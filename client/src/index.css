@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@plugin "flowbite-react/plugin/tailwindcss";
+@source "../.flowbite-react/class-list.json";
+
+@theme {
+  --color-primary: #C9B59C;
+  --color-primary-dark: #D9CFC7;
+  --color-secondary: #EFE9E3;
+  --color-text: #F9F8F6;
+  --color-textprimary:#182E49;
+  --color-texthover:#141729;
+  /* --color-text: #1E293B; */
+}
+
+@keyframes slideDown {
+  0% { transform: translateY(-40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideUp {
+  0% { transform: translateY(40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-title {
+  animation: slideDown 0.8s ease forwards;
+}
+
+.animate-description {
+  animation: slideUp 0.8s ease forwards;
+}

@@ -1,0 +1,73 @@
+import axios from "axios";
+
+const axiosIntance = axios.create({
+  baseURL: import.meta.env.VITE_BASE_URL,
+  withCredentials: true,
+});
+
+// Request interceptor → attach token before every request
+axiosIntance.interceptors.request.use((config) => {
+  const accessToken = localStorage.getItem("accessToken");
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+});
+
+// Response interceptor → handle expired token & refresh
+axiosIntance.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If no response (server down, CORS, etc.)
+    if (!error.response) {
+      return Promise.reject(error);
+    }
+
+    // Avoid infinite loop
+    if (originalRequest.url.includes("/api/user/refreshTokens")) {
+      return Promise.reject(error);
+    }
+
+    // If token expired
+    if (
+      (error.response.status === 401 || error.response.status === 403) &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+      try {
+        // Call refresh using plain axios (no interceptors)
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/api/user/refreshTokens`,
+          {},
+          { withCredentials: true }
+        );
+
+        if (data.success) {
+          // Save new token
+          localStorage.setItem("accessToken", data.accessToken);
+
+          // Update default headers for future requests
+          axiosIntance.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${data.accessToken}`;
+
+          // Retry original request with new token
+          originalRequest.headers[
+            "Authorization"
+          ] = `Bearer ${data.accessToken}`;
+          return axiosIntance(originalRequest);
+        }
+      } catch (err) {
+        console.error("Refresh Failed", err);
+        localStorage.removeItem("accessToken");
+        window.location.href = "/";
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default axiosIntance;
