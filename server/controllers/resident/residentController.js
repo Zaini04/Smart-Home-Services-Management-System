@@ -1,6 +1,6 @@
-import ServiceProvider from "../models/service_providerModel.js";
-import Service from "../models/servicesModel.js";
-import { errorResponse } from "../utills/response.js";
+import ServiceProvider from "../../models/service_providerModel.js";
+import Service from "../../models/servicesModel.js";
+import { errorResponse } from "../../utills/response.js";
 
 export const getApprovedProviders = async (req, res) => {
   try {
@@ -26,7 +26,7 @@ export const getApprovedProviders = async (req, res) => {
   }
 };
 
-export const getAllServices = async (req, res) => {
+export const getActiveServices = async (req, res) => {
   try {
     const services = await Service.find({ status: "active" });
     if (services.length <= 0) {

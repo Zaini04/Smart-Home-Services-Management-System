@@ -1,9 +1,9 @@
 import express from 'express'
-import { getAllServices, getApprovedProviders } from '../controllers/residentController.js'
+import { getActiveServices, getApprovedProviders } from '../controllers/resident/residentController.js'
 
 const residentRouter =  express.Router()
 
 residentRouter.get('/getWorkers',getApprovedProviders)
-residentRouter.get('/getServices',getAllServices)
+residentRouter.get('/getServices',getActiveServices)
 
 export default residentRouter

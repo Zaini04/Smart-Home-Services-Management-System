@@ -1,9 +1,9 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "../models/userModel.js";
-import { errorResponse, successResponse } from "../utills/response.js";
-import { refreshCookieName, refreshCookieOptions, signAccessToken, sigRefreshToken } from "../utills/tokens.js";
-import Session from "../models/sesstionModel.js";
+import User from "../../models/userModel.js";
+import { errorResponse, successResponse } from "../../utills/response.js";
+import { refreshCookieName, refreshCookieOptions, signAccessToken, sigRefreshToken } from "../../utills/tokens.js";
+import Session from "../../models/sesstionModel.js";
 
 
 

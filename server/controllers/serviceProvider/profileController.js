@@ -1,8 +1,8 @@
-import ServiceProvider from "../models/service_providerModel.js";
-import User from "../models/userModel.js";
-import Category from "../models/categoryModel.js";
-import SubCategory from "../models/subCategoryModel.js";
-import { errorResponse, successResponse } from "../utills/response.js";
+import Category from "../../models/categoryModel.js";
+import ServiceProvider from "../../models/service_providerModel.js";
+import SubCategory from "../../models/subCategoryModel.js";
+import User from "../../models/userModel.js";
+import { errorResponse, successResponse } from "../../utills/response.js";
 
 export const completeProviderProfile = async (req, res) => {
   try {
@@ -75,7 +75,6 @@ export const completeProviderProfile = async (req, res) => {
     return errorResponse(res, "Failed to complete profile", 500, err.message);
   }
 };
-
 export const getCategoriesWithSkills = async (req, res) => {
   try {
     const categories = await Category.find({ isActive: true }).lean();

@@ -1,6 +1,6 @@
 import express from "express";
-import { completeProviderProfile, getCategoriesWithSkills } from "../controllers/serviceProviderController.js";
 import { upload } from "../middlewares/upload.js";
+import { completeProviderProfile, getCategoriesWithSkills } from "../controllers/serviceProvider/profileController.js";
 
 const serviceProviderRouter = express.Router();
 
