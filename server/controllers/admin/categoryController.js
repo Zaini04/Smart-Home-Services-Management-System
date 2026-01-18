@@ -31,3 +31,11 @@ export const getCategories = async (req, res) => {
     return errorResponse(res, "Failed to fetch categories", 500, error.message);
   }
 };
+
+export const deleteCategory = async(req,res)=>{
+    try {
+        
+    } catch (error) {
+        
+    }
+}
