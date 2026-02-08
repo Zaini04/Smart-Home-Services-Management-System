@@ -7,6 +7,8 @@ import CreateCategory from "../pages/admin/CreateCategory";
 import CreateSubCategory from "../pages/admin/createSubCategory";
 import GetPendingWorkers from "../pages/admin/GetPendingWorkers";
 import UpdateKyc from "../pages/admin/UpdateKyc";
+import AllServices from "../pages/admin/AllSrervices";
+import AllWorkers from "../pages/admin/AllWorkers";
 
 
 export default function AdminRoutes() {
@@ -23,6 +25,8 @@ export default function AdminRoutes() {
         <Route index element={<AdminDashboard />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="add-service" element={<AddService />} />
+        <Route path="all-services" element={<AllServices />} />
+        <Route path="all-workers" element={<AllWorkers />} />
         <Route path="create-category" element={<CreateCategory />} />
         <Route path="create-subcategory" element={<CreateSubCategory />} />
         <Route path="pending-workers" element={<GetPendingWorkers />} />

@@ -339,10 +339,10 @@ export default function UpdateKyc() {
                 <div className="flex flex-wrap gap-2">
                   {worker.serviceCategories.map((cat, i) => (
                     <span
-                      key={i}
+                      key={cat._id}
                       className="px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-medium rounded-full"
                     >
-                      {cat}
+                      {cat.name}
                     </span>
                   ))}
                 </div>
@@ -356,10 +356,10 @@ export default function UpdateKyc() {
                 <div className="flex flex-wrap gap-2">
                   {worker.skills.map((skill, i) => (
                     <span
-                      key={i}
+                      key={skill._id}
                       className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-lg"
                     >
-                      {skill}
+                      {skill.name}
                     </span>
                   ))}
                 </div>
@@ -398,12 +398,7 @@ export default function UpdateKyc() {
             </div>
 
             {/* Debug Info - Remove in production */}
-            <div className="mt-4 p-4 bg-gray-50 rounded-xl text-xs text-gray-500">
-              <p className="font-medium mb-2">Image Paths (Debug):</p>
-              <p>Profile: {worker.profileImage || 'None'}</p>
-              <p>CNIC Front: {worker.cnicFrontImage || 'None'}</p>
-              <p>CNIC Back: {worker.cnicBackImage || 'None'}</p>
-            </div>
+            
           </div>
 
           {/* Timestamps */}

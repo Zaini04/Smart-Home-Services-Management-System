@@ -14,10 +14,10 @@ const serviceSchema = new mongoose.Schema(
     },
 
     category: {
-      type: String,
-      required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",  // Must match your Category model name exactly
+      required: true,
     },
-
     price: {
       type: Number,
       required: true

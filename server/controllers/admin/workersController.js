@@ -1,26 +1,33 @@
 import ServiceProvider from "../../models/service_providerModel.js";
 import { errorResponse, successResponse } from "../../utills/response.js";
 
-export const getAllProviders = async(req,res)=>{
-  try {
-    const allProviders = await ServiceProvider.find().sort({createdAt: -1})
-     if(allProviders.length === 0){
-        return errorResponse(res, "No services found", 404);
-    }
-    return successResponse(res,"All Services ",allProviders, 200)
-  } catch (error) {
-        return errorResponse(res, "Failed to fetch Service Provdiers", 500, error.message);
+// controllers/adminController.js
 
-  } 
-}
+export const getAllProviders = async (req, res) => {
+  try {
+    // ADDED .populate("userId") so we get the name/email/image
+    const allProviders = await ServiceProvider.find()
+      .populate("userId", "full_name email phone city address profileImage")
+      .populate("serviceCategories", "name").populate("skills", "name")
+      .sort({ createdAt: -1 });
+
+    if (allProviders.length === 0) {
+      return errorResponse(res, "No service providers found", 404);
+    }
+    return successResponse(res, "All Service Providers", allProviders, 200);
+  } catch (error) {
+    return errorResponse(res, "Failed to fetch Service Providers", 500, error.message);
+  }
+};
 export const getPendingWorkers = async (req, res) => {
   try {
     const pendingProviders = await ServiceProvider.find({
       kycStatus: "pending",
     }).populate(
       "userId",
-      "full_name email phone city address profileImage cnicFrontImage cnicBackImage visitPrice hourlyRate cnic description"
-    );
+      "full_name email phone city address profileImage "
+    ).populate("serviceCategories", "name").populate("skills", "name");
+    ;
 
     if (pendingProviders.length === 0) {
       return errorResponse(res, "No pending providers", 404);

@@ -124,8 +124,8 @@ export default function Login() {
 
       if (data.role === "resident") {
         navigate("/allservices");
-      } else if (data.role === "provider") {
-        navigate("/provider-dashboard");
+      } else if (data.role === "serviceprovider") {
+        navigate("/kyc-status");
       } else if(data.role === 'admin'){
         navigate('/admin')
       } else {

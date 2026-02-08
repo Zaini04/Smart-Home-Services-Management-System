@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { logout } from "../api/authorEndPoints";
 
 const AuthContext = createContext();
 
@@ -28,7 +29,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("accessToken", jwt);
   };
 
-  const logoutUser = () => {
+  const logoutUser = async() => {
+    await logout()
     setUser(null);
     setAccessToken(null);
 

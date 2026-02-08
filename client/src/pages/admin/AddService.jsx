@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { addService } from "../../api/adminEndPoints";
+import { addService, getCategories } from "../../api/adminEndPoints";
 import {
   FaCloudUploadAlt,
   FaImage,
@@ -87,14 +87,12 @@ const ImageUpload = ({ image, setImage, error }) => {
                 alt="Preview"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              {/* Overlay on hover */}
               <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                 <div className="text-white text-center">
                   <FaImage className="w-8 h-8 mx-auto mb-2" />
                   <span className="text-sm font-medium">Click to change image</span>
                 </div>
               </div>
-              {/* Remove button */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -105,7 +103,6 @@ const ImageUpload = ({ image, setImage, error }) => {
               >
                 <FaTrash className="w-4 h-4" />
               </button>
-              {/* Success badge */}
               <div className="absolute bottom-4 left-4 px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-full flex items-center gap-2 shadow-lg">
                 <FaCheckCircle className="w-4 h-4" />
                 Image uploaded
@@ -234,7 +231,7 @@ const FormTextarea = ({ icon: Icon, label, error, required, helper, ...props }) 
 
 /* ------------------ FORM SELECT COMPONENT ------------------ */
 
-const FormSelect = ({ icon: Icon, label, error, required, children, ...props }) => {
+const FormSelect = ({ icon: Icon, label, error, required, loading, children, ...props }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
@@ -243,6 +240,7 @@ const FormSelect = ({ icon: Icon, label, error, required, children, ...props }) 
         {Icon && <Icon className="w-4 h-4 text-gray-400" />}
         {label}
         {required && <span className="text-red-500">*</span>}
+        {loading && <FaSpinner className="w-3 h-3 animate-spin text-blue-500 ml-1" />}
       </label>
       <div className="relative">
         <select
@@ -257,6 +255,7 @@ const FormSelect = ({ icon: Icon, label, error, required, children, ...props }) 
           }}
           className={`
             w-full px-4 py-3.5 rounded-xl border-2 transition-all duration-200 outline-none appearance-none cursor-pointer
+            ${props.disabled ? "bg-gray-100 cursor-not-allowed" : ""}
             ${error
               ? "border-red-300 bg-red-50 focus:border-red-500"
               : isFocused
@@ -268,9 +267,13 @@ const FormSelect = ({ icon: Icon, label, error, required, children, ...props }) 
           {children}
         </select>
         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          {loading ? (
+            <FaSpinner className="w-5 h-5 text-gray-400 animate-spin" />
+          ) : (
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
         </div>
       </div>
       {error && (
@@ -352,33 +355,40 @@ export default function AddService() {
     fetchCategories();
   }, []);
 
+  // ✅ FIXED: Added setFetchingCategories(false) in finally block
   const fetchCategories = async () => {
+    setFetchingCategories(true);
     try {
-      // Replace with actual API call
-      // const res = await getCategories();
-      // setCategories(res.data.data);
+      const res = await getCategories();
       
-      // Mock data
-      setTimeout(() => {
-        setCategories([
-          { _id: "1", name: "Electrician" },
-          { _id: "2", name: "Plumber" },
-          { _id: "3", name: "AC Technician" },
-          { _id: "4", name: "Carpenter" },
-          { _id: "5", name: "Painter" },
-          { _id: "6", name: "Cleaner" },
-        ]);
-        setFetchingCategories(false);
-      }, 500);
+      console.log("=== CATEGORIES API RESPONSE ===");
+      console.log("res.data:", res.data);
+      
+      const categoriesData = res.data?.data || [];
+      
+      if (categoriesData.length > 0) {
+        console.log("Categories loaded:");
+        categoriesData.forEach((cat, i) => {
+          console.log(`  ${i + 1}. _id: ${cat._id} (length: ${cat._id?.length}), name: ${cat.name}`);
+        });
+      } else {
+        console.warn("No categories found");
+        setErrors(prev => ({ ...prev, category: "No categories available. Please create categories first." }));
+      }
+      
+      setCategories(categoriesData);
+      
     } catch (error) {
       console.error("Failed to fetch categories:", error);
+      setErrors(prev => ({ ...prev, category: "Failed to load categories. Please refresh." }));
+    } finally {
+      // ✅ This always runs!
       setFetchingCategories(false);
     }
   };
 
   const updateForm = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
@@ -428,7 +438,6 @@ export default function AddService() {
     e.preventDefault();
 
     if (!validateForm()) {
-      // Scroll to first error
       const firstErrorField = document.querySelector('[data-error="true"]');
       if (firstErrorField) {
         firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -448,15 +457,21 @@ export default function AddService() {
       formData.append("discountPercentage", form.discountPercentage || 0);
       formData.append("image", form.image);
 
-      await addService(formData);
+      console.log("=== SUBMITTING SERVICE ===");
+      console.log("Category ID:", form.category);
+      console.log("Category ID length:", form.category?.length);
+      console.log("Is valid ObjectId:", /^[0-9a-fA-F]{24}$/.test(form.category));
+
+      const response = await addService(formData);
+      console.log("Success:", response.data);
 
       setSuccess(true);
       
-      // Redirect after success
       setTimeout(() => {
-        navigate("/admin/services");
+        navigate("/all-services");
       }, 2000);
     } catch (err) {
+      console.error("Add service error:", err.response?.data || err.message);
       setErrors({ 
         submit: err.response?.data?.message || "Failed to add service. Please try again." 
       });
@@ -500,7 +515,7 @@ export default function AddService() {
               Add Another
             </button>
             <button
-              onClick={() => navigate("/admin/services")}
+              onClick={() => navigate("/admin/all-services")}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-colors flex items-center gap-2"
             >
               <FaEye className="w-4 h-4" />
@@ -533,6 +548,25 @@ export default function AddService() {
           </div>
         </div>
       </div>
+
+      {/* No Categories Warning */}
+      {!fetchingCategories && categories.length === 0 && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-3">
+          <FaExclamationCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-yellow-800">No Categories Available</p>
+            <p className="text-sm text-yellow-700">
+              You need to create categories before adding services.
+            </p>
+            <button
+              onClick={() => navigate("/admin/categories")}
+              className="mt-2 text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+            >
+              Go to Categories →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Error Alert */}
       {errors.submit && (
@@ -624,12 +658,21 @@ export default function AddService() {
                 label="Category"
                 required
                 value={form.category}
-                onChange={(e) => updateForm("category", e.target.value)}
+                onChange={(e) => {
+                  console.log("Selected category:", e.target.value);
+                  updateForm("category", e.target.value);
+                }}
                 error={errors.category}
-                disabled={fetchingCategories}
+                disabled={fetchingCategories || categories.length === 0}
+                loading={fetchingCategories}
               >
                 <option value="">
-                  {fetchingCategories ? "Loading categories..." : "Select a category"}
+                  {fetchingCategories 
+                    ? "Loading categories..." 
+                    : categories.length === 0 
+                      ? "No categories available" 
+                      : "Select a category"
+                  }
                 </option>
                 {categories.map((cat) => (
                   <option key={cat._id} value={cat._id}>
@@ -637,6 +680,17 @@ export default function AddService() {
                   </option>
                 ))}
               </FormSelect>
+              
+              {/* Retry button */}
+              {!fetchingCategories && categories.length === 0 && (
+                <button
+                  type="button"
+                  onClick={fetchCategories}
+                  className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Retry loading categories
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -654,7 +708,6 @@ export default function AddService() {
           </div>
 
           <div className="grid sm:grid-cols-2 gap-6 mb-6">
-            {/* Price */}
             <div data-error={!!errors.price}>
               <FormInput
                 icon={FaDollarSign}
@@ -670,7 +723,6 @@ export default function AddService() {
               />
             </div>
 
-            {/* Discount */}
             <div data-error={!!errors.discountPercentage}>
               <FormInput
                 icon={FaPercent}
@@ -688,7 +740,6 @@ export default function AddService() {
             </div>
           </div>
 
-          {/* Price Preview */}
           <PricePreview 
             price={form.price} 
             discountPercentage={form.discountPercentage} 
@@ -745,11 +796,11 @@ export default function AddService() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || categories.length === 0}
             className={`
               flex-1 px-8 py-4 rounded-xl font-semibold text-white
               flex items-center justify-center gap-3 transition-all order-1 sm:order-3
-              ${loading
+              ${loading || categories.length === 0
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30"
               }

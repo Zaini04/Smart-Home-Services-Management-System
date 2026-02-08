@@ -21,6 +21,7 @@ import {
   FaTools,
   FaMoneyBillWave,
 } from "react-icons/fa";
+import { logout } from "../../api/authorEndPoints";
 
 /* ------------------ SIDEBAR COMPONENT ------------------ */
 
@@ -41,7 +42,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       title: "Services",
       items: [
         { icon: FaPlus, label: "Add Service", path: "/admin/add-service" },
-        { icon: FaTools, label: "All Services", path: "/admin/services" },
+        { icon: FaTools, label: "All Services", path: "/admin/all-services" },
       ],
     },
     {
@@ -55,7 +56,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       title: "Workers",
       items: [
         { icon: FaUserClock, label: "Pending Workers", path: "/admin/pending-workers" },
-        { icon: FaUsers, label: "All Providers", path: "/admin/providers" },
+        { icon: FaUsers, label: "All Providers", path: "/admin/all-workers" },
       ],
     },
     {
@@ -67,10 +68,18 @@ const Sidebar = ({ isOpen, onClose }) => {
     },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    navigate("/login");
+  const handleLogout =async () => {
+    try {
+      await logout()
+
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+
+      navigate("/login");
+      
+    } catch (error) {
+      console.log(error)
+    }
   };
 
   const isActive = (path) => location.pathname === path;

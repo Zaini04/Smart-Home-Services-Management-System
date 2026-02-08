@@ -1,6 +1,6 @@
 import ServiceProvider from "../../models/service_providerModel.js";
 import Service from "../../models/servicesModel.js";
-import { errorResponse } from "../../utills/response.js";
+import { errorResponse, successResponse } from "../../utills/response.js";
 
 export const getApprovedProviders = async (req, res) => {
   try {
@@ -38,3 +38,4 @@ export const getActiveServices = async (req, res) => {
     return errorResponse(res, "Failed to get Services", 500, error.message);
   }
 };
+

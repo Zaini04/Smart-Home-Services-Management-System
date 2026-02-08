@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
@@ -22,23 +21,7 @@ import {
   FaTrash,
   FaSpinner,
 } from "react-icons/fa";
-import { completeProfile } from "../../api/serviceProviderEndPoints";
-
-/* ------------------ DATA ------------------ */
-
-const SERVICE_CATEGORIES = [
-  { name: "Plumber", icon: "🔧", color: "from-blue-500 to-blue-600" },
-  { name: "Electrician", icon: "⚡", color: "from-yellow-500 to-orange-500" },
-  { name: "Carpenter", icon: "🪚", color: "from-amber-600 to-amber-700" },
-  { name: "AC Technician", icon: "❄️", color: "from-cyan-500 to-cyan-600" },
-];
-
-const CATEGORY_SKILLS = {
-  Plumber: ["Pipe Installation", "Leak Fixing", "Drain Cleaning", "Bathroom Fittings"],
-  Electrician: ["Wiring", "Switch Repair", "Appliance Installation", "Fault Finding"],
-  Carpenter: ["Furniture Repair", "Door Installation", "Wood Polishing"],
-  "AC Technician": ["AC Installation", "Gas Refilling", "Cooling Issue Fix"],
-};
+import { completeProfile, getCategoriesWithSkills } from "../../api/serviceProviderEndPoints";
 
 /* ------------------ CUSTOM FILE UPLOAD COMPONENT ------------------ */
 
@@ -154,19 +137,21 @@ const CategoryCard = ({ category, isSelected, onToggle }) => {
       type="button"
       onClick={onToggle}
       className={`
-        relative overflow-hidden rounded-xl p-4 transition-all duration-300 transform
+        relative overflow-hidden rounded-xl p-4 transition-all duration-300 transform w-full text-left flex items-center gap-3
         ${isSelected 
-          ? `bg-gradient-to-br ${category.color} text-white shadow-lg scale-105` 
-          : "bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-md"
+          ? `bg-blue-50 border-blue-500 text-blue-700 shadow-md scale-[1.02] border-2` 
+          : "bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm"
         }
       `}
     >
-      <div className="flex items-center gap-3">
-        <span className="text-2xl">{category.icon}</span>
-        <span className="font-medium">{category.name}</span>
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl font-bold
+           ${isSelected ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+           {category.name.charAt(0).toUpperCase()}
       </div>
+      <span className="font-medium">{category.name}</span>
+      
       {isSelected && (
-        <FaCheckCircle className="absolute top-2 right-2 w-5 h-5 text-white/80" />
+        <FaCheckCircle className="absolute top-2 right-2 w-5 h-5 text-blue-500" />
       )}
     </button>
   );
@@ -180,15 +165,15 @@ const SkillChip = ({ skill, isSelected, onToggle }) => {
       type="button"
       onClick={onToggle}
       className={`
-        px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 transform
+        px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 transform border
         ${isSelected 
-          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md scale-105" 
-          : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:shadow"
+          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-transparent shadow-md scale-105" 
+          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
         }
       `}
     >
       {isSelected && <FaCheckCircle className="inline-block w-3 h-3 mr-2" />}
-      {skill}
+      {skill.name}
     </button>
   );
 };
@@ -236,56 +221,176 @@ const FormInput = ({ icon: Icon, label, error, ...props }) => {
   );
 };
 
+/* ------------------ HELPER FUNCTION ------------------ */
+
+// ✅ Check if string is valid MongoDB ObjectId
+const isValidObjectId = (id) => {
+  return /^[a-fA-F0-9]{24}$/.test(id);
+};
+
 /* ------------------ MAIN COMPONENT ------------------ */
 
 export default function CompleteProfile() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Form State
   const [age, setAge] = useState("");
   const [bio, setBio] = useState("");
   const [cnic, setCnic] = useState("");
-
-  const [serviceCategories, setServiceCategories] = useState([]);
-  const [availableSkills, setAvailableSkills] = useState([]);
-  const [skills, setSkills] = useState([]);
-
   const [experience, setExperience] = useState("");
   const [visitPrice, setVisitPrice] = useState("");
   const [hourlyRate, setHourlyRate] = useState("");
 
+  // Categories & Skills State
+  const [allData, setAllData] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]); // ✅ Array of ObjectId strings
+  const [availableSkills, setAvailableSkills] = useState([]);
+  const [selectedSkills, setSelectedSkills] = useState([]); // ✅ Array of ObjectId strings
+
+  // Files
   const [cnicFrontImage, setCnicFrontImage] = useState(null);
   const [cnicBackImage, setCnicBackImage] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
 
+  // UI State
   const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentStep, setCurrentStep] = useState(1);
 
-  /* ------------------ SKILL AUTO UPDATE ------------------ */
-
+  /* ------------------ FETCH DATA ON MOUNT ------------------ */
   useEffect(() => {
-    let mergedSkills = [];
-    serviceCategories.forEach((cat) => {
-      mergedSkills = [...mergedSkills, ...(CATEGORY_SKILLS[cat] || [])];
+    // ✅ Reset all selections on mount
+    setSelectedCategories([]);
+    setSelectedSkills([]);
+    setAvailableSkills([]);
+
+    const fetchData = async () => {
+      setDataLoading(true);
+      try {
+        const res = await getCategoriesWithSkills();
+        const data = res.data.data || [];
+        
+        // ✅ Debug: Log to verify data structure
+        console.log("Categories from API:", data);
+        
+        // ✅ Validate that each category has _id
+        const validData = data.filter(cat => cat._id && isValidObjectId(cat._id));
+        
+        if (validData.length !== data.length) {
+          console.warn("Some categories have invalid or missing _id");
+        }
+        
+        setAllData(validData);
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+        setError("Failed to load service categories. Please refresh the page.");
+      } finally {
+        setDataLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  /* ------------------ HANDLE CATEGORY SELECTION ------------------ */
+  const toggleCategory = (categoryId) => {
+    // ✅ Validate categoryId is a proper ObjectId
+    if (!isValidObjectId(categoryId)) {
+      console.error("Invalid category ID:", categoryId);
+      return;
+    }
+
+    let newCategories;
+    
+    if (selectedCategories.includes(categoryId)) {
+      newCategories = selectedCategories.filter(id => id !== categoryId);
+    } else {
+      newCategories = [...selectedCategories, categoryId];
+    }
+    
+    // ✅ Debug log
+    console.log("Selected Category IDs:", newCategories);
+    
+    setSelectedCategories(newCategories);
+
+    // Update Available Skills based on selected Category IDs
+    const relevantCats = allData.filter(cat => newCategories.includes(cat._id));
+    let newAvailableSkills = [];
+    
+    relevantCats.forEach(cat => {
+      if (cat.subCategories && cat.subCategories.length > 0) {
+        // ✅ Only add skills with valid _id
+        const validSkills = cat.subCategories.filter(skill => skill._id && isValidObjectId(skill._id));
+        newAvailableSkills = [...newAvailableSkills, ...validSkills];
+      }
     });
-    const uniqueSkills = [...new Set(mergedSkills)];
-    setAvailableSkills(uniqueSkills);
-    setSkills((prev) => prev.filter((s) => uniqueSkills.includes(s)));
-  }, [serviceCategories]);
+    
+    setAvailableSkills(newAvailableSkills);
 
-  /* ------------------ HANDLERS ------------------ */
-
-  const toggleItem = (item, state, setState) => {
-    setState((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-    );
+    // Clean up selected skills
+    const newAvailableSkillIds = newAvailableSkills.map(s => s._id);
+    setSelectedSkills(prev => prev.filter(sId => newAvailableSkillIds.includes(sId)));
   };
 
+  /* ------------------ HANDLE SKILL SELECTION ------------------ */
+  const toggleSkill = (skillId) => {
+    // ✅ Validate skillId is a proper ObjectId
+    if (!isValidObjectId(skillId)) {
+      console.error("Invalid skill ID:", skillId);
+      return;
+    }
+
+    setSelectedSkills(prev => {
+      const newSkills = prev.includes(skillId) 
+        ? prev.filter(id => id !== skillId) 
+        : [...prev, skillId];
+      
+      // ✅ Debug log
+      console.log("Selected Skill IDs:", newSkills);
+      
+      return newSkills;
+    });
+  };
+
+  /* ------------------ SUBMIT HANDLER ------------------ */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    // --- Validation ---
+    if (selectedCategories.length === 0) {
+      setError("Please select at least one service category.");
+      setLoading(false);
+      return;
+    }
+    if (selectedSkills.length === 0) {
+      setError("Please select at least one skill.");
+      setLoading(false);
+      return;
+    }
+    if (!profileImage || !cnicFrontImage || !cnicBackImage) {
+      setError("Please upload all required images (Profile, CNIC Front & Back).");
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Final validation before submit
+    const invalidCats = selectedCategories.filter(id => !isValidObjectId(id));
+    const invalidSkills = selectedSkills.filter(id => !isValidObjectId(id));
+
+    if (invalidCats.length > 0 || invalidSkills.length > 0) {
+      console.error("Invalid IDs found:", { invalidCats, invalidSkills });
+      setError("Invalid selection detected. Please refresh and try again.");
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Debug: Log final data being sent
+    console.log("=== SUBMITTING ===");
+    console.log("Categories:", selectedCategories);
+    console.log("Skills:", selectedSkills);
+    console.log("==================");
 
     try {
       const formData = new FormData();
@@ -296,36 +401,34 @@ export default function CompleteProfile() {
       formData.append("experience", experience);
       formData.append("visitPrice", visitPrice);
       formData.append("hourlyRate", hourlyRate);
-      formData.append("serviceCategories", JSON.stringify(serviceCategories));
-      formData.append("skills", JSON.stringify(skills));
+      
+      // ✅ Send arrays as JSON strings (containing only valid ObjectId strings)
+      formData.append("serviceCategories", JSON.stringify(selectedCategories));
+      formData.append("skills", JSON.stringify(selectedSkills));
+      
       formData.append("cnicFront", cnicFrontImage);
       formData.append("cnicBack", cnicBackImage);
       formData.append("profileImage", profileImage);
 
-      // await axios.post(
-      //   "http://localhost:5000/api/serviceProvider/complete-profile",
-      //   formData,
-      //   { headers: { "Content-Type": "multipart/form-data" } }
-      // );
-        await completeProfile(formData)
-
-
-      navigate("/provider-dashboard");
+      await completeProfile(formData);
+      navigate("/kyc-status");
     } catch (err) {
-      setError(err.response?.data?.message || "Profile submission failed");
+      console.error("Submission Error:", err);
+      setError(err.response?.data?.message || "Profile submission failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Progress Bar Logic
   const calculateProgress = () => {
     let filled = 0;
     const total = 10;
     if (age) filled++;
     if (bio) filled++;
     if (cnic) filled++;
-    if (serviceCategories.length > 0) filled++;
-    if (skills.length > 0) filled++;
+    if (selectedCategories.length > 0) filled++;
+    if (selectedSkills.length > 0) filled++;
     if (experience) filled++;
     if (visitPrice) filled++;
     if (hourlyRate) filled++;
@@ -340,11 +443,7 @@ export default function CompleteProfile() {
         <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
           <FaUser className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Authentication Required</h2>
-          <p className="text-gray-500 mb-4">Please login to complete your profile</p>
-          <button 
-            onClick={() => navigate("/login")}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
+          <button onClick={() => navigate("/login")} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             Go to Login
           </button>
         </div>
@@ -391,11 +490,6 @@ export default function CompleteProfile() {
                 style={{ width: `${progress}%` }}
               />
             </div>
-            {progress === 100 && (
-              <p className="text-green-600 text-sm mt-2 flex items-center gap-2">
-                <FaCheckCircle /> All fields completed! You're ready to submit.
-              </p>
-            )}
           </div>
         </div>
 
@@ -435,13 +529,7 @@ export default function CompleteProfile() {
                 <h4 className="font-medium text-gray-700">Upload a professional photo</h4>
                 <p className="text-gray-500 text-sm mt-1">
                   A clear, professional photo helps build trust with customers.
-                  Make sure your face is clearly visible.
                 </p>
-                <ul className="text-xs text-gray-400 mt-3 space-y-1">
-                  <li>✓ High quality image (min 400x400px)</li>
-                  <li>✓ Professional appearance</li>
-                  <li>✓ Good lighting</li>
-                </ul>
               </div>
             </div>
           </div>
@@ -487,14 +575,11 @@ export default function CompleteProfile() {
                 required
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell customers about yourself, your experience, specialties, and what makes your service stand out..."
+                placeholder="Tell customers about yourself, your experience, specialties..."
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 
                          hover:border-gray-300 focus:border-blue-500 focus:bg-white 
                          focus:shadow-md transition-all duration-200 outline-none resize-none"
               />
-              <p className="text-xs text-gray-400 mt-2">
-                Minimum 50 characters recommended for better profile visibility
-              </p>
             </div>
           </div>
 
@@ -508,16 +593,24 @@ export default function CompleteProfile() {
               Select all the categories you can provide services in
             </p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {SERVICE_CATEGORIES.map((cat) => (
-                <CategoryCard
-                  key={cat.name}
-                  category={cat}
-                  isSelected={serviceCategories.includes(cat.name)}
-                  onToggle={() => toggleItem(cat.name, serviceCategories, setServiceCategories)}
-                />
-              ))}
-            </div>
+            {dataLoading ? (
+              <div className="flex justify-center py-6">
+                <FaSpinner className="animate-spin text-blue-500 text-2xl" />
+              </div>
+            ) : allData.length === 0 ? (
+              <p className="text-red-500">No categories found. Please contact admin.</p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {allData.map((cat) => (
+                  <CategoryCard
+                    key={cat._id}
+                    category={cat}
+                    isSelected={selectedCategories.includes(cat._id)}
+                    onToggle={() => toggleCategory(cat._id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Skills Section */}
@@ -528,27 +621,19 @@ export default function CompleteProfile() {
                 Your Skills
               </h3>
               <p className="text-gray-500 text-sm mb-6">
-                Select the specific skills you're proficient in
+                Select specific skills from the categories you chose above
               </p>
 
               <div className="flex flex-wrap gap-3">
                 {availableSkills.map((skill) => (
                   <SkillChip
-                    key={skill}
+                    key={skill._id}
                     skill={skill}
-                    isSelected={skills.includes(skill)}
-                    onToggle={() => toggleItem(skill, skills, setSkills)}
+                    isSelected={selectedSkills.includes(skill._id)}
+                    onToggle={() => toggleSkill(skill._id)}
                   />
                 ))}
               </div>
-
-              {skills.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium text-blue-600">{skills.length}</span> skills selected
-                  </p>
-                </div>
-              )}
             </div>
           )}
 
@@ -600,13 +685,6 @@ export default function CompleteProfile() {
                 <span className="absolute right-4 top-[42px] text-gray-400 text-sm">PKR/hr</span>
               </div>
             </div>
-
-            <div className="mt-4 p-4 bg-blue-50 rounded-xl">
-              <p className="text-sm text-blue-700">
-                💡 <span className="font-medium">Tip:</span> Competitive pricing attracts more customers. 
-                Research local rates to stay competitive.
-              </p>
-            </div>
           </div>
 
           {/* CNIC Documents */}
@@ -615,11 +693,8 @@ export default function CompleteProfile() {
               <FaIdCard className="text-blue-600" />
               Identity Verification
             </h3>
-            <p className="text-gray-500 text-sm mb-6">
-              Upload clear photos of your CNIC (front and back) for verification
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-6">
+            
+            <div className="grid md:grid-cols-2 gap-6 mt-4">
               <FileUploadCard
                 label="CNIC Front Side"
                 icon={<FaIdCard className="w-8 h-8 text-gray-400" />}
@@ -634,17 +709,6 @@ export default function CompleteProfile() {
                 setFile={setCnicBackImage}
                 required
               />
-            </div>
-
-            <div className="mt-4 p-4 bg-amber-50 rounded-xl flex gap-3">
-              <FaInfoCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-amber-700">
-                <p className="font-medium">Privacy Notice</p>
-                <p className="mt-1">
-                  Your CNIC images are encrypted and stored securely. They are only used for 
-                  identity verification and are never shared with customers.
-                </p>
-              </div>
             </div>
           </div>
 
@@ -665,7 +729,7 @@ export default function CompleteProfile() {
               {loading ? (
                 <>
                   <FaSpinner className="w-5 h-5 animate-spin" />
-                  Submitting Your Profile...
+                  Submitting...
                 </>
               ) : (
                 <>
@@ -674,17 +738,8 @@ export default function CompleteProfile() {
                 </>
               )}
             </button>
-
-            <p className="text-center text-gray-500 text-sm mt-4">
-              By submitting, you agree to our{" "}
-              <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
-              {" "}and{" "}
-              <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
-            </p>
           </div>
         </form>
-
-        {/* Bottom Spacing */}
         <div className="h-8" />
       </div>
 

@@ -84,11 +84,6 @@ skills: [
       default: "",
     },
 
-    walletBalance: {
-      type: Number,
-      default: 0,
-    },
-
     lastActiveAt: { type: Date, default: Date.now },
   },
   { timestamps: true }

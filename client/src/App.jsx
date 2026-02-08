@@ -10,6 +10,8 @@ import Services from "./components/Services";
 import ServiceProviders from "./pages/resident/ServiceProviders";
 import HowItWorks from "./components/HowItWorks";
 import AdminRoutes from "./routes/adminRoutes";
+import KYCStatus from "./pages/serviceProvider/KYCStatus";
+import EditProfile from "./pages/serviceProvider/EditProfile";
 
 
 function App() {
@@ -24,7 +26,9 @@ function App() {
         <Route path="/allservices" element={<AllServices />}/>
         <Route path="/how" element={<HowItWorks/>}/>
         <Route path="/provider-dashboard" element={<ServiceProviderDashboard/>}/>
-      <Route  path="/serviceproviders" element={<ServiceProviders/>}/>
+        <Route  path="/serviceproviders" element={<ServiceProviders/>}/>
+        <Route path="/kyc-status" element={<KYCStatus />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
       </Routes>
       <AdminRoutes/>
     </BrowserRouter>

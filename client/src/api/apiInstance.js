@@ -26,7 +26,7 @@ axiosIntance.interceptors.response.use(
     }
 
     // Avoid infinite loop
-    if (originalRequest.url.includes("/api/user/refreshTokens")) {
+    if (originalRequest.url.includes("/api/user/refreshToken")) {
       return Promise.reject(error);
     }
 
@@ -39,7 +39,7 @@ axiosIntance.interceptors.response.use(
       try {
         // Call refresh using plain axios (no interceptors)
         const { data } = await axios.post(
-          `${import.meta.env.VITE_BASE_URL}/api/user/refreshTokens`,
+          `${import.meta.env.VITE_BASE_URL}/api/user/refreshToken`,
           {},
           { withCredentials: true }
         );
