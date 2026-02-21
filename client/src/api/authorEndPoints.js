@@ -1,14 +1,14 @@
-import axiosIntance from "./apiinstance"
+import axiosInstance from "./apiinstance"
 
 export const login = (credientals)=>{
-    return axiosIntance.post('/api/user/login',credientals)
+    return axiosInstance.post('/api/user/login',credientals)
 }
 
 export const logout = ()=>{
-    return axiosIntance.post('/api/user/logout')
+    return axiosInstance.post('/api/user/logout')
 }
 
 export const signUp = (credientals)=>{
-    return axiosIntance.post('/api/user/signup',credientals)
+    return axiosInstance.post('/api/user/signup',credientals)
 }
 

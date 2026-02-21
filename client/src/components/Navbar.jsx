@@ -38,7 +38,7 @@ const UserDropdown = ({ user, onLogout, onClose }) => {
 
   const menuItems = [
     { icon: FaUserCircle, label: "My Profile", link: "/profile" },
-    { icon: FaClipboardList, label: "My Bookings", link: "/bookings" },
+    { icon: FaClipboardList, label: "My Bookings", link: "/my-bookings" },
     // { icon: FaBars, label: "Dashboard", link: "/provider-dashboard" },
     { icon: FaHeart, label: "Favorites", link: "/favorites" },
     { icon: FaCog, label: "Settings", link: "/settings" },
@@ -238,7 +238,7 @@ export default function Navbar() {
         { label: "Home", path: "/", icon: FaHome },
         { label: "Services", path: "/allservices", icon: FaTools },
         { label: "Workers", path: "/serviceproviders", icon: FaUsers },
-        { label: "My Bookings", path: "/bookings", icon: FaCalendarAlt },
+        { label: "My Bookings", path: "/my-bookings", icon: FaCalendarAlt },
       ]
     : [
         { label: "Home", path: "/", icon: FaHome },

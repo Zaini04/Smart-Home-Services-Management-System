@@ -12,6 +12,14 @@ import HowItWorks from "./components/HowItWorks";
 import AdminRoutes from "./routes/adminRoutes";
 import KYCStatus from "./pages/serviceProvider/KYCStatus";
 import EditProfile from "./pages/serviceProvider/EditProfile";
+import PostJob from "./pages/resident/PostJob";
+import MyBookings from "./pages/resident/MyBookings";
+import BookingDetails from "./pages/resident/BookingDetails";
+import SubmitReview from "./pages/resident/SubmitReview";
+import AvailableJobs from "./pages/serviceProvider/AvailabeJobs";
+import MyOffers from "./pages/serviceProvider/MyOffers";
+import MyJobs from "./pages/serviceProvider/MyJobs";
+import JobDetails from "./pages/serviceProvider/JobDetails";
 
 
 function App() {
@@ -29,6 +37,15 @@ function App() {
         <Route  path="/serviceproviders" element={<ServiceProviders/>}/>
         <Route path="/kyc-status" element={<KYCStatus />} />
         <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/post-job" element={<PostJob />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/booking/:id" element={<BookingDetails />} />
+        <Route path="/submit-review" element={<SubmitReview />} />
+        <Route path="/provider/available-jobs" element={<AvailableJobs />} />
+        <Route path="/provider/my-offers" element={<MyOffers />} />
+        <Route path="/provider/my-jobs" element={<MyJobs />} />
+        <Route path="/provider/job/:bookingId" element={<JobDetails />} />
+
       </Routes>
       <AdminRoutes/>
     </BrowserRouter>

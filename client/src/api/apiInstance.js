@@ -1,12 +1,12 @@
 import axios from "axios";
 
-const axiosIntance = axios.create({
+const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
   withCredentials: true,
 });
 
 // Request interceptor → attach token before every request
-axiosIntance.interceptors.request.use((config) => {
+axiosInstance.interceptors.request.use((config) => {
   const accessToken = localStorage.getItem("accessToken");
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
@@ -15,7 +15,7 @@ axiosIntance.interceptors.request.use((config) => {
 });
 
 // Response interceptor → handle expired token & refresh
-axiosIntance.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
@@ -49,7 +49,7 @@ axiosIntance.interceptors.response.use(
           localStorage.setItem("accessToken", data.accessToken);
 
           // Update default headers for future requests
-          axiosIntance.defaults.headers.common[
+          axiosInstance.defaults.headers.common[
             "Authorization"
           ] = `Bearer ${data.accessToken}`;
 
@@ -70,4 +70,4 @@ axiosIntance.interceptors.response.use(
   }
 );
 
-export default axiosIntance;
+export default axiosInstance;

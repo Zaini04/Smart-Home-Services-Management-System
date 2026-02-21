@@ -2,7 +2,7 @@ import express from "express";
 import { upload } from "../middlewares/upload.js";
 import { completeProviderProfile, getCategoriesWithSkills, getProviderProfile, getProviderStatus, updateProviderProfile } from "../controllers/serviceProvider/profileController.js";
 import { protect } from "../middlewares/protect.js";
-import { completeInspection, completeWork, getAvailableBookings, sendOrUpdateOffer, startWork } from "../controllers/serviceProvider/bookingController.js";
+import { completeInspection, completeWork, getAvailableBookings, getDashboard, getJobDetails, getMyJobs, getMyOffers, sendFinalPrice, sendOrUpdateOffer, startWork, verifyStartOTP } from "../controllers/serviceProvider/bookingController.js";
 
 const serviceProviderRouter = express.Router();
 
@@ -22,10 +22,15 @@ serviceProviderRouter.put("/profile/:userId", uploadFields, updateProviderProfil
 
 // booking routes
 
-serviceProviderRouter.get("/available", protect, getAvailableBookings);
+serviceProviderRouter.get("/dashboard", protect, getDashboard);
+serviceProviderRouter.get("/available-jobs", protect, getAvailableBookings);
+serviceProviderRouter.get("/my-jobs", protect, getMyJobs);
+serviceProviderRouter.get("/my-offers", protect, getMyOffers);
+serviceProviderRouter.get("/job/:bookingId", protect, getJobDetails);
 serviceProviderRouter.post("/offer/:bookingId", protect, sendOrUpdateOffer);
-serviceProviderRouter.post("/inspection/:bookingId", protect, completeInspection);
-serviceProviderRouter.post("/start/:bookingId", protect, startWork);
-serviceProviderRouter.post("/complete/:bookingId", protect, completeWork);
-
+serviceProviderRouter.post("/verify-otp/:bookingId", protect, verifyStartOTP);
+serviceProviderRouter.post("/complete-inspection/:bookingId", protect, completeInspection);
+serviceProviderRouter.post("/send-price/:bookingId", protect, sendFinalPrice);
+serviceProviderRouter.post("/start-work/:bookingId", protect, startWork);
+serviceProviderRouter.post("/complete-work/:bookingId", protect, completeWork);
 export default serviceProviderRouter;

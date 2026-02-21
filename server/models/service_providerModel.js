@@ -88,7 +88,7 @@ skills: [
   },
   { timestamps: true }
 );
-
+providerSchema.index({ serviceCategories: 1 });
 const ServiceProvider = mongoose.model("ServiceProvider", providerSchema);
 
 export default ServiceProvider;
