@@ -283,7 +283,7 @@ export default function Signup() {
         loginUser(res.data.data, res.data.data.accessToken);
 
         if (res.data.data.role === "serviceprovider") {
-          navigate("/complete-profile");
+          navigate("/provider/complete-profile");
         } else {
           navigate("/allservices");
         }

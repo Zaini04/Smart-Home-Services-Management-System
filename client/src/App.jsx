@@ -20,6 +20,7 @@ import AvailableJobs from "./pages/serviceProvider/AvailabeJobs";
 import MyOffers from "./pages/serviceProvider/MyOffers";
 import MyJobs from "./pages/serviceProvider/MyJobs";
 import JobDetails from "./pages/serviceProvider/JobDetails";
+import ServiceProviderRoutes from "./routes/serviceProviderRoutes";
 
 
 function App() {
@@ -29,24 +30,25 @@ function App() {
         <Route path="/" element={<LandingPage  />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/complete-profile" element={<CompleteProfile/>}/>
+        {/* <Route path="/complete-profile" element={<CompleteProfile/>}/> */}
         <Route path="/services" element={<Services/>}/>
         <Route path="/allservices" element={<AllServices />}/>
         <Route path="/how" element={<HowItWorks/>}/>
-        <Route path="/provider-dashboard" element={<ServiceProviderDashboard/>}/>
+        {/* <Route path="/provider-dashboard" element={<ServiceProviderDashboard/>}/> */}
         <Route  path="/serviceproviders" element={<ServiceProviders/>}/>
-        <Route path="/kyc-status" element={<KYCStatus />} />
-        <Route path="/edit-profile" element={<EditProfile />} />
+        {/* <Route path="/kyc-status" element={<KYCStatus />} />
+        <Route path="/edit-profile" element={<EditProfile />} /> */}
         <Route path="/post-job" element={<PostJob />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/booking/:id" element={<BookingDetails />} />
         <Route path="/submit-review" element={<SubmitReview />} />
-        <Route path="/provider/available-jobs" element={<AvailableJobs />} />
+        {/* <Route path="/provider/available-jobs" element={<AvailableJobs />} />
         <Route path="/provider/my-offers" element={<MyOffers />} />
         <Route path="/provider/my-jobs" element={<MyJobs />} />
-        <Route path="/provider/job/:bookingId" element={<JobDetails />} />
+        <Route path="/provider/job/:bookingId" element={<JobDetails />} /> */}
 
       </Routes>
+      <ServiceProviderRoutes/>
       <AdminRoutes/>
     </BrowserRouter>
   );

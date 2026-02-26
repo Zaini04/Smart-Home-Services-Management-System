@@ -22,7 +22,7 @@ export const getAllProviders = async (req, res) => {
 export const getPendingWorkers = async (req, res) => {
   try {
     const pendingProviders = await ServiceProvider.find({
-      kycStatus: "pending",
+      kycStatus: "waiting",
     }).populate(
       "userId",
       "full_name email phone city address profileImage "

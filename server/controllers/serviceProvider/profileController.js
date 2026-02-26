@@ -82,6 +82,7 @@ export const completeProviderProfile = async (req, res) => {
       experience,
       visitPrice,
       hourlyRate,
+      kycStatus: "waiting", // Set to waiting for admin review
       cnicFrontImage: req.files.cnicFront[0].path,
       cnicBackImage: req.files.cnicBack[0].path,
       profileImage: req.files.profileImage[0].path,
@@ -233,7 +234,7 @@ export const updateProviderProfile = async (req, res) => {
     }
 
     // Reset to pending for re-review
-    provider.kycStatus = "pending";
+    provider.kycStatus = "waiting";
     provider.kycMessage = "";
 
     await provider.save();

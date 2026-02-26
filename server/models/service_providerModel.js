@@ -76,7 +76,7 @@ skills: [
 
     kycStatus: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending","waiting", "approved", "rejected"],
       default: "pending",
     },
     kycMessage: {

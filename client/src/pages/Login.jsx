@@ -120,12 +120,13 @@ export default function Login() {
       console.log(res)
 
       const data = res.data.data;
+      console.log("Login Response Data:", data);
       loginUser(data, data.accessToken);
 
       if (data.role === "resident") {
         navigate("/allservices");
       } else if (data.role === "serviceprovider") {
-        navigate("/kyc-status");
+        navigate("/provider/kyc-status");
       } else if(data.role === 'admin'){
         navigate('/admin')
       } else {

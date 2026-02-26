@@ -67,6 +67,7 @@ export const signupUser = async (req, res) => {
       role: newUser.role,
       city: newUser.city,
       address: newUser.address,
+      kycStatus: newUser.role === "serviceprovider" ? newUser.kycStatus : "n/a",
       accessToken
     }, 201);
 
@@ -121,6 +122,7 @@ export const loginUser = async (req, res) => {
       role: user.role,
       city: user.city,
       address: user.address,
+      kycStatus: user.role === "serviceprovider" ? user.kycStatus : "n/a",
       accessToken
     }, 201);
 

@@ -442,6 +442,7 @@ export const getDashboard = async (req, res) => {
         rating: provider.rating,
         ratingCount: provider.ratingCount,
         walletBalance: provider.walletBalance,
+        kycStatus: provider.kycStatus,
       },
       stats: {
         totalJobs,
