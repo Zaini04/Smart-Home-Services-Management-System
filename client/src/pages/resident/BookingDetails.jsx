@@ -43,7 +43,8 @@ const statusMeta = {
     barColor: "bg-blue-500",
     step: 1,
     icon: FaClock,
-    message: "Your job is live! Workers are reviewing it and will send offers soon.",
+    message:
+      "Your job is live! Workers are reviewing it and will send offers soon.",
   },
   offers_received: {
     label: "Offers Received",
@@ -51,7 +52,8 @@ const statusMeta = {
     barColor: "bg-purple-500",
     step: 2,
     icon: FaBell,
-    message: "You have received offers! Review them below and accept the best one.",
+    message:
+      "You have received offers! Review them below and accept the best one.",
   },
   inspection_pending: {
     label: "Inspection Pending",
@@ -59,7 +61,8 @@ const statusMeta = {
     barColor: "bg-yellow-500",
     step: 3,
     icon: FaSearch,
-    message: "Worker needs to inspect the problem before finalizing the price. Please approve.",
+    message:
+      "Worker needs to inspect the problem before finalizing the price. Please approve.",
   },
   inspection_scheduled: {
     label: "Inspection Scheduled",
@@ -75,7 +78,8 @@ const statusMeta = {
     barColor: "bg-amber-500",
     step: 4,
     icon: FaMoneyBillWave,
-    message: "Worker has sent the final price. Please review and approve to proceed.",
+    message:
+      "Worker has sent the final price. Please review and approve to proceed.",
   },
   price_approved: {
     label: "Price Approved",
@@ -83,7 +87,8 @@ const statusMeta = {
     barColor: "bg-teal-500",
     step: 5,
     icon: FaKey,
-    message: "Share the Start OTP with the worker when they arrive to begin work.",
+    message:
+      "Share the Start OTP with the worker when they arrive to begin work.",
   },
   work_in_progress: {
     label: "Work In Progress",
@@ -91,7 +96,8 @@ const statusMeta = {
     barColor: "bg-indigo-500",
     step: 6,
     icon: FaTools,
-    message: "Worker is currently working. Once done, enter the Complete OTP to confirm payment.",
+    message:
+      "Worker is currently working. Once done, enter the Complete OTP to confirm payment.",
   },
   completed: {
     label: "Completed",
@@ -99,7 +105,8 @@ const statusMeta = {
     barColor: "bg-green-500",
     step: 7,
     icon: FaCheckCircle,
-    message: "Job completed successfully! Please leave a review for the worker.",
+    message:
+      "Job completed successfully! Please leave a review for the worker.",
   },
   cancelled: {
     label: "Cancelled",
@@ -129,7 +136,9 @@ function ProgressBar({ currentStep, cancelled }) {
     return (
       <div className="flex items-center justify-center gap-2 py-3 bg-red-50 rounded-xl">
         <FaTimesCircle className="text-red-500" />
-        <span className="text-red-600 font-medium text-sm">Booking Cancelled</span>
+        <span className="text-red-600 font-medium text-sm">
+          Booking Cancelled
+        </span>
       </div>
     );
   }
@@ -157,8 +166,8 @@ function ProgressBar({ currentStep, cancelled }) {
                   done
                     ? "bg-blue-500 border-blue-500"
                     : active
-                    ? "bg-white border-blue-500 shadow-md shadow-blue-200"
-                    : "bg-white border-gray-300"
+                      ? "bg-white border-blue-500 shadow-md shadow-blue-200"
+                      : "bg-white border-gray-300"
                 }`}
               >
                 {done ? (
@@ -178,8 +187,8 @@ function ProgressBar({ currentStep, cancelled }) {
                   active
                     ? "text-blue-600"
                     : done
-                    ? "text-gray-600"
-                    : "text-gray-400"
+                      ? "text-gray-600"
+                      : "text-gray-400"
                 }`}
               >
                 {s.label}
@@ -329,7 +338,11 @@ function InspectionPendingPanel({ booking, onApprove, actionLoading }) {
         disabled={actionLoading}
         className="w-full py-3 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-600 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
       >
-        {actionLoading ? <FaSpinner className="animate-spin" /> : <FaCheckCircle />}
+        {actionLoading ? (
+          <FaSpinner className="animate-spin" />
+        ) : (
+          <FaCheckCircle />
+        )}
         Approve Inspection
       </button>
     </div>
@@ -345,7 +358,9 @@ function InspectionScheduledPanel() {
           <FaClock className="text-orange-600 w-5 h-5 animate-pulse" />
         </div>
         <div>
-          <h3 className="font-semibold text-orange-800">Inspection Scheduled</h3>
+          <h3 className="font-semibold text-orange-800">
+            Inspection Scheduled
+          </h3>
           <p className="text-orange-700 text-sm mt-0.5">
             Worker will visit soon. After inspection, they will send the final
             price for your approval.
@@ -370,7 +385,9 @@ function PriceApprovalPanel({ booking, onApprove, onReject, actionLoading }) {
           <FaMoneyBillWave className="text-blue-600 w-5 h-5" />
         </div>
         <div>
-          <h3 className="font-semibold text-blue-800">Final Price from Worker</h3>
+          <h3 className="font-semibold text-blue-800">
+            Final Price from Worker
+          </h3>
           <p className="text-blue-700 text-sm mt-0.5">
             Review the price breakdown and approve to proceed.
           </p>
@@ -622,7 +639,9 @@ function CompletedPanel({ booking, navigate }) {
         </div>
         <p className="text-xs text-gray-400">
           Payment via{" "}
-          <span className="capitalize font-medium">{booking.paymentMethod}</span>
+          <span className="capitalize font-medium">
+            {booking.paymentMethod}
+          </span>
         </p>
       </div>
 
@@ -657,7 +676,9 @@ function CancelledPanel({ booking }) {
           <h3 className="font-semibold text-red-800">Booking Cancelled</h3>
           <p className="text-red-700 text-sm mt-0.5">
             Cancelled by:{" "}
-            <span className="capitalize font-medium">{booking.cancelledBy}</span>
+            <span className="capitalize font-medium">
+              {booking.cancelledBy}
+            </span>
           </p>
           {booking.cancellationReason && (
             <p className="text-red-600 text-sm mt-1">
@@ -694,7 +715,10 @@ export default function BookingDetails() {
   const [alertMsg, setAlertMsg] = useState(null); // { type, text }
 
   useEffect(() => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     fetchBooking();
   }, [id, user]);
 
@@ -724,7 +748,10 @@ export default function BookingDetails() {
       showAlert("success", "Offer accepted successfully!");
       fetchBooking();
     } catch (err) {
-      showAlert("error", err.response?.data?.message || "Failed to accept offer");
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to accept offer",
+      );
     } finally {
       setActionLoading(false);
     }
@@ -749,7 +776,7 @@ export default function BookingDetails() {
       const res = await approveFinalPrice(id);
       showAlert(
         "success",
-        `Price approved! Start OTP: ${res.data.data.startOTP} — Share with worker.`
+        `Price approved! Start OTP: ${res.data.data.startOTP} — Share with worker.`,
       );
       fetchBooking();
     } catch (err) {
@@ -845,7 +872,7 @@ export default function BookingDetails() {
   const meta = statusMeta[booking.status] || statusMeta.posted;
   const isCancelled = booking.status === "cancelled";
   const canCancel = !["work_in_progress", "completed", "cancelled"].includes(
-    booking.status
+    booking.status,
   );
 
   return (
@@ -854,7 +881,6 @@ export default function BookingDetails() {
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-8 px-4">
         <div className="max-w-4xl mx-auto">
-
           {/* ── Alert Banner ── */}
           {alertMsg && (
             <div
@@ -912,10 +938,8 @@ export default function BookingDetails() {
 
           {/* ── Main Grid ── */}
           <div className="grid lg:grid-cols-3 gap-6">
-
             {/* Left: Main Content */}
             <div className="lg:col-span-2 space-y-6">
-
               {/* Job Description Card */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -1054,7 +1078,6 @@ export default function BookingDetails() {
 
             {/* Right: Sidebar */}
             <div className="space-y-4">
-
               {/* Worker Card */}
               {booking.selectedProvider ? (
                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
@@ -1087,7 +1110,8 @@ export default function BookingDetails() {
                         </span>
                       </div>
                       <p className="text-xs text-gray-400">
-                        {booking.selectedProvider.completedJobs || 0} jobs completed
+                        {booking.selectedProvider.completedJobs || 0} jobs
+                        completed
                       </p>
                     </div>
                   </div>
@@ -1101,6 +1125,16 @@ export default function BookingDetails() {
                       <FaPhone />
                       Call Worker
                     </a>
+                  )}
+                  {booking.selectedProvider && (
+                    <button
+                      onClick={() => navigate(`/chat/${booking._id}`)}
+                      className="w-full mt-3 py-2.5 bg-blue-600 text-white rounded-xl
+               font-medium flex items-center justify-center gap-2
+               hover:bg-blue-700 transition-colors"
+                    >
+                      💬 Message Worker
+                    </button>
                   )}
                 </div>
               ) : (

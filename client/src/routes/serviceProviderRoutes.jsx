@@ -11,6 +11,8 @@ import EditProfile from "../pages/serviceProvider/EditProfile";
 import ProviderLayout from "../pages/serviceProvider/ProviderLayout";
 import CompleteProfile from "../pages/serviceProvider/CompleteProfile";
 import KYCStatus from "../pages/serviceProvider/KYCStatus";
+import Chat from "../pages/chat/chat";
+import ChatInbox from "../pages/chat/ChatInbox";
 
 
 export default function ServiceProviderRoutes() {
@@ -32,5 +34,8 @@ export default function ServiceProviderRoutes() {
     {/* <Route path="profile"        element={<ProviderProfile />} /> */}
     <Route path="edit-profile"   element={<EditProfile />} />
   </Route>
+      <Route path="/provider/messages" element={<ChatInbox />} />
+      <Route path="/provider/chat/:bookingId" element={<Chat />} />
+
 </Routes>
   )}

@@ -21,6 +21,8 @@ import MyOffers from "./pages/serviceProvider/MyOffers";
 import MyJobs from "./pages/serviceProvider/MyJobs";
 import JobDetails from "./pages/serviceProvider/JobDetails";
 import ServiceProviderRoutes from "./routes/serviceProviderRoutes";
+import Chat from "./pages/chat/chat";
+import ChatInbox from "./pages/chat/ChatInbox";
 
 
 function App() {
@@ -41,11 +43,16 @@ function App() {
         <Route path="/post-job" element={<PostJob />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/booking/:id" element={<BookingDetails />} />
-        <Route path="/submit-review" element={<SubmitReview />} />
+        <Route path="/review/:bookingId" element={<SubmitReview />} />
         {/* <Route path="/provider/available-jobs" element={<AvailableJobs />} />
         <Route path="/provider/my-offers" element={<MyOffers />} />
         <Route path="/provider/my-jobs" element={<MyJobs />} />
         <Route path="/provider/job/:bookingId" element={<JobDetails />} /> */}
+
+        <Route path="/messages" element={<ChatInbox />} />
+        <Route path="/chat/:bookingId" element={<Chat />} />
+
+
 
       </Routes>
       <ServiceProviderRoutes/>

@@ -6,6 +6,7 @@ import {
   FaUser, FaEdit, FaSignOutAlt, FaExclamationCircle,
   FaStar, FaTimes, FaBars, FaChevronRight, FaTools,
   FaChevronDown, FaIdCard, FaShieldAlt, FaLock,
+  FaComments,
 } from "react-icons/fa";
 import { getProviderDashboard } from "../../api/serviceProviderEndPoints";
 
@@ -17,6 +18,7 @@ const approvedNavItems = [
   { to: "/provider/available-jobs", icon: FaSearch,    label: "Available Jobs", badge: "New" },
   { to: "/provider/my-offers",      icon: FaBell,      label: "My Offers" },
   { to: "/provider/my-jobs",        icon: FaBriefcase, label: "My Jobs" },
+  { to: "/provider/messages",       icon: FaComments,  label: "Messages" },  // ← ADD THIS
   { to: "/provider/earnings",       icon: FaWallet,    label: "Earnings" },
   { to: "/provider/profile",        icon: FaUser,      label: "My Profile" },
   { to: "/provider/edit-profile",   icon: FaEdit,      label: "Edit Profile" },

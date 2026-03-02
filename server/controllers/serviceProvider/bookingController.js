@@ -9,6 +9,8 @@ import { errorResponse, successResponse } from "../../utills/response.js";
 const generateOTP = () => Math.floor(1000 + Math.random() * 9000).toString();
 
 /* ---------------- GET AVAILABLE BOOKINGS ---------------- */
+// controllers/provider/bookingController.js
+
 export const getAvailableBookings = async (req, res) => {
   try {
     const provider = await ServiceProvider.findOne({ userId: req.user._id });
@@ -21,9 +23,9 @@ export const getAvailableBookings = async (req, res) => {
       return errorResponse(res, "Your profile is not approved yet", 403);
     }
 
-    // Get bookings that are posted (no category filter since we removed categories)
+    // ✅ FIX: Include BOTH "posted" AND "offers_received" statuses
     const bookings = await Booking.find({
-      status: "posted",
+      status: { $in: ["posted", "offers_received"] },  // ← FIXED!
     })
       .populate("resident", "name")
       .populate("category", "name")
@@ -51,7 +53,6 @@ export const getAvailableBookings = async (req, res) => {
     return errorResponse(res, "Failed to fetch bookings", 500, err.message);
   }
 };
-
 /* ---------------- SEND / UPDATE OFFER ---------------- */
 export const sendOrUpdateOffer = async (req, res) => {
   try {
@@ -68,7 +69,7 @@ export const sendOrUpdateOffer = async (req, res) => {
       return errorResponse(res, "Booking not found", 404);
     }
 
-    if (booking.status !== "posted") {
+    if (booking.status !== "posted" && booking.status !== "offers_received") {
       return errorResponse(res, "Booking is not accepting offers", 400);
     }
 

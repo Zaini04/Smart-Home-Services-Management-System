@@ -43,37 +43,46 @@ const steps = [
 
 const statusMeta = {
   inspection_pending: {
-    step: 1, label: "Inspection Pending",
+    step: 1,
+    label: "Inspection Pending",
     color: "bg-yellow-100 text-yellow-700",
     message: "Resident needs to approve inspection. Ask them to approve.",
   },
   inspection_scheduled: {
-    step: 2, label: "Inspection Scheduled",
+    step: 2,
+    label: "Inspection Scheduled",
     color: "bg-orange-100 text-orange-700",
-    message: "Inspection approved! Verify start OTP, then complete inspection and send final price.",
+    message:
+      "Inspection approved! Verify start OTP, then complete inspection and send final price.",
   },
   awaiting_price_approval: {
-    step: 3, label: "Awaiting Price Approval",
+    step: 3,
+    label: "Awaiting Price Approval",
     color: "bg-amber-100 text-amber-700",
     message: "Final price sent. Waiting for resident to approve.",
   },
   price_approved: {
-    step: 4, label: "Price Approved",
+    step: 4,
+    label: "Price Approved",
     color: "bg-teal-100 text-teal-700",
     message: "Price approved by resident! Verify start OTP to begin work.",
   },
   work_in_progress: {
-    step: 5, label: "Work In Progress",
+    step: 5,
+    label: "Work In Progress",
     color: "bg-indigo-100 text-indigo-700",
-    message: "Complete the work, then ask resident to confirm payment with complete OTP.",
+    message:
+      "Complete the work, then ask resident to confirm payment with complete OTP.",
   },
   completed: {
-    step: 6, label: "Completed",
+    step: 6,
+    label: "Completed",
     color: "bg-green-100 text-green-700",
     message: "Job completed! Payment received.",
   },
   cancelled: {
-    step: 0, label: "Cancelled",
+    step: 0,
+    label: "Cancelled",
     color: "bg-red-100 text-red-700",
     message: "This booking was cancelled.",
   },
@@ -109,8 +118,8 @@ function ProgressBar({ currentStep, cancelled }) {
                   done
                     ? "bg-blue-500 border-blue-500"
                     : active
-                    ? "bg-white border-blue-500 shadow-md shadow-blue-200"
-                    : "bg-white border-gray-300"
+                      ? "bg-white border-blue-500 shadow-md shadow-blue-200"
+                      : "bg-white border-gray-300"
                 }`}
               >
                 {done ? (
@@ -127,7 +136,11 @@ function ProgressBar({ currentStep, cancelled }) {
               </div>
               <span
                 className={`text-xs mt-1 font-medium ${
-                  active ? "text-blue-600" : done ? "text-gray-600" : "text-gray-400"
+                  active
+                    ? "text-blue-600"
+                    : done
+                      ? "text-gray-600"
+                      : "text-gray-400"
                 }`}
               >
                 {s.label}
@@ -199,8 +212,7 @@ function InspectionPanel({ onSubmit, loading }) {
   const [materialDescription, setMaterialDescription] = useState("");
   const [error, setError] = useState("");
 
-  const total =
-    (Number(laborCost) || 0) + (Number(materialCost) || 0);
+  const total = (Number(laborCost) || 0) + (Number(materialCost) || 0);
   const commission = Math.round((Number(laborCost) || 0) * 0.15);
   const earning = total - commission;
 
@@ -297,7 +309,9 @@ function InspectionPanel({ onSubmit, loading }) {
           )}
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Platform Fee (15%)</span>
-            <span className="text-red-600">- Rs. {commission.toLocaleString()}</span>
+            <span className="text-red-600">
+              - Rs. {commission.toLocaleString()}
+            </span>
           </div>
           <div className="border-t pt-1.5 flex justify-between font-bold">
             <span>Total to Resident</span>
@@ -408,7 +422,9 @@ function SendPricePanel({ onSubmit, loading }) {
         <div className="bg-white rounded-xl p-4 border border-purple-200 mb-4 space-y-1.5">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Platform Fee (15% of labor)</span>
-            <span className="text-red-600">- Rs. {commission.toLocaleString()}</span>
+            <span className="text-red-600">
+              - Rs. {commission.toLocaleString()}
+            </span>
           </div>
           <div className="border-t pt-1.5 flex justify-between font-bold text-purple-700">
             <span>Total (Resident pays)</span>
@@ -502,11 +518,7 @@ function CompleteWorkPanel({ booking, onComplete, loading }) {
         disabled={loading}
         className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60"
       >
-        {loading ? (
-          <FaSpinner className="animate-spin" />
-        ) : (
-          <FaCheckCircle />
-        )}
+        {loading ? <FaSpinner className="animate-spin" /> : <FaCheckCircle />}
         Mark as Work Completed
       </button>
     </div>
@@ -549,7 +561,9 @@ function CompletedPanel({ booking }) {
         )}
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Platform Fee</span>
-          <span className="text-red-600">- Rs. {commission.toLocaleString()}</span>
+          <span className="text-red-600">
+            - Rs. {commission.toLocaleString()}
+          </span>
         </div>
         <div className="border-t pt-2 flex justify-between font-bold text-green-700">
           <span>Your Earning</span>
@@ -576,7 +590,10 @@ export default function JobDetails() {
   const [alertMsg, setAlertMsg] = useState(null);
 
   useEffect(() => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     fetchJob();
   }, [bookingId, user]);
 
@@ -616,7 +633,7 @@ export default function JobDetails() {
       const res = await completeInspection(bookingId, data);
       showAlert(
         "success",
-        `Price sent! Your earning: Rs. ${res.data.data.preview.yourEarning.toLocaleString()}`
+        `Price sent! Your earning: Rs. ${res.data.data.preview.yourEarning.toLocaleString()}`,
       );
       fetchJob();
     } catch (err) {
@@ -632,7 +649,7 @@ export default function JobDetails() {
       const res = await sendFinalPrice(bookingId, data);
       showAlert(
         "success",
-        `Price sent to resident! Your earning: Rs. ${res.data.data.preview.yourEarning.toLocaleString()}`
+        `Price sent to resident! Your earning: Rs. ${res.data.data.preview.yourEarning.toLocaleString()}`,
       );
       fetchJob();
     } catch (err) {
@@ -648,7 +665,7 @@ export default function JobDetails() {
       const res = await startWork(bookingId);
       showAlert(
         "success",
-        `Work started! Complete OTP: ${res.data.data.completeOTP} — Show to resident when done.`
+        `Work started! Complete OTP: ${res.data.data.completeOTP} — Show to resident when done.`,
       );
       fetchJob();
     } catch (err) {
@@ -664,7 +681,7 @@ export default function JobDetails() {
       await completeWork(bookingId);
       showAlert(
         "success",
-        "Work marked complete! Ask resident to confirm payment with the OTP."
+        "Work marked complete! Ask resident to confirm payment with the OTP.",
       );
       fetchJob();
     } catch (err) {
@@ -724,7 +741,6 @@ export default function JobDetails() {
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-8 px-4">
         <div className="max-w-4xl mx-auto">
-
           {/* Alert */}
           {alertMsg && (
             <div
@@ -773,10 +789,8 @@ export default function JobDetails() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
-
             {/* Main Actions */}
             <div className="lg:col-span-2 space-y-6">
-
               {/* Job Info */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -817,13 +831,12 @@ export default function JobDetails() {
               {/* ── ACTION PANELS ── */}
 
               {/* inspection_scheduled: Verify OTP first */}
-              {booking.status === "inspection_scheduled" &&
-                !otpVerified && (
-                  <VerifyOTPPanel
-                    onVerify={handleVerifyOTP}
-                    loading={actionLoading}
-                  />
-                )}
+              {booking.status === "inspection_scheduled" && !otpVerified && (
+                <VerifyOTPPanel
+                  onVerify={handleVerifyOTP}
+                  loading={actionLoading}
+                />
+              )}
 
               {/* inspection_scheduled: After OTP verified, complete inspection */}
               {booking.status === "inspection_scheduled" &&
@@ -891,9 +904,8 @@ export default function JobDetails() {
                     Waiting for Resident Approval
                   </h3>
                   <p className="text-yellow-700 text-sm">
-                    Resident needs to approve the inspection request.
-                    Inspection fee: Rs.{" "}
-                    {booking.inspection?.fee?.toLocaleString() || 0}
+                    Resident needs to approve the inspection request. Inspection
+                    fee: Rs. {booking.inspection?.fee?.toLocaleString() || 0}
                   </p>
                 </div>
               )}
@@ -933,7 +945,6 @@ export default function JobDetails() {
 
             {/* Sidebar */}
             <div className="space-y-4">
-
               {/* Resident Card */}
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                 <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2 text-sm">
@@ -962,6 +973,17 @@ export default function JobDetails() {
                     Call Resident
                   </a>
                 )}
+
+                {booking.resident && (
+                  <button
+                    onClick={() => navigate(`/provider/chat/${booking._id}`)}
+                    className="w-full mt-3 py-2.5 bg-blue-600 text-white rounded-xl
+               font-medium flex items-center justify-center gap-2
+               hover:bg-blue-700 transition-colors"
+                  >
+                    💬 Message Resident
+                  </button>
+                )}
               </div>
 
               {/* Job Summary Card */}
@@ -972,7 +994,9 @@ export default function JobDetails() {
                 <div className="space-y-2.5 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Status</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${meta.color}`}>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${meta.color}`}
+                    >
                       {meta.label}
                     </span>
                   </div>
@@ -1008,7 +1032,7 @@ export default function JobDetails() {
                         <span className="text-red-600 font-medium">
                           - Rs.{" "}
                           {Math.round(
-                            booking.finalPrice.laborCost * 0.15
+                            booking.finalPrice.laborCost * 0.15,
                           ).toLocaleString()}
                         </span>
                       </div>

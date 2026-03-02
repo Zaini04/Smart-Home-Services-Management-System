@@ -1,11 +1,13 @@
+// pages/LandingPage.jsx
+
 import React from "react";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Features from "../components/Features";
 import Services from "../components/Services";
 import Footer from "../components/Footer";
-import { FaArrowUp } from "react-icons/fa";
 import HowItWorks from "../components/HowItWorks";
+import { FaArrowUp } from "react-icons/fa";
 
 /* ------------------ SCROLL TO TOP BUTTON ------------------ */
 
@@ -36,7 +38,7 @@ const ScrollToTopButton = () => {
         bg-gradient-to-r from-blue-600 to-indigo-600 text-white
         shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40
         transition-all duration-300 transform
-        ${isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"}
+        ${isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0 pointer-events-none"}
       `}
     >
       <FaArrowUp className="w-5 h-5" />
@@ -55,25 +57,20 @@ export default function LandingPage() {
         {/* Hero Section */}
         <Hero />
 
-        {/* Features Section */}
-        <section id="features">
+        {/* Features Section - ID for scroll navigation */}
+        <section id="features" className="scroll-mt-20">
           <Features />
         </section>
 
-        {/* Services Section */}
-        <section id="services">
+        {/* Services Section - ID for scroll navigation */}
+        <section id="services" className="scroll-mt-20">
           <Services />
         </section>
 
-        {/* How It Works Section */}
-        <section id="how">
+        {/* How It Works Section - ID for scroll navigation */}
+        <section id="how" className="scroll-mt-20">
           <HowItWorks />
         </section>
-
-        {/* Testimonials Section (Optional - can add later) */}
-        {/* <section id="testimonials">
-          <Testimonials />
-        </section> */}
       </main>
 
       <Footer />
