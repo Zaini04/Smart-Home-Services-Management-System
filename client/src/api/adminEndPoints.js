@@ -85,3 +85,38 @@ export const deleteSubCategory = (subCategoryId) => {
 export const getCategoriesWithSkills = ()=>{
     return axiosInstance.get('/api/admin/getCategoriesWithSkills')
 }
+
+
+// ... existing code stays ...
+
+// ── PLATFORM EARNINGS ──
+
+export const getPlatformDashboard = () => {
+  return axiosInstance.get("/api/admin/platform/dashboard");
+};
+
+export const getPlatformWallet = () => {
+  return axiosInstance.get("/api/admin/platform/wallet");
+};
+
+export const getPlatformTransactions = (params) => {
+  return axiosInstance.get("/api/admin/platform/transactions", { params });
+};
+
+export const adminWithdraw = (data) => {
+  return axiosInstance.post("/api/admin/platform/withdraw", data);
+};
+
+export const getEarningsReport = (params) => {
+  return axiosInstance.get("/api/admin/platform/earnings-report", { params });
+};
+
+export const getTopProviders = (params) => {
+  return axiosInstance.get("/api/admin/platform/top-providers", { params });
+};
+
+export const viewProviderWallet = (providerId) => {
+  return axiosInstance.get(
+    `/api/admin/platform/provider-wallet/${providerId}`
+  );
+};

@@ -202,6 +202,14 @@ export default function AdminDashboard() {
       bgColor: "bg-blue-100",
     },
     {
+  icon: FaMoneyBillWave,
+  title: "Platform Earnings",
+  description: "View commission & revenue",
+  linkTo: "/admin/platform-earnings",
+  color: "text-emerald-600",
+  bgColor: "bg-emerald-100",
+},
+    {
       icon: FaTags,
       title: "Categories",
       description: "Manage service categories",

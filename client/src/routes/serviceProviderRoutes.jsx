@@ -13,6 +13,7 @@ import CompleteProfile from "../pages/serviceProvider/CompleteProfile";
 import KYCStatus from "../pages/serviceProvider/KYCStatus";
 import Chat from "../pages/chat/chat";
 import ChatInbox from "../pages/chat/ChatInbox";
+import ProviderWallet from "../pages/serviceProvider/ProviderWallet";
 
 
 export default function ServiceProviderRoutes() {
@@ -31,6 +32,7 @@ export default function ServiceProviderRoutes() {
     <Route path="my-jobs"        element={<MyJobs />} />
     <Route path="job/:bookingId" element={<JobDetails />} />
     <Route path="earnings"       element={<ProviderEarnings />} />
+            <Route path="wallet" element={<ProviderWallet />} />      
     {/* <Route path="profile"        element={<ProviderProfile />} /> */}
     <Route path="edit-profile"   element={<EditProfile />} />
   </Route>

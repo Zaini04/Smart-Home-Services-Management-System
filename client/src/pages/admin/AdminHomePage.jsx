@@ -53,6 +53,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       ],
     },
     {
+  title: "Platform",
+  items: [
+    { icon: FaMoneyBillWave, label: "Platform Earnings", path: "/admin/platform-earnings" },
+    { icon: FaClipboardCheck, label: "Transactions", path: "/admin/platform-transactions" },
+  ],
+},
+    {
       title: "Workers",
       items: [
         { icon: FaUserClock, label: "Pending Workers", path: "/admin/pending-workers" },

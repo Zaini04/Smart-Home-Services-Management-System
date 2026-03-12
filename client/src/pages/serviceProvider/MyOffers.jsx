@@ -16,6 +16,7 @@ import {
   FaExclamationTriangle,
 } from "react-icons/fa";
 import { getMyOffers } from "../../api/serviceProviderEndPoints";
+import { calculateCommission } from "../../utils/commissionCalc";
 
 const offerStatusConfig = {
   pending: {
@@ -142,10 +143,9 @@ export default function MyOffers() {
                   offerStatusConfig[offer.status] || offerStatusConfig.pending;
                 const StatusIcon = statusConf.icon;
                 const booking = offer.booking;
-                const commission = Math.round(
-                  (offer.laborEstimate || 0) * 0.15
-                );
-                const earning = (offer.laborEstimate || 0) - commission;
+                const comm = calculateCommission(offer.laborEstimate || 0);
+const commission = comm.finalCommission;
+const earning = comm.providerKeeps;
 
                 return (
                   <div

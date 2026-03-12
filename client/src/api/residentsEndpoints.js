@@ -1,17 +1,16 @@
 import axiosInstance from "./apiinstance"
 
-export const getWorkers = ()=>{
-    return axiosInstance.get('/api/residents/getWorkers')
+export const getWorkers = () => {
+  return axiosInstance.get('/api/residents/getWorkers')
 }
-export const getServices = ()=>{
-    return axiosInstance.get('/api/residents/getServices')
+export const getServices = () => {
+  return axiosInstance.get('/api/residents/getServices')
 }
-export const getCategories = ()=>{
-    return axiosInstance.get('/api/residents/getCategories')
+export const getCategories = () => {
+  return axiosInstance.get('/api/residents/getCategories')
 }
 
 //  booking routes 
-
 
 export const createBooking = (formData) => {
   return axiosInstance.post("/api/residents/create-booking", formData);
@@ -33,8 +32,9 @@ export const acceptOffer = (offerId) => {
   return axiosInstance.post(`/api/residents/bookings/accept-offer/${offerId}`);
 };
 
-export const approveInspection = (bookingId) => {
-  return axiosInstance.post(`/api/residents/bookings/${bookingId}/approve-inspection`);
+// Respond to inspection request: { action: "approve"|"counter"|"reject", counterFee?, counterMessage? }
+export const respondToInspection = (bookingId, data) => {
+  return axiosInstance.post(`/api/residents/bookings/${bookingId}/respond-inspection`, data);
 };
 
 export const approveFinalPrice = (bookingId) => {
@@ -55,4 +55,17 @@ export const cancelBooking = (bookingId, data) => {
 
 export const submitReview = (bookingId, data) => {
   return axiosInstance.post(`/api/residents/bookings/${bookingId}/review`, data);
+};
+
+export const approvePriceRevision = (bookingId, revisionId, data) => {
+  return axiosInstance.post(
+    `/api/residents/bookings/${bookingId}/approve-revision/${revisionId}`,
+    data
+  );
+};
+
+export const approveScheduleUpdate = (bookingId) => {
+  return axiosInstance.post(
+    `/api/residents/bookings/${bookingId}/approve-schedule`
+  );
 };

@@ -57,7 +57,7 @@ axiosInstance.interceptors.response.use(
           originalRequest.headers[
             "Authorization"
           ] = `Bearer ${data.accessToken}`;
-          return axiosIntance(originalRequest);
+          return axiosInstance(originalRequest);
         }
       } catch (err) {
         console.error("Refresh Failed", err);

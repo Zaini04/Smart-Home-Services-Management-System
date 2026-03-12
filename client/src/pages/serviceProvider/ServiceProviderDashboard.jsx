@@ -194,9 +194,14 @@ export default function ServiceProviderDashboard() {
               {loading ? (
                 <div className="h-6 w-28 bg-white/20 rounded animate-pulse mt-0.5" />
               ) : (
-                <p className="font-bold text-xl">
-                  Rs. {(provider.walletBalance || 0).toLocaleString()}
-                </p>
+               <p className="font-bold text-xl">
+  Rs. {(data?.wallet?.balance || 0).toLocaleString()}
+</p>
+// {data?.wallet?.lockedAmount > 0 && (
+//   <p className="text-blue-200 text-xs">
+//     Locked: Rs. {data.wallet.lockedAmount.toLocaleString()}
+//   </p>
+// )}
               )}
             </div>
           </div>

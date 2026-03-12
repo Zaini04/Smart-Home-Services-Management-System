@@ -10,6 +10,7 @@ import {
   FaBriefcase,
 } from "react-icons/fa";
 import { getProviderDashboard } from "../../api/serviceProviderEndPoints";
+import { COMMISSION_TIERS } from "../../utils/commissionCalc";
 
 export default function Earnings() {
   const [data, setData] = useState(null);
@@ -120,7 +121,7 @@ export default function Earnings() {
       </div>
 
       {/* Commission Structure */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      {/* <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
           <FaShieldAlt className="text-blue-600" />
           Commission Structure
@@ -162,7 +163,21 @@ export default function Earnings() {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
+      {COMMISSION_TIERS.map((tier) => (
+  <div key={tier.range} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+    <div>
+      <p className="font-semibold text-gray-800 text-sm">Labor Rs. {tier.range}</p>
+      <p className="text-xs text-gray-400">Commission rate for this range</p>
+    </div>
+    <span className="font-bold text-sm text-blue-600">{tier.rate}</span>
+  </div>
+))}
+// Add below the tiers:
+<div className="p-4 bg-green-50 rounded-xl border border-green-200">
+  <p className="font-semibold text-green-800 text-sm">✨ New Provider Bonus</p>
+  <p className="text-xs text-green-600">First 5 completed jobs get 50% off commission!</p>
+</div>
 
       {/* Example */}
       <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-5">

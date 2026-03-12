@@ -9,6 +9,8 @@ import GetPendingWorkers from "../pages/admin/GetPendingWorkers";
 import UpdateKyc from "../pages/admin/UpdateKyc";
 import AllServices from "../pages/admin/AllSrervices";
 import AllWorkers from "../pages/admin/AllWorkers";
+import PlatformEarnings from "../pages/admin/PlatformEarnings";
+import PlatformTransactions from "../pages/admin/PlatformTransactions";
 
 
 export default function AdminRoutes() {
@@ -31,6 +33,8 @@ export default function AdminRoutes() {
         <Route path="create-subcategory" element={<CreateSubCategory />} />
         <Route path="pending-workers" element={<GetPendingWorkers />} />
         <Route path="update-kyc/:providerId" element={<UpdateKyc />} />
+        <Route path="platform-earnings" element={<PlatformEarnings />} />          {/* ← NEW */}
+        <Route path="platform-transactions" element={<PlatformTransactions />} />  {/* ← NEW */}
       </Route>
     </Routes>
   );

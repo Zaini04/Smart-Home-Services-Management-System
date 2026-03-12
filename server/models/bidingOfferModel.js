@@ -24,16 +24,6 @@ const offerSchema = new mongoose.Schema(
       default: "",
     },
 
-    inspectionRequired: {
-      type: Boolean,
-      default: false,
-    },
-
-    proposedInspectionFee: {
-      type: Number,
-      default: 0,
-    },
-
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected"],
@@ -51,4 +41,4 @@ offerSchema.index(
 
 const Offer = mongoose.model("Offer", offerSchema);
 
-export default Offer 
+export default Offer;
