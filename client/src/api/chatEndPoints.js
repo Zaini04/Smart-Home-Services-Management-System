@@ -15,3 +15,7 @@ export const getUnreadCount = () => {
 export const getMyConversations = () => {
   return axiosInstance.get("/api/chat/conversations");
 };
+
+export const uploadChatFile = (formData) => {
+  return axiosInstance.post("/api/chat/upload", formData);
+};

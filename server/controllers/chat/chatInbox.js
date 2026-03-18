@@ -1,5 +1,3 @@
-// controllers/chat/chatController.js
-
 import ChatMessage from "../../models/chatModel.js";
 import Booking from "../../models/bookingModel.js";
 import ServiceProvider from "../../models/service_providerModel.js";
@@ -8,15 +6,13 @@ import ServiceProvider from "../../models/service_providerModel.js";
 export const getMyConversations = async (req, res) => {
   try {
     const userId = req.user._id;
-    
-    // Check if user is a provider
     const provider = await ServiceProvider.findOne({ userId });
     
-    // Find all bookings where user is involved (as resident or provider)
-    // and chat is allowed (after offer accepted)
+    // 🌟 FIX: Updated to match your EXACT bookingModel statuses
     const chatAllowedStatuses = [
-      "inspection_pending",
-      "inspection_scheduled",
+      "provider_selected",
+      "inspection_requested",
+      "inspection_approved",
       "awaiting_price_approval",
       "price_approved",
       "work_in_progress",
@@ -26,16 +22,15 @@ export const getMyConversations = async (req, res) => {
     let bookings;
     
     if (provider) {
-      // User is a provider - get jobs assigned to them
       bookings = await Booking.find({
         selectedProvider: provider._id,
         status: { $in: chatAllowedStatuses },
       })
-        .populate("resident", "name email")
+        // 🌟 FIX: Use full_name instead of name
+        .populate("resident", "full_name email")
         .populate("category", "name")
         .sort({ updatedAt: -1 });
     } else {
-      // User is a resident - get their bookings with assigned providers
       bookings = await Booking.find({
         resident: userId,
         selectedProvider: { $ne: null },
@@ -44,57 +39,66 @@ export const getMyConversations = async (req, res) => {
         .populate({
           path: "selectedProvider",
           select: "profileImage userId",
-          populate: { path: "userId", select: "name" },
+          // 🌟 FIX: Use full_name instead of name
+          populate: { path: "userId", select: "full_name" }, 
         })
         .populate("category", "name")
         .sort({ updatedAt: -1 });
     }
 
-    // Get last message and unread count for each conversation
     const conversations = await Promise.all(
       bookings.map(async (booking) => {
-        // Get last message
         const lastMessage = await ChatMessage.findOne({ bookingId: booking._id })
           .sort({ createdAt: -1 })
           .limit(1);
 
-        // Get unread count (messages sent by other person, not read)
         const unreadCount = await ChatMessage.countDocuments({
           bookingId: booking._id,
           senderId: { $ne: userId },
           isRead: false,
         });
 
-        // Determine the "other person" info
+        // 🌟 FIX: Format Name nicely: "John Doe (Electrical)"
         let otherPerson;
+        const categoryName = booking.category?.name || "Service";
+
         if (provider) {
-          // I'm the provider, other person is resident
+          const resName = booking.resident?.full_name || "Resident";
           otherPerson = {
-            name: booking.resident?.name || "Resident",
-            image: null, // Residents don't have profile images in your model
+            name: `${resName} (${categoryName})`,
+            image: null, 
             role: "resident",
           };
         } else {
-          // I'm the resident, other person is provider
+          const provName = booking.selectedProvider?.userId?.full_name || "Worker";
           otherPerson = {
-            name: booking.selectedProvider?.userId?.name || "Worker",
+            name: `${provName} (${categoryName})`,
             image: booking.selectedProvider?.profileImage || null,
             role: "provider",
           };
         }
 
+        // Determine correct text for last message preview
+        let lastMsgText = "";
+        if (lastMessage) {
+            if (lastMessage.messageType === "image") lastMsgText = "📷 Image";
+            else if (lastMessage.messageType === "video") lastMsgText = "🎥 Video";
+            else lastMsgText = lastMessage.message || "Started conversation";
+        }
+
         return {
           bookingId: booking._id,
           bookingDisplayId: booking.bookingId,
-          category: booking.category?.name || "Service",
+          category: categoryName,
           description: booking.description?.slice(0, 50) + "...",
           status: booking.status,
           otherPerson,
           lastMessage: lastMessage
             ? {
-                text: lastMessage.message || (lastMessage.messageType === "image" ? "📷 Image" : ""),
+                text: lastMsgText,
                 time: lastMessage.createdAt,
                 isFromMe: lastMessage.senderId.toString() === userId.toString(),
+                messageType: lastMessage.messageType
               }
             : null,
           unreadCount,
@@ -103,7 +107,6 @@ export const getMyConversations = async (req, res) => {
       })
     );
 
-    // Sort by last message time (most recent first)
     conversations.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
     return res.status(200).json({ success: true, data: conversations });

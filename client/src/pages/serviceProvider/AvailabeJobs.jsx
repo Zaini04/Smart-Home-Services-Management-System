@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FaSearch, FaMapMarkerAlt, FaClock, FaUser, FaSpinner,
   FaClipboardList, FaCheckCircle, FaTimesCircle, FaMoneyBillWave,
-  FaImages, FaArrowRight, FaExclamationTriangle, FaBell, FaWallet,
+  FaExclamationTriangle, FaBell, FaWallet,
 } from "react-icons/fa";
 import { getAvailableBookings, sendOrUpdateOffer } from "../../api/serviceProviderEndPoints";
 import { calculateCommission, MIN_WALLET_BALANCE } from "../../utils/commissionCalc";
+import { io } from "socket.io-client";
 
-/* ── Offer Modal (Updated with dynamic commission) ── */
+/* ── Offer Modal ── */
 function OfferModal({ booking, onClose, onSubmit, submitting, walletBalance, canSendOffers }) {
   const [laborEstimate, setLaborEstimate] = useState(
     booking.myOffer?.laborEstimate?.toString() || ""
@@ -17,7 +19,6 @@ function OfferModal({ booking, onClose, onSubmit, submitting, walletBalance, can
   const [message, setMessage] = useState(booking.myOffer?.message || "");
   const [error, setError] = useState("");
 
-  // Dynamic commission preview
   const labor = Number(laborEstimate) || 0;
   const comm = labor > 0 ? calculateCommission(labor, 0) : null;
 
@@ -54,7 +55,6 @@ function OfferModal({ booking, onClose, onSubmit, submitting, walletBalance, can
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {/* Wallet Warning */}
           {!canSendOffers && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
               <FaWallet className="text-red-500 mt-0.5 flex-shrink-0" />
@@ -73,7 +73,6 @@ function OfferModal({ booking, onClose, onSubmit, submitting, walletBalance, can
             </div>
           )}
 
-          {/* Labor Estimate */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Labor Estimate (Rs.) <span className="text-red-500">*</span>
@@ -87,7 +86,6 @@ function OfferModal({ booking, onClose, onSubmit, submitting, walletBalance, can
             </div>
           </div>
 
-          {/* Dynamic Commission Preview */}
           {comm && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-3 space-y-1">
               <div className="flex justify-between text-sm">
@@ -105,15 +103,9 @@ function OfferModal({ booking, onClose, onSubmit, submitting, walletBalance, can
                 <span className="text-green-700">Your Earning</span>
                 <span className="text-green-700">Rs. {comm.providerKeeps.toLocaleString()}</span>
               </div>
-              {comm.isNewProvider && (
-                <p className="text-xs text-green-600 text-center mt-1">
-                  ✨ New provider discount applied!
-                </p>
-              )}
             </div>
           )}
 
-          {/* Message */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Message <span className="text-gray-400 font-normal">(optional)</span>
@@ -123,8 +115,6 @@ function OfferModal({ booking, onClose, onSubmit, submitting, walletBalance, can
               className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none resize-none text-sm"
             />
           </div>
-
-
 
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
@@ -145,62 +135,93 @@ function OfferModal({ booking, onClose, onSubmit, submitting, walletBalance, can
   );
 }
 
-/* ── Main ── */
+/* ── Main Component ── */
 export default function AvailableJobs() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedJob, setSelectedJob] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
   const [alertMsg, setAlertMsg] = useState(null);
-  const [walletWarning, setWalletWarning] = useState(null);
-  const [canSendOffers, setCanSendOffers] = useState(true);
-  const [walletBalance, setWalletBalance] = useState(0);
 
-  useEffect(() => {
-    if (!user) { navigate("/login"); return; }
-    fetchJobs();
-  }, [user]);
 
-  const fetchJobs = async () => {
-    try {
-      setLoading(true);
+   useEffect(() => {
+    // Get the token. Make sure "token" matches what you saved in localStorage during login!
+    // If your app stores it differently (e.g., in context or cookies), let me know.
+    const token = localStorage.getItem("accessToken"); 
+
+    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
+      auth: { token: token },
+      withCredentials: true, // 🌟 ADD THIS
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err.message);
+    });
+
+    // Listen for the specific event we created on the backend
+    socket.on("new_job_posted", () => {
+      // Show a nice popup notification (make sure you use showAlert, not standard alert)
+      alert("success", "🔔 A new job was just posted in your area!");
+      
+      // Tell React Query to silently re-fetch the jobs list right now!
+      queryClient.invalidateQueries(["availableJobs"]);
+    });
+
+    // Cleanup when leaving the page
+    return () => {
+      socket.disconnect();
+    };
+  }, [queryClient]);
+  // React Query: Fetch and Cache Data
+  const { data: fetchResult, isLoading, isError } = useQuery({
+    queryKey: ["availableJobs"],
+    queryFn: async () => {
       const res = await getAvailableBookings();
-      const data = res.data.data;
-      setJobs(data.bookings || data || []);
-      setWalletWarning(data.walletWarning || null);
-      setCanSendOffers(data.canSendOffers !== false);
-      setWalletBalance(data.walletBalance || 0);
-    } catch (err) {
-      console.error(err);
-      if (err.response?.status === 403) {
-        showAlert("error", err.response.data.message || "Profile not approved");
-      }
-    } finally { setLoading(false); }
-  };
+      return res.data.data;
+    },
+    enabled: !!user, // Only fetch if user is logged in
+  });
 
-  const showAlert = (type, text) => {
-    setAlertMsg({ type, text });
-    setTimeout(() => setAlertMsg(null), 4000);
-  };
+  // Extract variables safely from cached data
+  const jobs = fetchResult?.bookings || fetchResult || [];
+  const walletWarning = fetchResult?.walletWarning || null;
+  const canSendOffers = fetchResult?.canSendOffers !== false;
+  const walletBalance = fetchResult?.walletBalance || 0;
 
-  const handleSendOffer = async (data) => {
-    try {
-      setSubmitting(true);
-      const res = await sendOrUpdateOffer(selectedJob._id, data);
+  // React Query: Mutation for submitting offers
+  const offerMutation = useMutation({
+    mutationFn: (data) => sendOrUpdateOffer(selectedJob._id, data),
+    onSuccess: (res) => {
       const commInfo = res.data.data?.commissionPreview;
       const msg = commInfo
         ? `Offer sent! Commission: Rs. ${commInfo.estimatedCommission?.toLocaleString()} (${commInfo.commissionRate})`
         : "Offer sent successfully!";
       showAlert("success", msg);
       setSelectedJob(null);
-      fetchJobs();
-    } catch (err) {
+      // Trigger a silent background refresh of the jobs list
+      queryClient.invalidateQueries(["availableJobs"]);
+    },
+    onError: (err) => {
       showAlert("error", err.response?.data?.message || "Failed to send offer");
-    } finally { setSubmitting(false); }
+    },
+  });
+
+  if (!user) {
+    navigate("/login");
+    return null;
+  }
+
+  const showAlert = (type, text) => {
+    setAlertMsg({ type, text });
+    setTimeout(() => setAlertMsg(null), 4000);
+  };
+
+  const handleSendOffer = (data) => {
+    offerMutation.mutate(data);
   };
 
   const filtered = jobs.filter((j) =>
@@ -224,7 +245,6 @@ export default function AvailableJobs() {
             </div>
           )}
 
-          {/* Wallet Warning Banner */}
           {walletWarning && (
             <div className="mb-4 bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex items-start gap-3">
               <FaWallet className="text-amber-600 mt-0.5 flex-shrink-0" />
@@ -242,7 +262,7 @@ export default function AvailableJobs() {
             <div>
               <h1 className="text-2xl font-bold text-gray-800">Available Jobs</h1>
               <p className="text-gray-500 text-sm">
-                {loading ? "Loading..." : `${jobs.length} jobs available`}
+                {isLoading ? "Loading..." : `${jobs.length} jobs available`}
               </p>
             </div>
             <Link to="/provider/my-offers"
@@ -260,9 +280,13 @@ export default function AvailableJobs() {
             />
           </div>
 
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center py-20">
               <FaSpinner className="w-10 h-10 text-blue-500 animate-spin" />
+            </div>
+          ) : isError ? (
+            <div className="bg-red-50 p-6 text-center rounded-2xl text-red-600">
+              Failed to load jobs. Please try refreshing the page.
             </div>
           ) : filtered.length === 0 ? (
             <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
@@ -333,9 +357,13 @@ export default function AvailableJobs() {
       </div>
 
       {selectedJob && (
-        <OfferModal booking={selectedJob} onClose={() => setSelectedJob(null)}
-          onSubmit={handleSendOffer} submitting={submitting}
-          walletBalance={walletBalance} canSendOffers={canSendOffers}
+        <OfferModal 
+          booking={selectedJob} 
+          onClose={() => setSelectedJob(null)}
+          onSubmit={handleSendOffer} 
+          submitting={offerMutation.isPending} 
+          walletBalance={walletBalance} 
+          canSendOffers={canSendOffers}
         />
       )}
     </>

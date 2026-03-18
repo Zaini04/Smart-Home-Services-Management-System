@@ -22,12 +22,12 @@ const chatMessageSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  image: {
+  fileUrl: {
     type: String,          // file path if they send a photo
   },
   messageType: {
     type: String,
-    enum: ["text", "image"],
+    enum: ["text", "image","video"],
     default: "text",
   },
   isRead: {

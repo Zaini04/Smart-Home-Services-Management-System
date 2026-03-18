@@ -20,7 +20,7 @@ const approvedNavItems = [
   { to: "/provider/available-jobs", icon: FaSearch,    label: "Available Jobs", badge: "New" },
   { to: "/provider/my-offers",      icon: FaBell,      label: "My Offers" },
   { to: "/provider/my-jobs",        icon: FaBriefcase, label: "My Jobs" },
-  { to: "/provider/messages",       icon: FaComments,  label: "Messages" },  // ← ADD THIS
+  { to: "/provider/chat",       icon: FaComments,  label: "Messages" },  // ← ADD THIS
   { to: "/provider/wallet",         icon: FaWallet,    label: "Wallet" },      // ← ADD
   { to: "/provider/earnings",       icon: FaMoneyBillWave,    label: "Earnings" },
   { to: "/provider/profile",        icon: FaUser,      label: "My Profile" },
@@ -106,7 +106,7 @@ function KycGuard({ profileCompleted, kycStatus }) {
 ───────────────────────────────────────── */
 function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
   const navigate   = useNavigate();
-  const { logoutUser } = useAuth();
+  const {user, logoutUser } = useAuth();
 
   const navItems = getNavItems(profileCompleted, kycStatus);
   
@@ -324,7 +324,7 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
 function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatus }) {
   const location   = useLocation();
   const navigate   = useNavigate();
-  const { logout } = useAuth();
+  const { user,logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const navItems = getNavItems(profileCompleted, kycStatus);
@@ -438,7 +438,7 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
             {/* Name (not "Provider") */}
             <div className="hidden sm:block text-left max-w-28">
               <p className="font-semibold text-gray-800 text-sm leading-none truncate">
-                {provider?.name || "Loading..."}
+                {user?.full_name || "Loading..."}
               </p>
               <p className={`text-xs mt-0.5 leading-none ${
                 kycStatus === "approved" ? "text-green-500"
@@ -599,7 +599,6 @@ export default function ProviderLayout() {
       const data = res.data.data;
       console.log("Provider dashboard data:", data);
       setProvider(data?.provider || null);
-
       const status = data?.provider?.kycStatus || "pending";
       setKycStatus(status);
       setProfileCompleted(true);

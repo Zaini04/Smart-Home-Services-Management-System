@@ -115,7 +115,7 @@ const UserDropdown = ({ user, onLogout, onClose, unreadMessages }) => {
     { 
       icon: FaComments, 
       label: "Messages", 
-      link: "/messages",
+      link: "/chat",
       badge: unreadMessages > 0 ? unreadMessages : null,
     },
     { icon: FaCog, label: "Settings", link: "/settings" },
@@ -208,7 +208,7 @@ const MobileMenu = ({
   // Resident menu items for mobile
   const residentMenuItems = [
     { icon: FaClipboardList, label: "My Bookings", link: "/my-bookings" },
-    { icon: FaComments, label: "Messages", link: "/messages", badge: unreadMessages },
+    { icon: FaComments, label: "Messages", link: "/chat", badge: unreadMessages },
     { icon: FaUserCircle, label: "My Profile", link: "/profile" },
     { icon: FaCog, label: "Settings", link: "/settings" },
   ];
@@ -408,7 +408,7 @@ export default function Navbar() {
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, isResident]);
-
+  
   const fetchUnreadCount = async () => {
     try {
       const res = await getUnreadCount();
@@ -466,7 +466,7 @@ export default function Navbar() {
         { label: "Home", path: "/", icon: FaHome },
         { label: "Services", scrollTo: "services", icon: FaTools },
         { label: "My Bookings", path: "/my-bookings", icon: FaCalendarAlt },
-        { label: "Messages", path: "/messages", icon: FaComments, badge: unreadMessages },
+        { label: "Messages", path: "/chat", icon: FaComments, badge: unreadMessages },
       ]
     : [
         { label: "Home", path: "/", icon: FaHome },
@@ -556,7 +556,7 @@ export default function Navbar() {
                 <>
                   {/* Messages Icon (Mobile) */}
                   <Link
-                    to="/messages"
+                    to="/chat"
                     className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors sm:hidden"
                   >
                     <FaComments className="w-5 h-5" />

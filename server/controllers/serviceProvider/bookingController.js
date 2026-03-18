@@ -115,6 +115,7 @@ export const sendOrUpdateOffer = async (req, res) => {
       booking.status = "offers_received";
       await booking.save();
     }
+req.app.get("io")?.emit("data_updated"); 
 
     return successResponse(res, "Offer submitted", {
       offer,
@@ -139,7 +140,7 @@ export const sendOrUpdateOffer = async (req, res) => {
 export const requestInspection = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { fee, message: msg } = req.body;
+    const { fee, message: msg, scheduledDate, scheduledTime } = req.body; // 🌟 added date/time
 
     const provider = await ServiceProvider.findOne({ userId: req.user._id });
     const booking = await Booking.findById(bookingId);
@@ -154,12 +155,14 @@ export const requestInspection = async (req, res) => {
     booking.inspection.requested = true;
     booking.inspection.fee = Number(fee) || 0;
     booking.inspection.message = msg || "";
+    booking.inspection.scheduledDate = scheduledDate ? new Date(scheduledDate) : null; // 🌟 add
+    booking.inspection.scheduledTime = scheduledTime || ""; // 🌟 add
     booking.inspection.requestedAt = new Date();
     booking.inspection.status = "requested";
 
     booking.status = "inspection_requested";
     await booking.save();
-
+req.app.get("io")?.emit("data_updated");
     return successResponse(
       res,
       "Inspection requested. Waiting for resident approval.",
@@ -210,7 +213,7 @@ export const respondToCounterFee = async (req, res) => {
       await booking.save();
       return successResponse(res, "New fee proposed to resident", booking, 200);
     }
-
+req.app.get("io")?.emit("data_updated");
     return errorResponse(res, "Invalid action. Use: accept, re_propose", 400);
   } catch (err) {
     return errorResponse(res, "Failed to respond to counter fee", 500, err.message);
@@ -309,6 +312,9 @@ export const completeInspection = async (req, res) => {
 
     booking.status = "awaiting_price_approval";
     await booking.save();
+
+    req.app.get("io")?.emit("data_updated"); 
+
 
     return successResponse(res, "Inspection done. Price sent to resident.", {
       booking,
@@ -419,6 +425,8 @@ export const sendFinalPrice = async (req, res) => {
     booking.status = "awaiting_price_approval";
     await booking.save();
 
+req.app.get("io")?.emit("data_updated"); 
+
     return successResponse(res, "Price sent to resident", {
       booking,
       commissionInfo: {
@@ -483,6 +491,7 @@ export const updatePriceDuringWork = async (req, res) => {
     });
 
     await booking.save();
+req.app.get("io")?.emit("data_updated"); 
 
     return successResponse(res, "Price revision sent to resident for approval", {
       revision: booking.priceRevisions.at(-1),
@@ -538,6 +547,7 @@ export const updateSchedule = async (req, res) => {
     booking.schedule.sentAt = new Date();
 
     await booking.save();
+req.app.get("io")?.emit("data_updated"); 
 
     return successResponse(res, "Schedule update sent for approval", booking.schedule, 200);
   } catch (err) {
@@ -570,6 +580,7 @@ export const verifyStartOTP = async (req, res) => {
     booking.otp.start.verifiedAt = new Date();
 
     await booking.save();
+    req.app.get("io")?.emit("data_updated");
     return successResponse(res, "OTP verified. You can proceed.", booking, 200);
   } catch (err) {
     return errorResponse(res, "Failed to verify OTP", 500, err.message);
@@ -604,7 +615,7 @@ export const startWork = async (req, res) => {
     booking.otp.complete.code = generateOTP();
 
     await booking.save();
-
+req.app.get("io")?.emit("data_updated");
     return successResponse(res, "Work started!", {
       booking,
       completeOTP: booking.otp.complete.code,
@@ -631,6 +642,7 @@ export const completeWork = async (req, res) => {
     if (booking.status !== "work_in_progress")
       return errorResponse(res, "Work not in progress", 400);
 
+    req.app.get("io")?.emit("data_updated");
     return successResponse(
       res,
       "Ask resident to confirm payment with the Complete OTP",
@@ -710,6 +722,7 @@ export const providerCancelJob = async (req, res) => {
     };
 
     await booking.save();
+    req.app.get("io")?.emit("data_updated");
 
     return successResponse(
       res,

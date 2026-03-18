@@ -49,6 +49,8 @@ const bookingSchema = new mongoose.Schema(
       message: { type: String, default: "" },      // why inspection needed
       requestedAt: { type: Date, default: null },
 
+      scheduledDate: { type: Date, default: null }, 
+      scheduledTime: { type: String, default: "" },
       // Resident response
       status: {
         type: String,

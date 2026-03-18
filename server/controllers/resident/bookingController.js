@@ -38,6 +38,12 @@ export const createBooking = async (req, res) => {
       status: "posted",
     });
 
+      const io = req.app.get("io");
+    if (io) {
+      io.emit("new_job_posted");
+    }
+
+
     return successResponse(res, "Booking posted successfully", booking, 201);
   } catch (err) {
     return errorResponse(res, "Failed to create booking", 500, err.message);
@@ -167,6 +173,12 @@ export const acceptOffer = async (req, res) => {
     booking.otp.start.code = generateOTP();
     await booking.save();
 
+    req.app.get("io")?.emit("data_updated"); 
+
+ req.app.get("io")?.to(offer.provider.toString()).emit("notification", {
+      title: "🎉 Offer Accepted!",
+      message: "A resident just accepted your offer. Check your active jobs!",
+    });
     return successResponse(res, "Offer accepted", booking, 200);
   } catch (err) {
     return errorResponse(res, "Failed to accept offer", 500, err.message);
@@ -218,7 +230,7 @@ export const respondToInspection = async (req, res) => {
       await booking.save();
       return successResponse(res, "Inspection rejected. Provider can send price directly.", booking, 200);
     }
-
+req.app.get("io")?.emit("data_updated");
     return errorResponse(res, "Invalid action. Use: approve, counter, reject", 400);
   } catch (err) {
     return errorResponse(res, "Failed to respond to inspection", 500, err.message);
@@ -292,6 +304,8 @@ export const approveFinalPrice = async (req, res) => {
     }
 
     await booking.save();
+    req.app.get("io")?.emit("data_updated"); 
+    
 
     return successResponse(res, "Price approved. Share OTP with worker to start.", {
       booking,
@@ -344,6 +358,7 @@ export const rejectFinalPrice = async (req, res) => {
     };
 
     await booking.save();
+    req.app.get("io")?.emit("data_updated");
     return successResponse(res, "Booking cancelled", { booking, penalty }, 200);
   } catch (err) {
     return errorResponse(res, "Failed to reject price", 500, err.message);
@@ -418,7 +433,7 @@ export const approvePriceRevision = async (req, res) => {
     booking.commission.amount = newComm;
 
     await booking.save();
-
+req.app.get("io")?.emit("data_updated");
     return successResponse(res, "Price revision approved", {
       booking,
       newTotal: revision.totalAmount,
@@ -442,6 +457,7 @@ export const approveScheduleUpdate = async (req, res) => {
     booking.schedule.approvedByResident = true;
     booking.schedule.approvedAt = new Date();
     await booking.save();
+    req.app.get("io")?.emit("data_updated");
 
     return successResponse(res, "Schedule approved", booking.schedule, 200);
   } catch (err) {
@@ -512,6 +528,7 @@ export const confirmPayment = async (req, res) => {
     await ServiceProvider.findByIdAndUpdate(booking.selectedProvider, {
       $inc: { completedJobs: 1 },
     });
+req.app.get("io")?.emit("data_updated"); 
 
     return successResponse(
       res,
@@ -572,7 +589,7 @@ export const cancelBooking = async (req, res) => {
     };
 
     await booking.save();
-
+req.app.get("io")?.emit("data_updated");
     return successResponse(res, "Booking cancelled", { booking, penalty }, 200);
   } catch (err) {
     return errorResponse(res, "Failed to cancel booking", 500, err.message);

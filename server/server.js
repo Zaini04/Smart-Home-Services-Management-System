@@ -45,8 +45,12 @@ const io = new Server(server, {
   cors: {
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     methods: ["GET", "POST"],
+        credentials: true, // 🌟 ADD THIS LINE
+
   },
 });
+
+app.set("io", io); 
 
 /* ── Socket Auth Middleware ── */
 io.use((socket, next) => {
@@ -66,6 +70,8 @@ io.use((socket, next) => {
 /* ── Socket Events ── */
 io.on("connection", (socket) => {
   console.log("User connected:", socket.userId);
+  
+  socket.join(socket.userId.toString()); 
 
   /* Join a booking chat room */
   socket.on("join_chat", async ({ bookingId }) => {
@@ -91,7 +97,7 @@ io.on("connection", (socket) => {
   });
 
   /* Send message */
-  socket.on("send_message", async ({ bookingId, message, messageType = "text" }) => {
+  socket.on("send_message", async ({ bookingId, message, messageType = "text",fileUrl }) => {
     try {
       const booking = await Booking.findById(bookingId)
         .populate("selectedProvider");
@@ -112,6 +118,7 @@ io.on("connection", (socket) => {
         senderRole: isResident ? "resident" : "provider",
         message,
         messageType,
+        fileUrl,
       });
 
       // Broadcast to everyone in this chat room
@@ -122,9 +129,12 @@ io.on("connection", (socket) => {
         senderRole: isResident ? "resident" : "provider",
         message,
         messageType,
+        fileUrl,
         isRead:     false,
         createdAt:  newMsg.createdAt,
       });
+
+      io.emit("data_updated"); // Notify all clients to refresh data (e.g. last message preview)
 
     } catch (err) {
       console.error("Send message error:", err);
