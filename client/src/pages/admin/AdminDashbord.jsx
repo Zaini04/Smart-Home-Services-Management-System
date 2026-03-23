@@ -1,58 +1,53 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSocket } from "../../context/SocketContext"; // Adjust path to your context
+import { getAdminDashboardStats } from "../../api/adminEndPoints"; // Adjust path to api
 import {
-  FaTools,
   FaUserClock,
   FaUserCheck,
   FaClipboardList,
   FaMoneyBillWave,
-  FaArrowUp,
-  FaArrowDown,
   FaArrowRight,
   FaCheckCircle,
-  FaTimesCircle,
-  FaClock,
-  FaStar,
-  FaEye,
   FaSpinner,
   FaChartLine,
   FaUsers,
-  FaCalendarAlt,
-  FaTags ,
+  FaTags,
+  FaWallet,
+  FaExclamationCircle,
+  FaClock
 } from "react-icons/fa";
 
-/* ------------------ STAT CARD COMPONENT ------------------ */
+/* ------------------ ANIMATED NUMBER COMPONENT ------------------ */
+const AnimatedNumber = ({ value, prefix = "", suffix = "" }) => {
+  const [displayValue, setDisplayValue] = useState(value);
+  const [colorClass, setColorClass] = useState("text-gray-900");
 
-const StatCard = ({ icon: Icon, label, value, change, changeType, color, bgColor, iconBg }) => (
-  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 group">
-    <div className="flex items-start justify-between">
-      <div className={`w-14 h-14 rounded-2xl ${iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-        <Icon className={`w-7 h-7 ${color}`} />
-      </div>
-      {change !== undefined && (
-        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium ${
-          changeType === "up" 
-            ? "bg-green-100 text-green-700" 
-            : "bg-red-100 text-red-700"
-        }`}>
-          {changeType === "up" ? (
-            <FaArrowUp className="w-3 h-3" />
-          ) : (
-            <FaArrowDown className="w-3 h-3" />
-          )}
-          {change}%
-        </div>
-      )}
-    </div>
-    <div className="mt-4">
-      <p className="text-3xl font-bold text-gray-900">{value}</p>
-      <p className="text-sm text-gray-500 mt-1">{label}</p>
-    </div>
-  </div>
-);
+  useEffect(() => {
+    if (value > displayValue) {
+      setColorClass("text-green-500 scale-110 transition-all duration-300");
+    } else if (value < displayValue) {
+      setColorClass("text-red-500 scale-90 transition-all duration-300");
+    }
+    
+    setDisplayValue(value);
+    
+    const timeout = setTimeout(() => {
+      setColorClass("text-gray-900 scale-100 transition-all duration-500");
+    }, 600);
+
+    return () => clearTimeout(timeout);
+  }, [value]);
+
+  return (
+    <span className={`inline-block font-bold ${colorClass}`}>
+      {prefix}{Number(displayValue).toLocaleString()}{suffix}
+    </span>
+  );
+};
 
 /* ------------------ QUICK ACTION CARD ------------------ */
-
 const QuickActionCard = ({ icon: Icon, title, description, linkTo, color, bgColor }) => (
   <Link
     to={linkTo}
@@ -72,150 +67,56 @@ const QuickActionCard = ({ icon: Icon, title, description, linkTo, color, bgColo
   </Link>
 );
 
-/* ------------------ RECENT ACTIVITY ITEM ------------------ */
-
-const ActivityItem = ({ icon: Icon, title, description, time, color }) => (
-  <div className="flex items-start gap-4 p-4 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
-    <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center flex-shrink-0`}>
-      <Icon className="w-4 h-4 text-white" />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="font-medium text-gray-900">{title}</p>
-      <p className="text-sm text-gray-500 truncate">{description}</p>
-    </div>
-    <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">{time}</span>
-  </div>
-);
-
-/* ------------------ PENDING WORKER CARD ------------------ */
-
-const PendingWorkerCard = ({ worker, onView }) => (
-  <div className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
-        {worker.name?.charAt(0) || "U"}
-      </div>
-      <div>
-        <p className="font-medium text-gray-900">{worker.name}</p>
-        <p className="text-sm text-gray-500">{worker.category}</p>
-      </div>
-    </div>
-    <button
-      onClick={() => onView(worker)}
-      className="p-2 hover:bg-white rounded-lg transition-colors"
-    >
-      <FaEye className="w-4 h-4 text-gray-500" />
-    </button>
-  </div>
-);
-
-/* ------------------ MAIN COMPONENT ------------------ */
-
+/* ------------------ MAIN DASHBOARD COMPONENT ------------------ */
 export default function AdminDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalServices: 0,
-    pendingProviders: 0,
-    approvedProviders: 0,
-    totalBookings: 0,
-    totalRevenue: 0,
-    totalUsers: 0,
+  const queryClient = useQueryClient();
+  const { socket } = useSocket();
+
+  // Fetch Data using React Query
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ["adminDashboard"],
+    queryFn: async () => {
+      const res = await getAdminDashboardStats();
+      return res.data.data;
+    },
+    refetchOnWindowFocus: true,
   });
 
+  // Listen for real-time socket updates
   useEffect(() => {
-    // Simulate fetching stats
-    const fetchStats = async () => {
-      try {
-        // Replace with actual API call
-        // const res = await getAdminStats();
-        // setStats(res.data);
+    if (!socket) return;
 
-        // Mock data
-        setTimeout(() => {
-          setStats({
-            totalServices: 156,
-            pendingProviders: 24,
-            approvedProviders: 523,
-            totalBookings: 8934,
-            totalRevenue: 2345600,
-            totalUsers: 12458,
-          });
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
-        setLoading(false);
-      }
+    const handleUpdate = () => {
+      console.log("Real-time update received! Refreshing dashboard...");
+      // This tells React Query to refetch the data in the background instantly
+      queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
     };
 
-    fetchStats();
-  }, []);
+    socket.on("data_updated", handleUpdate);
 
-  const statCards = [
-    {
-      icon: FaTools,
-      label: "Total Services",
-      value: loading ? "—" : stats.totalServices.toLocaleString(),
-      change: 12,
-      changeType: "up",
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
-      iconBg: "bg-blue-100",
-    },
-    {
-      icon: FaUserClock,
-      label: "Pending Providers",
-      value: loading ? "—" : stats.pendingProviders.toLocaleString(),
-      color: "text-amber-600",
-      bgColor: "bg-amber-100",
-      iconBg: "bg-amber-100",
-    },
-    {
-      icon: FaUserCheck,
-      label: "Approved Providers",
-      value: loading ? "—" : stats.approvedProviders.toLocaleString(),
-      change: 8,
-      changeType: "up",
-      color: "text-green-600",
-      bgColor: "bg-green-100",
-      iconBg: "bg-green-100",
-    },
-    {
-      icon: FaUsers,
-      label: "Total Users",
-      value: loading ? "—" : stats.totalUsers.toLocaleString(),
-      change: 15,
-      changeType: "up",
-      color: "text-purple-600",
-      bgColor: "bg-purple-100",
-      iconBg: "bg-purple-100",
-    },
-  ];
+    return () => {
+      socket.off("data_updated", handleUpdate);
+    };
+  }, [socket, queryClient]);
 
+  if (isLoading || !dashboardData) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh]">
+        <FaSpinner className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+        <p className="text-gray-600 font-medium animate-pulse">Syncing live data...</p>
+      </div>
+    );
+  }
+
+  // Quick actions without service-related stuff
   const quickActions = [
-    {
-      icon: FaTools,
-      title: "Add Service",
-      description: "Create a new service listing",
-      linkTo: "/admin/add-service",
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
-    },
-    {
-  icon: FaMoneyBillWave,
-  title: "Platform Earnings",
-  description: "View commission & revenue",
-  linkTo: "/admin/platform-earnings",
-  color: "text-emerald-600",
-  bgColor: "bg-emerald-100",
-},
     {
       icon: FaTags,
       title: "Categories",
       description: "Manage service categories",
       linkTo: "/admin/create-category",
-      color: "text-green-600",
-      bgColor: "bg-green-100",
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
     },
     {
       icon: FaUserClock,
@@ -226,119 +127,110 @@ export default function AdminDashboard() {
       bgColor: "bg-amber-100",
     },
     {
+      icon: FaMoneyBillWave,
+      title: "Platform Earnings",
+      description: "View revenue & transactions",
+      linkTo: "/admin/platform-earnings",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-100",
+    },
+    {
       icon: FaChartLine,
       title: "Analytics",
-      description: "View detailed reports",
+      description: "Detailed system reports",
       linkTo: "/admin/analytics",
       color: "text-purple-600",
       bgColor: "bg-purple-100",
     },
   ];
 
-  const recentActivities = [
-    {
-      icon: FaCheckCircle,
-      title: "New booking completed",
-      description: "AC Repair service by Ahmed Khan",
-      time: "2 min ago",
-      color: "bg-green-500",
-    },
-    {
-      icon: FaUserCheck,
-      title: "Provider approved",
-      description: "Usman Ali - Electrician",
-      time: "15 min ago",
-      color: "bg-blue-500",
-    },
-    {
-      icon: FaClock,
-      title: "KYC pending review",
-      description: "Bilal Hassan submitted documents",
-      time: "1 hour ago",
-      color: "bg-amber-500",
-    },
-    {
-      icon: FaStar,
-      title: "New 5-star review",
-      description: "Customer rated Faisal Malik",
-      time: "2 hours ago",
-      color: "bg-yellow-500",
-    },
-    {
-      icon: FaTimesCircle,
-      title: "Booking cancelled",
-      description: "Plumbing service in DHA",
-      time: "3 hours ago",
-      color: "bg-red-500",
-    },
-  ];
-
-  const pendingWorkers = [
-    { id: 1, name: "Muhammad Ali", category: "Electrician" },
-    { id: 2, name: "Hassan Raza", category: "Plumber" },
-    { id: 3, name: "Kamran Ahmed", category: "AC Technician" },
-    { id: 4, name: "Imran Khan", category: "Carpenter" },
-  ];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="text-center">
-          <FaSpinner className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading dashboard...</p>
+  return (
+    <div className="space-y-8 pb-10">
+      
+      {/* 1. Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-1">Platform overview and real-time statistics</p>
+        </div>
+        <div className="flex items-center gap-2 bg-green-50 border border-green-100 px-4 py-2 rounded-full shadow-sm">
+          <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+          <span className="text-sm font-medium text-green-700">Live Updates Active</span>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="space-y-8">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 text-white relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
-        </div>
-
-        <div className="relative z-10">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-            Welcome back, Admin! 👋
-          </h1>
-          <p className="text-blue-100 max-w-xl">
-            Here's what's happening with your platform today. You have{" "}
-            <span className="font-semibold text-white">{stats.pendingProviders} pending</span> KYC
-            requests to review.
-          </p>
-
-          <div className="mt-6 flex flex-wrap gap-4">
-            <Link
-              to="/admin/pending-workers"
-              className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-lg"
-            >
-              Review Pending
-              <FaArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              to="/admin/add-service"
-              className="px-6 py-3 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-colors flex items-center gap-2 border border-white/30"
-            >
-              Add Service
-            </Link>
+      {/* 2. Top Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        {/* Total Revenue */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all group">
+          <div className="flex justify-between items-start">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FaWallet className="w-7 h-7 text-emerald-600" />
+            </div>
+            <div className="bg-emerald-50 text-emerald-600 text-xs font-bold px-2 py-1 rounded-md">Today: Rs. {dashboardData.earnings.today}</div>
+          </div>
+          <div className="mt-4">
+            <p className="text-3xl font-bold">
+              <AnimatedNumber value={dashboardData.wallet.totalEarnings} prefix="Rs. " />
+            </p>
+            <p className="text-sm text-gray-500 mt-1">Total Platform Revenue</p>
           </div>
         </div>
+
+        {/* Total Users */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all group">
+          <div className="flex justify-between items-start">
+            <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FaUsers className="w-7 h-7 text-blue-600" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-3xl font-bold"><AnimatedNumber value={dashboardData.users.total} /></p>
+            <p className="text-sm text-gray-500 mt-1">Total Users</p>
+            <p className="text-xs text-blue-500 mt-1 font-medium bg-blue-50 w-fit px-2 py-0.5 rounded">
+              Residents: <AnimatedNumber value={dashboardData.users.residents} />
+            </p>
+          </div>
+        </div>
+
+        {/* Total Workers */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all group">
+          <div className="flex justify-between items-start">
+            <div className="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FaUserCheck className="w-7 h-7 text-purple-600" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-3xl font-bold"><AnimatedNumber value={dashboardData.providers.total} /></p>
+            <p className="text-sm text-gray-500 mt-1">Total Workers</p>
+            <p className="text-xs text-purple-500 mt-1 font-medium bg-purple-50 w-fit px-2 py-0.5 rounded">
+              Approved: <AnimatedNumber value={dashboardData.providers.approved} />
+            </p>
+          </div>
+        </div>
+
+        {/* Total Bookings */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all group">
+          <div className="flex justify-between items-start">
+            <div className="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FaClipboardList className="w-7 h-7 text-orange-600" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-3xl font-bold"><AnimatedNumber value={dashboardData.bookings.total} /></p>
+            <p className="text-sm text-gray-500 mt-1">Total Bookings</p>
+            <p className="text-xs text-orange-500 mt-1 font-medium bg-orange-50 w-fit px-2 py-0.5 rounded">
+              Active Now: <AnimatedNumber value={dashboardData.bookings.active} />
+            </p>
+          </div>
+        </div>
+
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, index) => (
-          <StatCard key={index} {...stat} />
-        ))}
-      </div>
-
-      {/* Quick Actions */}
+      {/* 3. Quick Actions Grid */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+        <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Shortcuts</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action, index) => (
             <QuickActionCard key={index} {...action} />
@@ -346,76 +238,110 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Main Content Grid */}
+      {/* 4. Bottom Grids (Recent Activity & Pending KYC) */}
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Recent Activity */}
+        
+        {/* Recent Activity Table (Takes up 2 columns) */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
-            <button className="text-sm text-blue-600 font-medium hover:text-blue-700 transition-colors">
-              View All
-            </button>
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <FaClock className="text-blue-500"/> Recent Bookings
+            </h2>
           </div>
-          <div className="divide-y divide-gray-50">
-            {recentActivities.map((activity, index) => (
-              <ActivityItem key={index} {...activity} />
-            ))}
+          <div className="divide-y divide-gray-100">
+            {dashboardData.lists.recentActivities.length === 0 ? (
+              <p className="p-8 text-center text-gray-500">No recent activities found.</p>
+            ) : (
+              dashboardData.lists.recentActivities.map((activity) => (
+                <div key={activity._id} className="p-4 px-6 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden flex-shrink-0">
+                      {activity.resident?.profileImage ? (
+                        <img src={activity.resident.profileImage} alt="" className="w-full h-full object-cover"/>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold">
+                          {activity.resident?.full_name?.charAt(0) || "U"}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">{activity.category?.name || "Service Request"}</p>
+                      <p className="text-xs text-gray-500">By: {activity.resident?.full_name}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold px-2.5 py-1 bg-gray-100 rounded-md text-gray-600 uppercase tracking-wide">
+                      {activity.status.replace(/_/g, " ")}
+                    </span>
+                    <p className="text-[11px] text-gray-400 mt-1.5 font-medium">
+                      {new Date(activity.createdAt).toLocaleDateString()} at {new Date(activity.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Pending Workers */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">Pending Workers</h2>
-            <span className="px-3 py-1 bg-amber-100 text-amber-700 text-sm font-medium rounded-full">
-              {stats.pendingProviders}
+        {/* Pending Workers List (Takes up 1 column) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+          <div className="p-5 border-b border-gray-100 bg-amber-50/50 flex justify-between items-center">
+            <h2 className="text-lg font-bold text-amber-800 flex items-center gap-2">
+              <FaExclamationCircle /> Action Required
+            </h2>
+            <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-200">
+              <AnimatedNumber value={dashboardData.providers.pending} /> Pending
             </span>
           </div>
-          <div className="p-4 space-y-3">
-            {pendingWorkers.map((worker) => (
-              <PendingWorkerCard
-                key={worker.id}
-                worker={worker}
-                onView={() => {}}
-              />
-            ))}
+          
+          <div className="flex-1 divide-y divide-gray-100 overflow-y-auto">
+            {dashboardData.lists.pendingWorkers.length === 0 ? (
+              <div className="p-10 flex flex-col items-center justify-center text-gray-400 h-full">
+                <FaCheckCircle className="text-4xl text-green-300 mb-3" />
+                <p className="font-medium text-gray-600">All caught up!</p>
+                <p className="text-xs text-center mt-1">No workers are pending approval.</p>
+              </div>
+            ) : (
+              dashboardData.lists.pendingWorkers.map((worker) => (
+                <Link 
+                  key={worker._id} 
+                  to={`/admin/update-kyc/${worker._id}`} 
+                  className="p-4 flex items-center justify-between hover:bg-amber-50/30 transition group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden flex-shrink-0">
+                      {worker.userId?.profileImage ? (
+                        <img src={worker.userId.profileImage} alt="" className="w-full h-full object-cover"/>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-amber-100 text-amber-700 font-bold">
+                          {worker.userId?.full_name?.charAt(0) || "W"}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-gray-800 group-hover:text-amber-700 transition">
+                        {worker.userId?.full_name || "Unknown"}
+                      </p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">{worker.userId?.phone}</p>
+                    </div>
+                  </div>
+                  <button className="text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded font-medium group-hover:bg-amber-500 group-hover:text-white transition">
+                    Review
+                  </button>
+                </Link>
+              ))
+            )}
           </div>
-          <div className="p-4 border-t border-gray-100">
-            <Link
-              to="/admin/pending-workers"
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
-            >
-              Review All
-              <FaArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          
+          {dashboardData.providers.pending > 5 && (
+            <div className="p-3 text-center border-t border-gray-100 bg-gray-50 mt-auto">
+               <Link to="/admin/pending-workers" className="text-blue-600 font-semibold text-sm hover:underline">
+                  View all {dashboardData.providers.pending} pending workers &rarr;
+               </Link>
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Revenue Card */}
-      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-8 text-white">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <FaMoneyBillWave className="w-8 h-8" />
-              <h2 className="text-xl font-bold">Total Revenue</h2>
-            </div>
-            <p className="text-4xl font-bold mb-2">
-              PKR {(stats.totalRevenue / 1000000).toFixed(2)}M
-            </p>
-            <p className="text-emerald-100">+23% from last month</p>
-          </div>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-white/20 rounded-2xl p-4">
-              <p className="text-emerald-100 text-sm">Total Bookings</p>
-              <p className="text-2xl font-bold">{stats.totalBookings.toLocaleString()}</p>
-            </div>
-            <div className="bg-white/20 rounded-2xl p-4">
-              <p className="text-emerald-100 text-sm">Avg. Order Value</p>
-              <p className="text-2xl font-bold">PKR 2,450</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

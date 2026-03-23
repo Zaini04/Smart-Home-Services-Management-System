@@ -36,6 +36,17 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+     resetPasswordToken: {
+    type: String,
+    required: false,
+  },
+  resetPasswordExpires: {
+    type: Date,
+    required: false,
+  },
+    isEmailVerified: { type: Boolean, default: false },
+  emailVerificationOTP: { type: String, default: null },
+  otpExpiresAt: { type: Date, default: null },
 
   // in paise/lowest currency unit or rupees as int
     createdAt: { type: Date, default: Date.now },

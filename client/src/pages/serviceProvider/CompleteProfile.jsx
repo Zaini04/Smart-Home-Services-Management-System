@@ -122,11 +122,11 @@ export default function CompleteProfile() {
       fd.append("cnicBack",         cnicBackImage);
 
       await completeProfile(fd);
-      navigate("/provider/kyc-status", { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Submission failed. Try again.");
     } finally {
       setLoading(false);
+      navigate("/provider/kyc-status", { replace: true });
     }
   };
 

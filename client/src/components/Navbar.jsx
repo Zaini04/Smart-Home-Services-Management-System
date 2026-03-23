@@ -120,6 +120,8 @@ const UserDropdown = ({ user, onLogout, onClose, unreadMessages }) => {
     },
     { icon: FaCog, label: "Settings", link: "/settings" },
     { icon: FaHeadset, label: "Help & Support", link: "/support" },
+    { icon: FaCalendarAlt, label: "My Calendar", link: "/calendar" },
+    { icon: FaBell, label: "Notifications", link: "/notifications" },
   ];
 
   return (
@@ -211,6 +213,8 @@ const MobileMenu = ({
     { icon: FaComments, label: "Messages", link: "/chat", badge: unreadMessages },
     { icon: FaUserCircle, label: "My Profile", link: "/profile" },
     { icon: FaCog, label: "Settings", link: "/settings" },
+    { icon: FaBell, label: "Notifications", link: "/notifications" },
+    { icon: FaCalendarAlt, label: "My Calendar", link: "/calendar" },
   ];
 
   return (
@@ -461,19 +465,11 @@ export default function Navbar() {
   }, [location]);
 
   // Navigation links based on login status
-  const navLinks = isLoggedIn
-    ? [
-        { label: "Home", path: "/", icon: FaHome },
-        { label: "Services", scrollTo: "services", icon: FaTools },
-        { label: "My Bookings", path: "/my-bookings", icon: FaCalendarAlt },
-        { label: "Messages", path: "/chat", icon: FaComments, badge: unreadMessages },
-      ]
-    : [
-        { label: "Home", path: "/", icon: FaHome },
-        { label: "Services", scrollTo: "services", icon: FaTools },
-        { label: "How it Works", scrollTo: "how", icon: FaQuestionCircle },
-        { label: "Features", scrollTo: "features", icon: FaStar },
-      ];
+  const navLinks = [
+    { label: "Home", path: "/", icon: FaHome },
+    { label: "How it Works", scrollTo: "how", icon: FaQuestionCircle },
+    { label: "Features", scrollTo: "features", icon: FaStar },
+  ];
 
   const isActive = (path) => location.pathname === path;
 
@@ -568,9 +564,12 @@ export default function Navbar() {
                   </Link>
 
                   {/* Notifications */}
-                  <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors hidden sm:flex">
+                  <button onClick={()=>navigate('/notifications')} className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors  flex">
                     <FaBell className="w-5 h-5" />
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  </button>
+                  <button onClick={() => navigate('/calendar')} className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors  flex">
+                    <FaCalendarAlt className="w-5 h-5" />
                   </button>
 
                   {/* User Profile Dropdown */}

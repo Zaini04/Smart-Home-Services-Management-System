@@ -17,15 +17,29 @@ import ChatMessage from "./models/chatModel.js";
 import jwt         from "jsonwebtoken";
 import chatRouter from './routes/chatRoutes.js';
 import Booking from './models/bookingModel.js';
+import notificationRouter from './routes/notificationRoutes.js';
 
 dotenv.config()
 const app = express()
 
 await connectDb()
            
+const allowedOrigins = [
+  'http://localhost:5173', 
+  'http://localhost:8081',
+  'http://localhost:8082',
+  process.env.FRONTEND_URL || 'http://localhost:5173'
+];
+
 app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials:true
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true
 }))
 
 app.use(cookieParser())
@@ -37,16 +51,17 @@ app.use('/api/serviceProvider',serviceProviderRouter)
 app.use('/api/residents',residentRouter)
 app.use('/api/admin',adminRouter)
 app.use('/api/chat',chatRouter)
+app.use('/api/notifications', notificationRouter);
+
 
 
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
-        credentials: true, // 🌟 ADD THIS LINE
-
+    credentials: true,
   },
 });
 
@@ -70,7 +85,7 @@ io.use((socket, next) => {
 /* ── Socket Events ── */
 io.on("connection", (socket) => {
   console.log("User connected:", socket.userId);
-  
+
   socket.join(socket.userId.toString()); 
 
   /* Join a booking chat room */
@@ -135,7 +150,14 @@ io.on("connection", (socket) => {
       });
 
       io.emit("data_updated"); // Notify all clients to refresh data (e.g. last message preview)
+  const receiverId = isResident 
+        ? booking.selectedProvider.userId.toString() // If resident sent it, send toast to Provider
+        : booking.resident.toString();               // If provider sent it, send toast to Resident
 
+      io.to(receiverId).emit("notification", {
+        title: "💬 New Message",
+        message: messageType === "text" ? message : `Sent an ${messageType}`,
+      });
     } catch (err) {
       console.error("Send message error:", err);
     }

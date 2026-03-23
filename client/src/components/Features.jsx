@@ -20,8 +20,8 @@ const features = [
   },
   {
     icon: FaWallet,
-    title: "Secure Payments",
-    description: "Pay securely through our platform with multiple payment options available.",
+    title: "Direct Secure Payments",
+    description: "Pay providers directly with secure cash or local transfer options upon completion.",
     color: "from-green-500 to-emerald-600",
     bgColor: "bg-green-50",
   },
@@ -34,8 +34,8 @@ const features = [
   },
   {
     icon: FaStar,
-    title: "Quality Guaranteed",
-    description: "Not satisfied? We offer a money-back guarantee on all services.",
+    title: "Direct Communication",
+    description: "Chat directly with local providers to discuss your problem and negotiate pricing before commitment.",
     color: "from-amber-500 to-orange-600",
     bgColor: "bg-amber-50",
   },
@@ -48,8 +48,8 @@ const features = [
   },
   {
     icon: FaMapMarkerAlt,
-    title: "City-Wide Coverage",
-    description: "Available across 50+ cities with more locations being added regularly.",
+    title: "Exclusive to Multan",
+    description: "Dedicated entirely to serving the residents and providers of Multan city.",
     color: "from-cyan-500 to-teal-600",
     bgColor: "bg-cyan-50",
   },
@@ -137,7 +137,7 @@ export default function Features() {
             {[
               { value: "10K+", label: "Happy Customers" },
               { value: "500+", label: "Verified Providers" },
-              { value: "50+", label: "Cities Covered" },
+              { value: "Multan", label: "Exclusive Region" },
               { value: "98%", label: "Satisfaction Rate" },
             ].map((stat, index) => (
               <div key={index} className="text-center">

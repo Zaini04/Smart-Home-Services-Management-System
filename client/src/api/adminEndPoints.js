@@ -1,29 +1,16 @@
-import axios from "axios";
 import axiosInstance from "./apiinstance";
 
-/* ===================== SERVICES ===================== */
-export const addService = (formData) => {
-  return axiosInstance.post("/api/admin/addService", formData);
-};
 
-export const getAllServices = () => {
-  return axiosInstance.get("/api/admin/services");
-};
 
-export const updateService = (serviceId, formData) => {
-  return axiosInstance.put(
-    `/api/admin/service/${serviceId}`,
-    formData
-  );
+export const getAdminDashboardStats = () => {
+  return axiosInstance.get("/api/admin/platform/dashboard");
 };
-
-export const deleteService = (serviceId) => {
-  return axiosInstance.delete(
-    `/api/admin/service/${serviceId}`
-  );
+export const getComprehensiveAnalytics = () => {
+  return axiosInstance.get("/api/admin/platform/comprehensive-analytics"); // Adjust path based on your route setup
 };
-
 /* ===================== WORKERS ===================== */
+
+
 export const getPendingWorkers = () => {
   return axiosInstance.get("/api/admin/getPendingWorkers");
 };

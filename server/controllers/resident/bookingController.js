@@ -7,6 +7,7 @@ import Wallet from "../../models/walletModel.js";
 import WalletTransaction from "../../models/walletTransactionModel.js";
 import { creditPlatformCommission } from "../../utills/platformWallet.js";
 import { errorResponse, successResponse } from "../../utills/response.js";
+import { sendNotification } from "../../utills/notify.js";
 import {
   calculateCommission,
   calculateCancellationPenalty,
@@ -27,22 +28,34 @@ const getOrCreateWallet = async (pid) => {
    ================================================================ */
 export const createBooking = async (req, res) => {
   try {
-    const { category, description, address } = req.body;
+    const { category, description, address, lat, lng} = req.body;
     if (!category || !description || !address)
       return errorResponse(res, "All fields are required", 400);
 
     const images = req.files?.map((f) => f.path) || [];
     const booking = await Booking.create({
       resident: req.user._id,
-      category, description, address, images,
+      category,
+      description, 
+      address, 
+      location: {
+        lat,
+        lng
+      },
+      images,
       status: "posted",
     });
 
-      const io = req.app.get("io");
+    const io = req.app.get("io");
     if (io) {
-      io.emit("new_job_posted");
+      io.emit("data_updated"); // Refreshes lists
+      
+      // We broadcast this to everyone (or you can filter it later)
+      io.emit("notification", {
+        title: "📢 New Job Available",
+        message: "A new job was just posted in your area. Check available jobs!",
+      });
     }
-
 
     return successResponse(res, "Booking posted successfully", booking, 201);
   } catch (err) {
@@ -127,6 +140,9 @@ export const getBookingOffers = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
+    req.app.get("io")?.emit("data_updated");
+    await sendNotification(req, req.user._id, "📝 Offers Available", "New offers are available for your booking.");
+
     return successResponse(res, "Offers fetched", offers, 200);
   } catch (err) {
     return errorResponse(res, "Failed to fetch offers", 500, err.message);
@@ -175,10 +191,11 @@ export const acceptOffer = async (req, res) => {
 
     req.app.get("io")?.emit("data_updated"); 
 
- req.app.get("io")?.to(offer.provider.toString()).emit("notification", {
-      title: "🎉 Offer Accepted!",
-      message: "A resident just accepted your offer. Check your active jobs!",
-    });
+    const providerProfile = await ServiceProvider.findById(offer.provider);
+    if (providerProfile) {
+      await sendNotification(req, providerProfile.userId, "🎉 Offer Accepted!", "A resident just accepted your offer. Check your active jobs!");
+    }
+
     return successResponse(res, "Offer accepted", booking, 200);
   } catch (err) {
     return errorResponse(res, "Failed to accept offer", 500, err.message);
@@ -206,6 +223,12 @@ export const respondToInspection = async (req, res) => {
       booking.inspection.respondedAt = new Date();
       booking.status = "inspection_approved";
       await booking.save();
+      req.app.get("io")?.emit("data_updated");
+      
+      const providerProfile = await ServiceProvider.findById(booking.selectedProvider);
+      if (providerProfile) {
+        await sendNotification(req, providerProfile.userId, `🔍 Inspection ${action}`, "The resident " + action + " your inspection request.");
+      }
       return successResponse(res, "Inspection approved", booking, 200);
     }
 
@@ -219,6 +242,12 @@ export const respondToInspection = async (req, res) => {
       booking.inspection.respondedAt = new Date();
       // stays in inspection_requested until provider responds
       await booking.save();
+      req.app.get("io")?.emit("data_updated");
+      
+      const providerProfile = await ServiceProvider.findById(booking.selectedProvider);
+      if (providerProfile) {
+        await sendNotification(req, providerProfile.userId, `🔍 Inspection ${action}`, "The resident " + action + " your inspection request.");
+      }
       return successResponse(res, "Counter offer sent to provider", booking, 200);
     }
 
@@ -228,9 +257,15 @@ export const respondToInspection = async (req, res) => {
       // go back to provider_selected — provider can send price without inspection
       booking.status = "provider_selected";
       await booking.save();
+
+      req.app.get("io")?.emit("data_updated");
+      const providerProfile = await ServiceProvider.findById(booking.selectedProvider);
+      if (providerProfile) {
+        await sendNotification(req, providerProfile.userId, `🔍 Inspection ${action}`, "The resident " + action + " your inspection request.");
+      }
       return successResponse(res, "Inspection rejected. Provider can send price directly.", booking, 200);
     }
-req.app.get("io")?.emit("data_updated");
+
     return errorResponse(res, "Invalid action. Use: approve, counter, reject", 400);
   } catch (err) {
     return errorResponse(res, "Failed to respond to inspection", 500, err.message);
@@ -304,8 +339,11 @@ export const approveFinalPrice = async (req, res) => {
     }
 
     await booking.save();
-    req.app.get("io")?.emit("data_updated"); 
-    
+
+    req.app.get("io")?.emit("data_updated");
+    if (provider) {
+      await sendNotification(req, provider.userId, "✅ Price Approved!", "The resident approved your price and schedule. Start OTP generated.");
+    }
 
     return successResponse(res, "Price approved. Share OTP with worker to start.", {
       booking,
@@ -359,6 +397,14 @@ export const rejectFinalPrice = async (req, res) => {
 
     await booking.save();
     req.app.get("io")?.emit("data_updated");
+    
+    if (booking.selectedProvider) {
+      const providerProfile = await ServiceProvider.findById(booking.selectedProvider);
+      if (providerProfile) {
+        await sendNotification(req, providerProfile.userId, "❌ Price Rejected", `The resident rejected your price. Booking cancelled. Penalty: Rs. ${penalty.amount} (${penalty.reason}).`);
+      }
+    }
+    
     return successResponse(res, "Booking cancelled", { booking, penalty }, 200);
   } catch (err) {
     return errorResponse(res, "Failed to reject price", 500, err.message);
@@ -433,7 +479,15 @@ export const approvePriceRevision = async (req, res) => {
     booking.commission.amount = newComm;
 
     await booking.save();
-req.app.get("io")?.emit("data_updated");
+    req.app.get("io")?.emit("data_updated");
+    
+    if (booking.selectedProvider) {
+      const providerProfile = await ServiceProvider.findById(booking.selectedProvider);
+      if (providerProfile) {
+        await sendNotification(req, providerProfile.userId, "💰 Price Revision Approved", `The resident approved your price revision. New labor cost: Rs. ${revision.laborCost}.`);
+      }
+    }
+
     return successResponse(res, "Price revision approved", {
       booking,
       newTotal: revision.totalAmount,
@@ -457,7 +511,14 @@ export const approveScheduleUpdate = async (req, res) => {
     booking.schedule.approvedByResident = true;
     booking.schedule.approvedAt = new Date();
     await booking.save();
+    
     req.app.get("io")?.emit("data_updated");
+    if (booking.selectedProvider) {
+      const providerProfile = await ServiceProvider.findById(booking.selectedProvider);
+      if (providerProfile) {
+        await sendNotification(req, providerProfile.userId, "📝 Schedule Update Approved", `The resident approved your schedule update.`);
+      }
+    }
 
     return successResponse(res, "Schedule approved", booking.schedule, 200);
   } catch (err) {
@@ -528,7 +589,11 @@ export const confirmPayment = async (req, res) => {
     await ServiceProvider.findByIdAndUpdate(booking.selectedProvider, {
       $inc: { completedJobs: 1 },
     });
-req.app.get("io")?.emit("data_updated"); 
+    req.app.get("io")?.emit("data_updated");
+    const providerProfile = await ServiceProvider.findById(booking.selectedProvider);
+    if (providerProfile) {
+      await sendNotification(req, providerProfile.userId, "🎉 Payment Confirmed!", `Job completed! Rs. ${providerEarning} has been added to your earnings.`);
+    }
 
     return successResponse(
       res,
@@ -589,12 +654,21 @@ export const cancelBooking = async (req, res) => {
     };
 
     await booking.save();
-req.app.get("io")?.emit("data_updated");
+    req.app.get("io")?.emit("data_updated");
+    if (booking.selectedProvider) {
+      const providerProfile = await ServiceProvider.findById(booking.selectedProvider);
+      if (providerProfile) {
+        await sendNotification(req, providerProfile.userId, "💼 Job Cancelled", `The resident cancelled the job. Penalty: Rs. ${penalty.amount}.`);
+      }
+    }
+    
     return successResponse(res, "Booking cancelled", { booking, penalty }, 200);
   } catch (err) {
     return errorResponse(res, "Failed to cancel booking", 500, err.message);
   }
 };
+
+
 
 /* ================================================================
    SUBMIT REVIEW
@@ -624,6 +698,12 @@ export const submitReview = async (req, res) => {
 
     booking.isReviewed = true;
     await booking.save();
+    req.app.get("io")?.emit("data_updated");
+
+    const providerProfile = await ServiceProvider.findById(booking.selectedProvider);
+    if (providerProfile) {
+      await sendNotification(req, providerProfile.userId, "⭐ Review Submitted", `The resident submitted a review for your job.`);
+    }
 
     return successResponse(res, "Review submitted", newReview, 201);
   } catch (err) {

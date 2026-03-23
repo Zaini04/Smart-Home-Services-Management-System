@@ -12,54 +12,67 @@ import {
 const steps = [
   {
     icon: FaClipboardList,
-    title: "Post Your Request",
-    desc: "Describe your problem, upload photos, and select your preferred time slot.",
+    title: "Post Problem",
+    desc: "Describe your home issue with details and reference photos.",
     color: "from-blue-500 to-blue-600",
     bgColor: "bg-blue-50",
     iconColor: "text-blue-600",
     details: [
-      "Choose from 50+ service categories",
-      "Add photos for better quotes",
-      "Set your preferred date & time",
+      "Provide issue description",
+      "Upload reference photos",
+      "Submit for provider review",
     ],
   },
   {
     icon: FaUserCheck,
-    title: "Get Matched",
-    desc: "Receive quotes from verified providers and choose the best fit for you.",
+    title: "Offers Received",
+    desc: "Local providers in Multan send bids and time estimates.",
     color: "from-green-500 to-emerald-600",
     bgColor: "bg-green-50",
     iconColor: "text-green-600",
     details: [
-      "Compare multiple quotes",
-      "View provider ratings & reviews",
-      "Check availability instantly",
+      "Review provider profiles",
+      "Compare price quotes",
+      "Check availability",
     ],
   },
   {
-    icon: FaCreditCard,
-    title: "Confirm & Pay",
-    desc: "Approve the final price and pay securely through our platform.",
+    icon: FaCheckCircle,
+    title: "Accept Offer",
+    desc: "Choose the best provider offer and formalize the booking.",
     color: "from-purple-500 to-indigo-600",
     bgColor: "bg-purple-50",
     iconColor: "text-purple-600",
     details: [
-      "Transparent pricing",
-      "Multiple payment options",
-      "Secure transactions",
+      "Accept preferred bid",
+      "Confirm provider terms",
+      "Lock in the provider",
     ],
   },
   {
     icon: FaStar,
-    title: "Rate & Review",
-    desc: "Share your experience to help others find great service providers.",
+    title: "Chat & Scheduled",
+    desc: "Communicate directly and confirm the exact arrival schedule.",
     color: "from-amber-500 to-orange-600",
     bgColor: "bg-amber-50",
     iconColor: "text-amber-600",
     details: [
-      "Rate your experience",
-      "Leave detailed feedback",
-      "Build trusted community",
+      "Real-time chat support",
+      "Share location details",
+      "Status updates",
+    ],
+  },
+  {
+    icon: FaCreditCard,
+    title: "Inspection & Final",
+    desc: "Provider inspects, completes work, and you approve final payment.",
+    color: "from-pink-500 to-rose-600",
+    bgColor: "bg-pink-50",
+    iconColor: "text-pink-600",
+    details: [
+      "On-site inspection",
+      "Work completion",
+      "Direct secure payment",
     ],
   },
 ];
@@ -164,7 +177,7 @@ export default function HowItWorks() {
         </div>
 
         {/* Steps Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4 mb-16">
           {steps.map((step, index) => (
             <StepCard
               key={index}
@@ -211,7 +224,7 @@ export default function HowItWorks() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-all shadow-lg flex items-center justify-center gap-2">
-                Book Your First Service
+                Post Your Problem
                 <FaArrowRight className="w-4 h-4" />
               </button>
               <button className="px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">

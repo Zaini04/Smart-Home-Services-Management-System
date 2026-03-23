@@ -39,13 +39,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       ],
     },
     {
-      title: "Services",
-      items: [
-        { icon: FaPlus, label: "Add Service", path: "/admin/add-service" },
-        { icon: FaTools, label: "All Services", path: "/admin/all-services" },
-      ],
-    },
-    {
       title: "Categories",
       items: [
         { icon: FaTags, label: "Categories", path: "/admin/create-category" },
@@ -199,7 +192,9 @@ const Header = ({ onMenuClick }) => {
     const path = location.pathname.split("/").pop();
     const titles = {
       dashboard: "Dashboard",
-      "add-service": "Add Service",
+      analytics: "Analytics",
+       "platform-earnings": "Platform Earnings",
+      "platform-transactions": "Transactions",
       "create-category": "Categories",
       "create-subcategory": "Subcategories",
       "pending-workers": "Pending Workers",
@@ -248,19 +243,13 @@ const Header = ({ onMenuClick }) => {
           </div>
 
           {/* Notifications */}
-          <button className="relative p-2.5 hover:bg-gray-100 rounded-xl transition-colors">
+          {/* <button className="relative p-2.5 hover:bg-gray-100 rounded-xl transition-colors">
             <FaBell className="w-5 h-5 text-gray-600" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          </button>
+          </button> */}
 
           {/* Quick Add */}
-          <NavLink
-            to="/admin/add-service"
-            className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30"
-          >
-            <FaPlus className="w-4 h-4" />
-            Add Service
-          </NavLink>
+         
         </div>
       </div>
     </header>

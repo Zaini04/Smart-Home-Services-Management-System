@@ -3,18 +3,47 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import {
-  FaCamera,
-  FaMapMarkerAlt,
-  FaPaperPlane,
-  FaSpinner,
-  FaCheckCircle,
-  FaTrash,
-  FaList,
-  FaEdit,
-  FaTimesCircle,
+  FaCamera, FaMapMarkerAlt, FaPaperPlane, FaSpinner,
+  FaCheckCircle, FaTrash, FaList, FaEdit, FaTimesCircle, FaLocationArrow
 } from "react-icons/fa";
 import { getCategories, createBooking } from "../../api/residentsEndpoints";
+
+// Fix Leaflet's default icon missing issue in React
+import iconUrl from "leaflet/dist/images/marker-icon.png";
+import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+L.Marker.prototype.options.icon = L.icon({
+  iconUrl, shadowUrl, iconSize: [25, 41], iconAnchor: [12, 41]
+});
+
+// Map Component to handle clicks & drop pins
+function LocationMarker({ position, setPosition, setAddress }) {
+  const map = useMap();
+
+  useMapEvents({
+    async click(e) {
+      const { lat, lng } = e.latlng;
+      setPosition({ lat, lng });
+      map.flyTo(e.latlng, map.getZoom());
+
+      // Reverse Geocode to get address text (Free API)
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        const data = await res.json();
+        if (data && data.display_name) {
+          setAddress(data.display_name);
+        }
+      } catch (err) { 
+        console.error("Geocoding failed"); 
+      }
+    },
+  });
+
+  return position === null ? null : <Marker position={position}></Marker>;
+}
 
 export default function PostJob() {
   const { user } = useAuth();
@@ -30,6 +59,11 @@ export default function PostJob() {
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
   const [images, setImages] = useState([]);
+
+  // 🌟 Map State
+  const [position, setPosition] = useState(null); // { lat, lng }
+  const [showMap, setShowMap] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
 
   // UI State
   const [loading, setLoading] = useState(false);
@@ -65,11 +99,7 @@ export default function PostJob() {
       return;
     }
 
-    // Validate file types
-    const validFiles = files.filter((file) =>
-      file.type.startsWith("image/")
-    );
-
+    const validFiles = files.filter((file) => file.type.startsWith("image/"));
     if (validFiles.length !== files.length) {
       setError("Only image files are allowed");
       return;
@@ -83,23 +113,48 @@ export default function PostJob() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // 🌟 Handle GPS Button Click
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      return setError("Geolocation is not supported by your browser");
+    }
+
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setPosition({ lat: latitude, lng: longitude });
+        setShowMap(true);
+        
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          if (data?.display_name) {
+            setAddress(data.display_name);
+            setError("");
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setGettingLocation(false);
+        }
+      },
+      () => {
+        setError("Location permission denied. Click the map manually.");
+        setGettingLocation(false);
+      }
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     // Validation
-    if (!selectedCategory) {
-      setError("Please select a category");
-      return;
-    }
-    if (!description.trim()) {
-      setError("Please describe your problem");
-      return;
-    }
-    if (!address.trim()) {
-      setError("Please enter your address");
-      return;
-    }
+    if (!selectedCategory) return setError("Please select a category");
+    if (!description.trim()) return setError("Please describe your problem");
+    if (!address.trim()) return setError("Please enter your address");
+    if (!position) return setError("Please drop a pin on the map so the worker can find you.");
 
     try {
       setLoading(true);
@@ -108,6 +163,10 @@ export default function PostJob() {
       formData.append("category", selectedCategory._id);
       formData.append("description", description.trim());
       formData.append("address", address.trim());
+      
+      // 🌟 Append the exact GPS coordinates to send to backend
+      formData.append("lat", position.lat);
+      formData.append("lng", position.lng);
 
       images.forEach((image) => {
         formData.append("images", image);
@@ -217,7 +276,6 @@ export default function PostJob() {
                         }
                       `}
                     >
-                      {/* Category Icon/Initial */}
                       <div className={`
                         w-12 h-12 rounded-lg flex items-center justify-center text-xl font-bold mb-2
                         ${selectedCategory?._id === category._id
@@ -236,7 +294,6 @@ export default function PostJob() {
                         {category.name}
                       </p>
 
-                      {/* Selected Checkmark */}
                       {selectedCategory?._id === category._id && (
                         <div className="absolute top-2 right-2">
                           <FaCheckCircle className="w-5 h-5 text-blue-500" />
@@ -268,6 +325,56 @@ export default function PostJob() {
               </p>
             </div>
 
+            {/* Address with Map (Replaced old textarea with this) */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <FaMapMarkerAlt className="text-blue-600" />
+                  Your Address
+                  <span className="text-red-500">*</span>
+                </h3>
+                <button 
+                  type="button" 
+                  onClick={handleGetCurrentLocation} 
+                  disabled={gettingLocation} 
+                  className="text-sm font-medium text-blue-600 flex items-center gap-1.5 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-blue-200"
+                >
+                  {gettingLocation ? <FaSpinner className="animate-spin" /> : <FaLocationArrow />}
+                  Use Current Location
+                </button>
+              </div>
+
+              {!showMap ? (
+                <div 
+                  onClick={() => setShowMap(true)} 
+                  className="w-full h-48 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors mb-3"
+                >
+                  <FaMapMarkerAlt className="w-8 h-8 text-gray-400 mb-2" />
+                  <span className="font-medium text-gray-500">Click to open map and drop a pin</span>
+                </div>
+              ) : (
+                <div className="h-64 w-full rounded-xl overflow-hidden border-2 border-gray-200 mb-3 relative z-0">
+                  <MapContainer 
+                    center={position || [30.3753, 69.3451]} 
+                    zoom={position ? 15 : 5} 
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <LocationMarker position={position} setPosition={setPosition} setAddress={setAddress} />
+                  </MapContainer>
+                </div>
+              )}
+
+              <textarea
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="House/Flat number, Street, Area, City... (Auto-fills when you click map)"
+                rows={2}
+                required
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none resize-none transition-all text-gray-700 placeholder-gray-400"
+              />
+            </div>
+
             {/* Photos */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -277,7 +384,6 @@ export default function PostJob() {
               </h3>
               
               <div className="flex flex-wrap gap-3">
-                {/* Image Previews */}
                 {images.map((img, index) => (
                   <div
                     key={index}
@@ -298,7 +404,6 @@ export default function PostJob() {
                   </div>
                 ))}
 
-                {/* Add Button */}
                 {images.length < 5 && (
                   <button
                     type="button"
@@ -323,23 +428,6 @@ export default function PostJob() {
               <p className="text-xs text-gray-400 mt-3">
                 Upload up to 5 photos of the problem • JPG, PNG supported
               </p>
-            </div>
-
-            {/* Address */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <FaMapMarkerAlt className="text-blue-600" />
-                Your Address
-                <span className="text-red-500">*</span>
-              </h3>
-              <textarea
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="House/Flat number, Street, Area, City..."
-                rows={2}
-                required
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none resize-none transition-all text-gray-700 placeholder-gray-400"
-              />
             </div>
 
             {/* Submit Button */}

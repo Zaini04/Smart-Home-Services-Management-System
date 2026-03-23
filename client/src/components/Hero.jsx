@@ -47,7 +47,7 @@ export default function Hero() {
   const trustedCompanies = [
     "10,000+ Customers",
     "500+ Verified Providers",
-    "50+ Cities Covered",
+    "Operating Exclusively in Multan",
   ];
 
   return (
@@ -94,39 +94,7 @@ export default function Hero() {
               secure payments, and satisfaction guaranteed.
             </p>
 
-            {/* Search Bar */}
-            <div className="bg-white rounded-2xl p-2 shadow-2xl shadow-black/20 max-w-xl mx-auto lg:mx-0 mb-8">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 relative">
-                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="What service do you need?"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  />
-                </div>
-                <div className="relative sm:w-40">
-                  <FaMapMarkerAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <select
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl text-gray-800 focus:outline-none appearance-none cursor-pointer"
-                  >
-                    <option>Lahore</option>
-                    <option>Karachi</option>
-                    <option>Islamabad</option>
-                    <option>Rawalpindi</option>
-                    <option>Faisalabad</option>
-                  </select>
-                </div>
-                <button className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
-                  Search
-                  <FaArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            {/* No Search Bar since we only post problems. We just show simple text here instead of the search bar block. */}
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
@@ -134,7 +102,7 @@ export default function Hero() {
                 to="/signup"
                 className="group px-8 py-4 bg-white text-gray-900 font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-lg flex items-center justify-center gap-2"
               >
-                Book a Service
+                Post a Problem
                 <FaArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <button className="px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">

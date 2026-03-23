@@ -10,6 +10,20 @@ export const getCategories = () => {
   return axiosInstance.get('/api/residents/getCategories')
 }
 
+
+//  profile routes
+export const getUserProfile = () => {
+  return axiosInstance.get("/api/residents/profile");
+};
+
+export const updateUserProfile = (formData) => {
+  return axiosInstance.put("/api/residents/profile", formData);
+};
+
+export const changePassword = (data) => {
+  return axiosInstance.put("/api/residents/change-password", data);
+};
+
 //  booking routes 
 
 export const createBooking = (formData) => {

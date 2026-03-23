@@ -19,12 +19,7 @@ import {
   deleteSubCategory,
   updateSubCategory,
 } from "../controllers/admin/subCategoryController.js";
-import {
-  addService,
-  deleteService,
-  getAllServices,
-  updateService,
-} from "../controllers/admin/serviceController.js";
+
 import {
   getAllBookings,
   getBookingDetails,
@@ -38,26 +33,11 @@ import {
   getTopProviders,
   viewProviderWallet,
 } from "../controllers/admin/platformController.js";
+import { getComprehensiveAnalytics } from "../controllers/admin/analyticsController.js";
 
 const adminRouter = express.Router();
 
-// ── Services ──
-adminRouter.post(
-  "/addService",
-  protect,
-  adminOnly,
-  uploadServiceImage.single("image"),
-  addService
-);
-adminRouter.put(
-  "/service/:serviceId",
-  protect,
-  adminOnly,
-  uploadServiceImage.single("image"),
-  updateService
-);
-adminRouter.delete("/service/:serviceId", protect, adminOnly, deleteService);
-adminRouter.get("/services", protect, adminOnly, getAllServices);
+
 
 // ── Workers ──
 adminRouter.get("/getPendingWorkers", getPendingWorkers);
@@ -98,6 +78,9 @@ adminRouter.get("/bookings/:bookingId", protect, adminOnly, getBookingDetails);
 // ══════════════════════════════════════════
 //  ★ PLATFORM EARNINGS & WALLET (NEW) ★
 // ══════════════════════════════════════════
+
+adminRouter.get("/platform/comprehensive-analytics", protect, getComprehensiveAnalytics);
+
 
 adminRouter.get(
   "/platform/dashboard",

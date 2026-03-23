@@ -48,7 +48,7 @@ export const FileUploadCard = ({
     3. Nothing
   */
   const preview = filePreview
-    || (currentImage ? `${import.meta.env.VITE_API_URL}/${currentImage}` : null);
+    || (currentImage ? `${import.meta.env.VITE_BASE_URL}/${currentImage}` : null);
 
   const handleDrop = (e) => {
     e.preventDefault();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
   FaHome, FaSearch, FaBell, FaBriefcase, FaWallet,
@@ -9,6 +9,7 @@ import {
   FaComments,
   FaMoneyBill,
   FaMoneyBillWave,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import { getProviderDashboard } from "../../api/serviceProviderEndPoints";
 
@@ -20,11 +21,16 @@ const approvedNavItems = [
   { to: "/provider/available-jobs", icon: FaSearch,    label: "Available Jobs", badge: "New" },
   { to: "/provider/my-offers",      icon: FaBell,      label: "My Offers" },
   { to: "/provider/my-jobs",        icon: FaBriefcase, label: "My Jobs" },
+  { to: "/provider/calendar",       icon: FaCalendarAlt, label: "Calendar" },
+  { to: "/provider/notifications",  icon: FaBell,      label: "Notifications" },
   { to: "/provider/chat",       icon: FaComments,  label: "Messages" },  // ← ADD THIS
   { to: "/provider/wallet",         icon: FaWallet,    label: "Wallet" },      // ← ADD
   { to: "/provider/earnings",       icon: FaMoneyBillWave,    label: "Earnings" },
   { to: "/provider/profile",        icon: FaUser,      label: "My Profile" },
   { to: "/provider/edit-profile",   icon: FaEdit,      label: "Edit Profile" },
+  { to: "/provider/settings",       icon: FaTools,    label: "Settings" },
+  { to: "/provider/support",       icon: FaExclamationCircle, label: "Support" },
+
 ];
 
 /* ─────────────────────────────────────────
@@ -287,7 +293,7 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
 
       {/* ── Footer ── */}
       <div className="flex-shrink-0 px-3 pb-4 pt-3 border-t border-gray-100 space-y-2">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-3
+        {/* <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-3
                         border border-blue-100">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -298,11 +304,11 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
           <p className="text-xs text-gray-500 mb-2 leading-relaxed">
             Contact support for assistance.
           </p>
-          <button className="w-full py-1.5 bg-blue-600 text-white text-xs font-semibold
+          <button  className="w-full py-1.5 bg-blue-600 text-white text-xs font-semibold
                              rounded-lg hover:bg-blue-700 transition-colors">
             Get Support
           </button>
-        </div>
+        </div> */}
 
         <button
           onClick={handleLogout}
@@ -403,14 +409,33 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
 
         {/* Wallet pill — only when approved */}
         {kycStatus === "approved" && (
-          <div className="hidden md:flex items-center gap-1.5 bg-green-50 border
+          <>
+          <div className="flex items-center gap-1.5 bg-green-50 border
                           border-green-200 rounded-xl px-3 py-1.5">
-            <FaWallet className="w-3.5 h-3.5 text-green-600" />
-            <span className="text-sm font-bold text-green-700">
-              Rs. {(provider?.walletBalance || 0).toLocaleString()}
-            </span>
+            <FaBell onClick={() => navigate('/provider/notifications')} className="w-3.5 h-3.5 text-green-600" />
+            
           </div>
+
+            <FaCalendarAlt onClick={() => navigate('/provider/calendar')} className="w-3.5 h-3.5 text-green-600" />
+            <Link
+                    to="/chat"
+                    className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors sm:hidden"
+                  >
+                    <FaComments className="w-5 h-5" />
+                    {/* {unreadMessages > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                        {unreadMessages > 9 ? "9" : unreadMessages}
+                      </span>
+                    )} */}
+                  </Link>
+
+
+
+          </>
+
+          
         )}
+
 
         {/* Profile dropdown button */}
         <div className="relative" id="prov-navbar-dropdown">
@@ -495,12 +520,12 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
                           </span>
                         </div>
                         <span className="text-gray-300">•</span>
-                        <div className="flex items-center gap-1">
+                        {/* <div className="flex items-center gap-1">
                           <FaWallet className="w-3 h-3 text-green-500" />
                           <span className="text-xs font-semibold text-green-600">
                             Rs. {(provider?.walletBalance || 0).toLocaleString()}
                           </span>
-                        </div>
+                        </div> */}
                       </div>
                     )}
                     {/* KYC badge */}
@@ -597,8 +622,7 @@ export default function ProviderLayout() {
       setLayoutLoading(true);
       const res  = await getProviderDashboard();
       const data = res.data.data;
-      console.log("Provider dashboard data:", data);
-      setProvider(data?.provider || null);
+      setProvider(data?.provider || null); 
       const status = data?.provider?.kycStatus || "pending";
       setKycStatus(status);
       setProfileCompleted(true);

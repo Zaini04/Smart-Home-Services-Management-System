@@ -9,6 +9,8 @@ import {
   signAccessToken,
   signRefreshToken // Fixed typo here
 } from "../../utills/tokens.js";
+import { sendEmail } from "../../utills/sendEmail.js";
+import crypto from "crypto";
 
 
 /* ------------------ SIGNUP ------------------ */
@@ -16,63 +18,97 @@ export const signupUser = async (req, res) => {
   try {
     const { full_name, email, phone, password, role, city, address } = req.body;
 
-    if (!full_name || !email || !phone || !password || !role || !city || !address) {
-      return errorResponse(res, "Missing required fields", 400);
-    }
-
     const emailExists = await User.findOne({ email });
     if (emailExists) {
+      if (!emailExists.isEmailVerified) {
+        return errorResponse(res, "Account exists but is unverified. Please login to verify.", 400);
+      }
       return errorResponse(res, "Email already taken", 400);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Generate 4-digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
     const newUser = await User.create({
-      full_name,
-      email,
-      phone,
+      full_name, email, phone, role, city, address,
       password: hashedPassword,
-      role,
-      city,
-      address,
+      isEmailVerified: false,
+      emailVerificationOTP: await bcrypt.hash(otp, 10), // Hash OTP for security
+      otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000) // Valid for 10 mins
     });
 
-    // 1. Create a Session Placeholder (to get _id)
+    // Send the Email
+    const message = `
+      <h2>Welcome to Service Hub!</h2>
+      <p>Your email verification code is: <strong style="font-size: 24px; color: #2563eb;">${otp}</strong></p>
+      <p>This code will expire in 10 minutes.</p>
+    `;
+    
+    await sendEmail({ email: newUser.email, subject: "Verify your Email", message });
+
+    // Send response WITHOUT tokens (they are not logged in yet)
+    return successResponse(res, "OTP sent to email. Please verify.", { email: newUser.email }, 201);
+  } catch (err) {
+    return errorResponse(res, "SignUp Failed", 500, err.message);
+  }
+};
+
+
+/* ------------------ 2. VERIFY OTP & LOGIN ------------------ */
+export const verifyEmailOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return errorResponse(res, "User not found", 404);
+    if (user.isEmailVerified) return errorResponse(res, "Email already verified", 400);
+    
+    if (user.otpExpiresAt < new Date()) {
+      return errorResponse(res, "OTP has expired. Please request a new one.", 400);
+    }
+
+    // Check OTP
+    const isMatch = await bcrypt.compare(otp, user.emailVerificationOTP);
+    if (!isMatch) return errorResponse(res, "Invalid OTP", 400);
+
+    // Mark as verified
+    user.isEmailVerified = true;
+    user.emailVerificationOTP = undefined;
+    user.otpExpiresAt = undefined;
+    await user.save();
+
+    // NOW generate the Session & Tokens (just like your old signup)
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 14);
 
     const newSession = await Session.create({
-      user: newUser._id,
-      refreshTokenHash: "temp", // Temporary
+      user: user._id,
+      refreshTokenHash: "temp", 
       userAgent: req.get("user-Agent"),
       ip: req.ip,
       expiresAt,
     });
 
-    // 2. Generate Tokens (Embed Session ID)
-    const accessToken = signAccessToken(newUser);
-    const refreshToken = signRefreshToken(newUser, newSession._id);
+    const accessToken = signAccessToken(user);
+    const refreshToken = signRefreshToken(user, newSession._id);
 
-    // 3. Update Session with Hash
     newSession.refreshTokenHash = await bcrypt.hash(refreshToken, 10);
     await newSession.save();
 
     res.cookie(refreshCookieName, refreshToken, refreshCookieOptions);
 
-    return successResponse(res, "Account created successfully", {
-      user_id: newUser._id,
-      full_name: newUser.full_name,
-      email: newUser.email,
-      phone: newUser.phone,
-      role: newUser.role,
-      city: newUser.city,
-      address: newUser.address,
-      kycStatus: newUser.role === "serviceprovider" ? newUser.kycStatus : "n/a",
+    return successResponse(res, "Email verified & Logged In successfully", {
+      user_id: user._id,
+      full_name: user.full_name,
+      email: user.email,
+      role: user.role,
       accessToken
-    }, 201);
+    }, 200);
 
   } catch (err) {
-    return errorResponse(res, "SignUp Failed...", 500, err.message);
+    return errorResponse(res, "Verification failed", 500, err.message);
   }
 };
 
@@ -85,6 +121,11 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return errorResponse(res, "Invalid Credentials", 400);
+    }
+
+     if (!user.isEmailVerified) {
+      // Logic to generate and send a new OTP could go here
+      return errorResponse(res, "Please verify your email before logging in.", 403);
     }
 
     const match = await bcrypt.compare(password, user.password);
@@ -214,5 +255,88 @@ export const logoutUser = async (req, res) => {
     return successResponse(res, "Logged Out Successfully", {}, 200);
   } catch (error) {
     return errorResponse(res, "Failed to Logout", 500, error.message);
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return errorResponse(res, "No user found with that email address.", 404);
+    }
+
+    // 1. Generate a random reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // 2. Hash token and save to DB (Valid for 15 mins)
+    user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; 
+    await user.save();
+
+    // 3. Create reset URL (Frontend URL)
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+
+    // 4. Send Email
+    const message = `
+      <h2>Password Reset Request</h2>
+      <p>You requested a password reset. Click the link below to set a new password:</p>
+      <a href="${resetUrl}" style="background:#2563eb; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block; margin-top:10px;">Reset Password</a>
+      <p style="margin-top:20px; font-size:12px; color:gray;">If you didn't request this, please ignore this email. The link expires in 15 minutes.</p>
+    `;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Service Hub - Password Reset",
+        message,
+      });
+
+      return successResponse(res, "Password reset link sent to your email.", null, 200);
+    } catch (err) {
+      // If email fails, clear the tokens so they can try again
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+      return errorResponse(res, "Failed to send email. Try again later.", 500);
+    }
+  } catch (err) {
+    return errorResponse(res, "Forgot password failed", 500, err.message);
+  }
+};
+
+
+/* ------------------ RESET PASSWORD ------------------ */
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    // 1. Hash the incoming token to compare with DB
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    // 2. Find user with this token AND check if it hasn't expired
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return errorResponse(res, "Token is invalid or has expired", 400);
+    }
+
+    // 3. Hash the new password & save
+    user.password = await bcrypt.hash(newPassword, 10);
+    
+    // 4. Clear reset fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    return successResponse(res, "Password has been reset successfully. You can now login.", null, 200);
+  } catch (err) {
+    return errorResponse(res, "Reset password failed", 500, err.message);
   }
 };

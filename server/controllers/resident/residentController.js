@@ -1,6 +1,5 @@
 import Category from "../../models/categoryModel.js";
 import ServiceProvider from "../../models/service_providerModel.js";
-import Service from "../../models/servicesModel.js";
 import { errorResponse, successResponse } from "../../utills/response.js";
 
 export const getApprovedProviders = async (req, res) => {
@@ -27,18 +26,7 @@ export const getApprovedProviders = async (req, res) => {
   }
 };
 
-export const getActiveServices = async (req, res) => {
-  try {
-    const services = await Service.find({ status: "active" });
-    if (services.length <= 0) {
-      return errorResponse(res, "Services not availabe right now", 404);
-    }
 
-    return successResponse(res, "All Active Services", services, 200);
-  } catch (error) {
-    return errorResponse(res, "Failed to get Services", 500, error.message);
-  }
-};
 
 export const getCategories  = async (req,res)=>{
   try {

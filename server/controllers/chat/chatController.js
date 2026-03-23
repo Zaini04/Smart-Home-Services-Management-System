@@ -25,9 +25,10 @@ export const getChatMessages = async (req, res) => {
     }
 
     // Only allow chat if offer was accepted
-    const chatAllowedStatuses = [
-      "inspection_pending",
-      "inspection_scheduled", 
+     const chatAllowedStatuses = [
+      "provider_selected",        // <-- Chat opens the moment an offer is accepted!
+      "inspection_requested", 
+      "inspection_approved",
       "awaiting_price_approval",
       "price_approved",
       "work_in_progress",

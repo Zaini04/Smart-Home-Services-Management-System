@@ -112,18 +112,8 @@ export default function Footer() {
 
   const quickLinks = [
     { label: "Home", path: "/" },
-    { label: "Services", path: "/allservices" },
     { label: "Service Providers", path: "/serviceproviders" },
-    { label: "How it Works", path: "/how-it-works" },
-    { label: "Pricing", path: "/pricing" },
-  ];
-
-  const serviceCategories = [
-    { label: "Plumbing Services", path: "/services/plumber" },
-    { label: "Electrical Services", path: "/services/electrician" },
-    { label: "AC Repair", path: "/services/ac-technician" },
-    { label: "Carpentry", path: "/services/carpenter" },
-    { label: "Home Cleaning", path: "/services/cleaning" },
+    { label: "How it Works", path: "/#how" },
   ];
 
   const supportLinks = [
@@ -217,23 +207,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Services */}
-          <div>
-            <h4 className="text-gray-900 font-semibold mb-4 text-lg">Our Services</h4>
-            <ul className="space-y-3">
-              {serviceCategories.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    to={link.path}
-                    className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-2 group"
-                  >
-                    <FaArrowRight className="w-3 h-3 opacity-0 -ml-5 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Services Render Section Removed */}
 
           {/* Contact Info */}
           <div>
@@ -245,7 +219,7 @@ export default function Footer() {
                 </div>
                 <div>
                   <p className="text-gray-600 text-sm">
-                    123 Service Street, Business District, Lahore, Pakistan
+                    Multan, Pakistan
                   </p>
                 </div>
               </li>

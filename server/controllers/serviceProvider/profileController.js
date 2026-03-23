@@ -119,7 +119,7 @@ export const getCategoriesWithSkills = async (req, res) => {
 
     return successResponse(res, "Categories with skills", result, 200);
   } catch (error) {
-    return errorResponse(res, "Failed to complete profile", 500, err.message);
+    return errorResponse(res, "Failed to complete profile", 500, error.message);
   }
 };
 // ✅ Get Provider KYC Status

@@ -6,6 +6,7 @@ import Wallet from "../../models/walletModel.js";
 import WalletTransaction from "../../models/walletTransactionModel.js";
 import { creditPlatformPenalty } from "../../utills/platformWallet.js";
 import { errorResponse, successResponse } from "../../utills/response.js";
+import { sendNotification } from "../../utills/notify.js";
 import {
   calculateCommission,
   calculateCancellationPenalty,
@@ -115,7 +116,9 @@ export const sendOrUpdateOffer = async (req, res) => {
       booking.status = "offers_received";
       await booking.save();
     }
-req.app.get("io")?.emit("data_updated"); 
+    
+    req.app.get("io")?.emit("data_updated"); 
+    await sendNotification(req, booking.resident, "📝 New Offer Received!", `A worker has sent a quote of Rs. ${laborEstimate} for your job.`);
 
     return successResponse(res, "Offer submitted", {
       offer,
@@ -140,7 +143,7 @@ req.app.get("io")?.emit("data_updated");
 export const requestInspection = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { fee, message: msg, scheduledDate, scheduledTime } = req.body; // 🌟 added date/time
+    const { fee, message: msg, scheduledDate, scheduledTime } = req.body; 
 
     const provider = await ServiceProvider.findOne({ userId: req.user._id });
     const booking = await Booking.findById(bookingId);
@@ -155,14 +158,17 @@ export const requestInspection = async (req, res) => {
     booking.inspection.requested = true;
     booking.inspection.fee = Number(fee) || 0;
     booking.inspection.message = msg || "";
-    booking.inspection.scheduledDate = scheduledDate ? new Date(scheduledDate) : null; // 🌟 add
-    booking.inspection.scheduledTime = scheduledTime || ""; // 🌟 add
+    booking.inspection.scheduledDate = scheduledDate ? new Date(scheduledDate) : null; 
+    booking.inspection.scheduledTime = scheduledTime || ""; 
     booking.inspection.requestedAt = new Date();
     booking.inspection.status = "requested";
 
     booking.status = "inspection_requested";
     await booking.save();
-req.app.get("io")?.emit("data_updated");
+    
+    req.app.get("io")?.emit("data_updated");
+    await sendNotification(req, booking.resident, "🔍 Inspection Requested", "The worker needs to inspect the issue before giving a final price.");
+    
     return successResponse(
       res,
       "Inspection requested. Waiting for resident approval.",
@@ -198,6 +204,10 @@ export const respondToCounterFee = async (req, res) => {
       booking.inspection.status = "approved";
       booking.status = "inspection_approved";
       await booking.save();
+      
+      req.app.get("io")?.emit("data_updated");
+      await sendNotification(req, booking.resident, "🔍 Counter Fee Accepted", "The worker accepted your counter fee.");
+      
       return successResponse(res, "Counter fee accepted. Inspection approved.", booking, 200);
     }
 
@@ -211,9 +221,13 @@ export const respondToCounterFee = async (req, res) => {
       booking.inspection.requestedAt = new Date();
       // stays at inspection_requested
       await booking.save();
+      
+      req.app.get("io")?.emit("data_updated");
+      await sendNotification(req, booking.resident, "🔍 New Inspection Fee", "The worker proposed a new inspection fee.");
+      
       return successResponse(res, "New fee proposed to resident", booking, 200);
     }
-req.app.get("io")?.emit("data_updated");
+    
     return errorResponse(res, "Invalid action. Use: accept, re_propose", 400);
   } catch (err) {
     return errorResponse(res, "Failed to respond to counter fee", 500, err.message);
@@ -314,7 +328,7 @@ export const completeInspection = async (req, res) => {
     await booking.save();
 
     req.app.get("io")?.emit("data_updated"); 
-
+    await sendNotification(req, booking.resident, "💰 Final Price Received", `The worker has sent the final schedule and labor cost (Rs. ${laborCost}). Please approve.`);
 
     return successResponse(res, "Inspection done. Price sent to resident.", {
       booking,
@@ -361,12 +375,8 @@ export const sendFinalPrice = async (req, res) => {
       );
     }
 
-    console.log("provider",req.user._id);
-    
-
     const provider = await ServiceProvider.findOne({ userId: req.user._id });
-    console.log("Provider:", provider);
-        if (!provider) return errorResponse(res, "Provider not found", 404);
+    if (!provider) return errorResponse(res, "Provider not found", 404);
 
     const booking = await Booking.findById(bookingId);
     if (!booking) return errorResponse(res, "Booking not found", 404);
@@ -425,8 +435,9 @@ export const sendFinalPrice = async (req, res) => {
     booking.status = "awaiting_price_approval";
     await booking.save();
 
-req.app.get("io")?.emit("data_updated"); 
-
+    req.app.get("io")?.emit("data_updated"); 
+    await sendNotification(req, booking.resident, "💰 Final Price Received", `The worker has sent the final schedule and labor cost (Rs. ${laborCost}). Please approve.`);
+    
     return successResponse(res, "Price sent to resident", {
       booking,
       commissionInfo: {
@@ -491,8 +502,10 @@ export const updatePriceDuringWork = async (req, res) => {
     });
 
     await booking.save();
-req.app.get("io")?.emit("data_updated"); 
 
+    req.app.get("io")?.emit("data_updated"); 
+    await sendNotification(req, booking.resident, "📝 Price Revision!", `A worker has sent a revision of Rs. ${labor} for your job.`);
+    
     return successResponse(res, "Price revision sent to resident for approval", {
       revision: booking.priceRevisions.at(-1),
       commissionInfo: {
@@ -547,8 +560,10 @@ export const updateSchedule = async (req, res) => {
     booking.schedule.sentAt = new Date();
 
     await booking.save();
-req.app.get("io")?.emit("data_updated"); 
 
+    req.app.get("io")?.emit("data_updated"); 
+    await sendNotification(req, booking.resident, "📝 Schedule Update!", "A worker has sent a schedule update for your job. Please review and approve.");
+    
     return successResponse(res, "Schedule update sent for approval", booking.schedule, 200);
   } catch (err) {
     return errorResponse(res, "Failed to update schedule", 500, err.message);
@@ -615,7 +630,10 @@ export const startWork = async (req, res) => {
     booking.otp.complete.code = generateOTP();
 
     await booking.save();
-req.app.get("io")?.emit("data_updated");
+    
+    req.app.get("io")?.emit("data_updated");
+    await sendNotification(req, booking.resident, "📝 Work Started!", "A worker has started working on your job.");
+    
     return successResponse(res, "Work started!", {
       booking,
       completeOTP: booking.otp.complete.code,
@@ -643,6 +661,8 @@ export const completeWork = async (req, res) => {
       return errorResponse(res, "Work not in progress", 400);
 
     req.app.get("io")?.emit("data_updated");
+    await sendNotification(req, booking.resident, "📝 Work Completed!", "A worker has completed the job.");
+
     return successResponse(
       res,
       "Ask resident to confirm payment with the Complete OTP",
@@ -722,7 +742,9 @@ export const providerCancelJob = async (req, res) => {
     };
 
     await booking.save();
+    
     req.app.get("io")?.emit("data_updated");
+    await sendNotification(req, booking.resident, "📝 Job Cancelled!", "A worker has cancelled the job.");
 
     return successResponse(
       res,

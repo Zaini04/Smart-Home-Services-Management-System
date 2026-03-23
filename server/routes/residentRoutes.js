@@ -1,9 +1,10 @@
 import express from "express";
 import {
-  getActiveServices,
   getApprovedProviders,
   getCategories,
 } from "../controllers/resident/residentController.js";
+import { upload } from "../middlewares/upload.js";
+import {  changePassword, getUserProfile, updateUserProfile } from "../controllers/resident/accountController.js";
 import { uploadBookingImages } from "../middlewares/bookingUpload.js";
 import {
   acceptOffer,
@@ -25,8 +26,14 @@ import { protect } from "../middlewares/protect.js";
 const residentRouter = express.Router();
 
 residentRouter.get("/getWorkers", getApprovedProviders);
-residentRouter.get("/getServices", getActiveServices);
 residentRouter.get("/getCategories", getCategories);
+
+// ── Account & Profile ──
+residentRouter.get("/profile", protect, getUserProfile);
+residentRouter.put("/profile", protect, upload.single("profileImage"), updateUserProfile);
+residentRouter.put("/change-password", protect, changePassword);
+
+
 
 // ── Bookings ──
 residentRouter.post("/create-booking", protect, uploadBookingImages.array("images", 5), createBooking);

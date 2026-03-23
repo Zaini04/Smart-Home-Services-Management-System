@@ -24,10 +24,10 @@ import {
   FaCheck,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
-import { signUp } from "../api/authorEndPoints";
+import { signUp, verifyEmailOTP } from "../api/authorEndPoints"; // ✅ Make sure verifyEmailOTP is imported!
+import { toast } from "react-hot-toast";
 
 /* ------------------ CUSTOM INPUT COMPONENT ------------------ */
-
 const FormInput = ({ 
   icon: Icon, 
   label, 
@@ -86,7 +86,6 @@ const FormInput = ({
 };
 
 /* ------------------ ROLE CARD COMPONENT ------------------ */
-
 const RoleCard = ({ icon: Icon, title, description, isSelected, onSelect }) => (
   <button
     type="button"
@@ -120,7 +119,6 @@ const RoleCard = ({ icon: Icon, title, description, isSelected, onSelect }) => (
 );
 
 /* ------------------ STEP INDICATOR COMPONENT ------------------ */
-
 const StepIndicator = ({ currentStep, totalSteps }) => (
   <div className="flex items-center justify-center gap-2 mb-8">
     {Array.from({ length: totalSteps }, (_, i) => (
@@ -148,7 +146,6 @@ const StepIndicator = ({ currentStep, totalSteps }) => (
 );
 
 /* ------------------ PASSWORD STRENGTH COMPONENT ------------------ */
-
 const PasswordStrength = ({ password }) => {
   const getStrength = () => {
     let strength = 0;
@@ -185,7 +182,6 @@ const PasswordStrength = ({ password }) => {
 };
 
 /* ------------------ MAIN COMPONENT ------------------ */
-
 export default function Signup() {
   const navigate = useNavigate();
   const { loginUser } = useAuth();
@@ -200,6 +196,7 @@ export default function Signup() {
   const [confirm, setConfirm] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
+  const [otp, setOtp] = useState(""); // ✅ New OTP State
 
   // UI state
   const [showPassword, setShowPassword] = useState(false);
@@ -217,21 +214,18 @@ export default function Signup() {
     setConfirm("");
     setAddress("");
     setCity("");
+    setOtp("");
     setCurrentStep(1);
   };
 
   const validateStep = (step) => {
     switch (step) {
-      case 1:
-        return role !== "";
-      case 2:
-        return name && email && phone;
-      case 3:
-        return password && confirm && password === confirm && password.length >= 8;
-      case 4:
-        return address && city && agreed;
-      default:
-        return false;
+      case 1: return role !== "";
+      case 2: return name && email && phone;
+      case 3: return password && confirm && password === confirm && password.length >= 8;
+      case 4: return address && city && agreed;
+      case 5: return otp.length === 4; // ✅ OTP validation
+      default: return false;
     }
   };
 
@@ -247,14 +241,14 @@ export default function Signup() {
     setError("");
   };
 
-  const handleSubmit = async (e) => {
+  // ✅ Step 4 Submission (Sends Email OTP)
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
 
     if (password !== confirm) {
       setError("Passwords do not match");
       return;
     }
-
     if (!agreed) {
       setError("Please agree to the terms and conditions");
       return;
@@ -274,21 +268,40 @@ export default function Signup() {
     };
 
     try {
-      const res = await signUp(payload)
-      console.log(res)
-
+      const res = await signUp(payload);
       if (res.status === 201) {
-        resetFields(); 
-        loginUser(res.data.data, res.data.data.accessToken);
+        toast.success("OTP sent to your email!");
+        setCurrentStep(5); // Move to OTP Step
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Signup failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        if (res.data.data.role === "serviceprovider") {
+  // ✅ Step 5 Submission (Verifies OTP & Logs In)
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await verifyEmailOTP({ email, otp });
+      
+      if (res.status === 200) {
+        toast.success("Account verified & created successfully!");
+        const userData = res.data.data;
+        loginUser(userData, userData.accessToken);
+
+        if (userData.role === "serviceprovider") {
           navigate("/provider/complete-profile");
         } else {
           navigate("/allservices");
         }
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Signup failed. Please try again.");
+      setError(err.response?.data?.message || "Invalid or expired OTP.");
     } finally {
       setLoading(false);
     }
@@ -304,7 +317,6 @@ export default function Signup() {
           {/* Left Side - Branding */}
           <div className="hidden lg:flex flex-col justify-center p-8">
             <div className="space-y-6">
-              {/* Logo/Brand */}
               <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
                   <FaShieldAlt className="w-5 h-5 text-white" />
@@ -312,7 +324,6 @@ export default function Signup() {
                 <span className="font-bold text-gray-800">ServiceHub</span>
               </div>
 
-              {/* Heading */}
               <div className="space-y-4">
                 <h1 className="text-4xl xl:text-5xl font-bold text-gray-900 leading-tight">
                   Join our growing
@@ -325,7 +336,6 @@ export default function Signup() {
                 </p>
               </div>
 
-              {/* Stats */}
               <div className="grid grid-cols-3 gap-4 pt-6">
                 {[
                   { value: "10K+", label: "Active Users" },
@@ -339,7 +349,6 @@ export default function Signup() {
                 ))}
               </div>
 
-              {/* Testimonial */}
               <div className="relative mt-8">
                 <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-3xl blur-2xl" />
                 <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/50">
@@ -368,19 +377,22 @@ export default function Signup() {
           {/* Right Side - Signup Form */}
           <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
             <div className="bg-white rounded-3xl shadow-2xl shadow-gray-200/50 p-8 sm:p-10 border border-gray-100">
-              {/* Header */}
+              
               <div className="text-center mb-6">
                 <div className="lg:hidden inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
                   <FaShieldAlt className="w-7 h-7 text-white" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create account</h2>
-                <p className="text-gray-500 mt-2">Get started with your free account</p>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  {currentStep === 5 ? "Verify Email" : "Create account"}
+                </h2>
+                <p className="text-gray-500 mt-2">
+                  {currentStep === 5 ? `Enter the code sent to ${email}` : "Get started with your free account"}
+                </p>
               </div>
 
-              {/* Step Indicator */}
-              <StepIndicator currentStep={currentStep} totalSteps={4} />
+              {/* Show step indicator only up to step 4 */}
+              {currentStep <= 5 && <StepIndicator currentStep={currentStep} totalSteps={5} />}
 
-              {/* Error Message */}
               {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
                   <FaTimesCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -391,10 +403,10 @@ export default function Signup() {
                 </div>
               )}
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Form decides which handler to run based on current step */}
+              <form onSubmit={currentStep === 5 ? handleVerifyOTP : handleSignupSubmit} className="space-y-5">
                 
-                {/* Step 1: Role Selection */}
+                {/* Step 1 */}
                 {currentStep === 1 && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800">Choose your account type</h3>
@@ -417,57 +429,25 @@ export default function Signup() {
                   </div>
                 )}
 
-                {/* Step 2: Personal Info */}
+                {/* Step 2 */}
                 {currentStep === 2 && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800">Personal Information</h3>
-                    <FormInput
-                      icon={FaUser}
-                      label="Full Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                      placeholder="Enter your full name"
-                    />
-                    <FormInput
-                      icon={FaEnvelope}
-                      label="Email Address"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      placeholder="Enter your email"
-                    />
-                    <FormInput
-                      icon={FaPhone}
-                      label="Phone Number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                      placeholder="03XXXXXXXXX"
-                    />
+                    <FormInput icon={FaUser} label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Enter your full name" />
+                    <FormInput icon={FaEnvelope} label="Email Address" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Enter your email" />
+                    <FormInput icon={FaPhone} label="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="03XXXXXXXXX" />
                   </div>
                 )}
 
-                {/* Step 3: Password */}
+                {/* Step 3 */}
                 {currentStep === 3 && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800">Create Password</h3>
                     <div>
                       <FormInput
-                        icon={FaLock}
-                        label="Password"
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        placeholder="Create a strong password"
+                        icon={FaLock} label="Password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Create a strong password"
                         rightElement={
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
-                          >
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 transition-colors">
                             {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
                           </button>
                         }
@@ -475,77 +455,68 @@ export default function Signup() {
                       <PasswordStrength password={password} />
                     </div>
                     <FormInput
-                      icon={FaLock}
-                      label="Confirm Password"
-                      type={showConfirm ? "text" : "password"}
-                      value={confirm}
-                      onChange={(e) => setConfirm(e.target.value)}
-                      required
-                      placeholder="Confirm your password"
+                      icon={FaLock} label="Confirm Password" type={showConfirm ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} required placeholder="Confirm your password"
                       error={confirm && password !== confirm ? "Passwords don't match" : ""}
                       rightElement={
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirm(!showConfirm)}
-                          className="text-gray-400 hover:text-gray-600 transition-colors"
-                        >
+                        <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-gray-400 hover:text-gray-600 transition-colors">
                           {showConfirm ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
                         </button>
                       }
                     />
                     {confirm && password === confirm && (
                       <p className="text-sm text-green-600 flex items-center gap-1">
-                        <FaCheckCircle className="w-4 h-4" />
-                        Passwords match!
+                        <FaCheckCircle className="w-4 h-4" /> Passwords match!
                       </p>
                     )}
                   </div>
                 )}
 
-                {/* Step 4: Location */}
+                {/* Step 4 */}
                 {currentStep === 4 && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800">Location Details</h3>
-                    <FormInput
-                      icon={FaMapMarkerAlt}
-                      label="Address"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      required
-                      placeholder="House #123, Street 4"
-                    />
-                    <FormInput
-                      icon={FaCity}
-                      label="City"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      required
-                      placeholder="Enter your city"
-                    />
+                    <FormInput icon={FaMapMarkerAlt} label="Address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="House #123, Street 4" />
+                    <FormInput icon={FaCity} label="City" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="Enter your city" />
                     
-                    {/* Terms Checkbox */}
                     <div className="pt-4">
                       <label className="flex items-start gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={agreed}
-                          onChange={(e) => setAgreed(e.target.checked)}
-                          className="w-5 h-5 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
+                        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="w-5 h-5 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                         <span className="text-sm text-gray-600">
-                          I agree to the{" "}
-                          <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
-                          {" "}and{" "}
-                          <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+                          I agree to the <a href="#" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
                         </span>
                       </label>
                     </div>
                   </div>
                 )}
 
+                {/* ✅ Step 5: OTP VERIFICATION */}
+                {currentStep === 5 && (
+                  <div className="space-y-6 py-4">
+                    <div className="flex justify-center mb-2">
+                      <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
+                        <FaEnvelope className="text-3xl text-blue-500" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-center text-sm font-medium text-gray-700 mb-3">
+                        Enter 4-Digit Code
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        maxLength={4}
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} // only numbers
+                        className="w-full text-center text-3xl tracking-[1em] font-bold py-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all bg-gray-50 focus:bg-white"
+                        placeholder="••••"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Navigation Buttons */}
                 <div className="flex gap-3 pt-4">
-                  {currentStep > 1 && (
+                  {currentStep > 1 && currentStep < 5 && (
                     <button
                       type="button"
                       onClick={handleBack}
@@ -556,7 +527,7 @@ export default function Signup() {
                     </button>
                   )}
                   
-                  {currentStep < 4 ? (
+                  {currentStep < 4 && (
                     <button
                       type="button"
                       onClick={handleNext}
@@ -573,7 +544,10 @@ export default function Signup() {
                       Continue
                       <FaArrowRight className="w-4 h-4" />
                     </button>
-                  ) : (
+                  )}
+
+                  {/* Submit initial form -> Go to Step 5 */}
+                  {currentStep === 4 && (
                     <button
                       type="submit"
                       disabled={loading || !validateStep(4)}
@@ -582,20 +556,36 @@ export default function Signup() {
                         flex items-center justify-center gap-2 transition-all duration-300
                         ${loading || !validateStep(4)
                           ? "bg-gray-400 cursor-not-allowed" 
+                          : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
+                        }
+                      `}
+                    >
+                      {loading ? (
+                        <><FaSpinner className="w-5 h-5 animate-spin" /> Sending...</>
+                      ) : (
+                        <><FaEnvelope className="w-5 h-5" /> Send Verify Code</>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Submit OTP -> Final Login */}
+                  {currentStep === 5 && (
+                    <button
+                      type="submit"
+                      disabled={loading || otp.length !== 4}
+                      className={`
+                        w-full py-4 rounded-xl font-semibold text-white
+                        flex items-center justify-center gap-2 transition-all duration-300
+                        ${loading || otp.length !== 4
+                          ? "bg-gray-400 cursor-not-allowed" 
                           : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg shadow-green-500/30"
                         }
                       `}
                     >
                       {loading ? (
-                        <>
-                          <FaSpinner className="w-5 h-5 animate-spin" />
-                          Creating account...
-                        </>
+                        <><FaSpinner className="w-5 h-5 animate-spin" /> Verifying...</>
                       ) : (
-                        <>
-                          <FaCheckCircle className="w-5 h-5" />
-                          Create Account
-                        </>
+                        <><FaCheckCircle className="w-5 h-5" /> Verify & Create Account</>
                       )}
                     </button>
                   )}
@@ -615,17 +605,11 @@ export default function Signup() {
                   </div>
 
                   <div className="flex gap-3">
-                    <button
-                      type="button"
-                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-gray-200 bg-white text-gray-600 font-medium hover:border-gray-300 hover:bg-gray-50 transition-all"
-                    >
+                    <button type="button" className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-gray-200 bg-white text-gray-600 font-medium hover:border-gray-300 hover:bg-gray-50 transition-all">
                       <FaGoogle className="w-5 h-5 text-red-500" />
                       <span className="text-sm">Google</span>
                     </button>
-                    <button
-                      type="button"
-                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-gray-200 bg-white text-gray-600 font-medium hover:border-gray-300 hover:bg-gray-50 transition-all"
-                    >
+                    <button type="button" className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-gray-200 bg-white text-gray-600 font-medium hover:border-gray-300 hover:bg-gray-50 transition-all">
                       <FaFacebook className="w-5 h-5 text-blue-600" />
                       <span className="text-sm">Facebook</span>
                     </button>
@@ -634,15 +618,14 @@ export default function Signup() {
               )}
 
               {/* Login Link */}
-              <p className="mt-8 text-center text-gray-600">
-                Already have an account?{" "}
-                <Link 
-                  to="/login" 
-                  className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  Sign in
-                </Link>
-              </p>
+              {currentStep < 5 && (
+                <p className="mt-8 text-center text-gray-600">
+                  Already have an account?{" "}
+                  <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                    Sign in
+                  </Link>
+                </p>
+              )}
             </div>
           </div>
         </div>

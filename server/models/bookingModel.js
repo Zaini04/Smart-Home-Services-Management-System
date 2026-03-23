@@ -29,6 +29,10 @@ const bookingSchema = new mongoose.Schema(
     description: { type: String, required: true, maxlength: 1000 },
     images: { type: [String], default: [] },
     address: { type: String, required: true },
+    location: {
+      lat: { type: Number, required: false },
+      lng: { type: Number, required: false },
+    },
 
     /* ── PROVIDER ── */
     selectedProvider: {

@@ -74,6 +74,7 @@ export default function PlatformEarnings() {
   const bookings = data?.bookings || {};
   const providers = data?.providers || {};
   const w = data?.wallet || wallet || {};
+  console.log("pDashboard Data:", data); // Debug log
 
   return (
     <div className="space-y-8">

@@ -4,7 +4,6 @@ import React from "react";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Features from "../components/Features";
-import Services from "../components/Services";
 import Footer from "../components/Footer";
 import HowItWorks from "../components/HowItWorks";
 import { FaArrowUp } from "react-icons/fa";
@@ -60,11 +59,6 @@ export default function LandingPage() {
         {/* Features Section - ID for scroll navigation */}
         <section id="features" className="scroll-mt-20">
           <Features />
-        </section>
-
-        {/* Services Section - ID for scroll navigation */}
-        <section id="services" className="scroll-mt-20">
-          <Services />
         </section>
 
         {/* How It Works Section - ID for scroll navigation */}

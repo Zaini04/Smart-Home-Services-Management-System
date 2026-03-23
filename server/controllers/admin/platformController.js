@@ -6,107 +6,90 @@ import Wallet from "../../models/walletModel.js";
 import Booking from "../../models/bookingModel.js";
 import ServiceProvider from "../../models/service_providerModel.js";
 import { errorResponse, successResponse } from "../../utills/response.js";
+import User from "../../models/userModel.js";
 
 /* ════════════════════════════════════════════
    DASHBOARD  —  Admin sees everything
+   ════════════════════════════════════════════ */
+// Add User import at the top of your controller file
+
+/* ════════════════════════════════════════════
+   DASHBOARD  —  Admin Real-Time Dashboard
    ════════════════════════════════════════════ */
 export const getPlatformDashboard = async (req, res) => {
   try {
     const wallet = await getPlatformWallet();
 
+    console.log("Platform Wallet:", wallet); // Debug log
+
     /* ── Time-based earnings ── */
     const now = new Date();
-
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-
-    const weekStart = new Date(now);
-    weekStart.setDate(weekStart.getDate() - 7);
-
-    const monthStart = new Date(now);
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
+    const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
+    const weekStart = new Date(now); weekStart.setDate(weekStart.getDate() - 7);
+    const monthStart = new Date(now); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
 
     const [todayEarnings, weekEarnings, monthEarnings] = await Promise.all([
       PlatformTransaction.aggregate([
-        {
-          $match: {
-            type: { $in: ["commission_received", "penalty_received"] },
-            createdAt: { $gte: todayStart },
-          },
-        },
+        { $match: { type: { $in: ["commission_received", "penalty_received"] }, createdAt: { $gte: todayStart } } },
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ]),
       PlatformTransaction.aggregate([
-        {
-          $match: {
-            type: { $in: ["commission_received", "penalty_received"] },
-            createdAt: { $gte: weekStart },
-          },
-        },
+        { $match: { type: { $in: ["commission_received", "penalty_received"] }, createdAt: { $gte: weekStart } } },
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ]),
       PlatformTransaction.aggregate([
-        {
-          $match: {
-            type: { $in: ["commission_received", "penalty_received"] },
-            createdAt: { $gte: monthStart },
-          },
-        },
+        { $match: { type: { $in: ["commission_received", "penalty_received"] }, createdAt: { $gte: monthStart } } },
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ]),
     ]);
 
-    /* ── Booking stats ── */
+    /* ── Stats Counts ── */
     const [
-      totalBookings,
-      completedBookings,
-      activeBookings,
-      cancelledBookings,
+      totalBookings, completedBookings, activeBookings,cancelledBookings,
+      totalProviders, approvedProviders, pendingProvidersCount,
+      totalUsers, totalResidents
     ] = await Promise.all([
       Booking.countDocuments(),
       Booking.countDocuments({ status: "completed" }),
-      Booking.countDocuments({
-        status: {
-          $in: [
-            "posted",
-            "offers_received",
-            "provider_selected",
-            "inspection_pending",
-            "inspection_scheduled",
-            "awaiting_price_approval",
-            "price_approved",
-            "work_in_progress",
-          ],
-        },
-      }),
+      Booking.countDocuments({ status: { $in: ["work_in_progress", "provider_selected", "posted", "offers_received"] } }),
       Booking.countDocuments({ status: "cancelled" }),
+      ServiceProvider.countDocuments(),
+      ServiceProvider.countDocuments({ kycStatus: "approved" }),
+      ServiceProvider.countDocuments({ kycStatus: { $in: ["pending", "waiting"] } }),
+      User.countDocuments(),
+      User.countDocuments({ role: "resident" })
     ]);
 
-    /* ── Provider stats ── */
-    const [totalProviders, approvedProviders, pendingProviders] =
-      await Promise.all([
-        ServiceProvider.countDocuments(),
-        ServiceProvider.countDocuments({ kycStatus: "approved" }),
-        ServiceProvider.countDocuments({
-          kycStatus: { $in: ["pending", "waiting"] },
-        }),
-      ]);
 
-    /* ── Commission breakdown ── */
-    const commissionFromJobs = await PlatformTransaction.aggregate([
-      { $match: { type: "commission_received" } },
-      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
-    ]);
+    /* ── Fetch Quick Lists for Dashboard UI ── */
+    // 1. Pending workers (top 5 for quick review)
+    const pendingWorkersList = await ServiceProvider.find({ kycStatus: { $in: ["pending", "waiting"] } })
+      .populate("userId", "full_name email phone profileImage")
+      .limit(5)
+      .sort({ createdAt: -1 });
 
-    const penaltyIncome = await PlatformTransaction.aggregate([
-      { $match: { type: "penalty_received" } },
-      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
-    ]);
+    // 2. Recent Activities (latest 5 bookings)
+    const recentActivities = await Booking.find()
+      .populate("resident", "full_name profileImage")
+      .populate("category", "name")
+      .select("bookingId status createdAt finalPrice")
+      .limit(5)
+      .sort({ createdAt: -1 });
+
+
+      const commissionFromJobs = await PlatformTransaction.aggregate([
+  { $match: { type: "commission_received" } },
+  { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
+]);
+
+const penaltyIncome = await PlatformTransaction.aggregate([
+  { $match: { type: "penalty_received" } },
+  { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
+]);
 
     return successResponse(
       res,
-      "Platform dashboard",
+      "Platform dashboard fetched",
       {
         wallet: {
           totalEarnings: wallet.totalEarnings,
@@ -118,16 +101,20 @@ export const getPlatformDashboard = async (req, res) => {
           thisWeek: weekEarnings[0]?.total || 0,
           thisMonth: monthEarnings[0]?.total || 0,
         },
-        incomeBreakdown: {
-          commissions: {
-            total: commissionFromJobs[0]?.total || 0,
-            count: commissionFromJobs[0]?.count || 0,
-          },
-          penalties: {
-            total: penaltyIncome[0]?.total || 0,
-            count: penaltyIncome[0]?.count || 0,
-          },
+        users: {
+          total: totalUsers,
+          residents: totalResidents,
         },
+        incomeBreakdown: {
+      commissions: {
+        total: commissionFromJobs[0]?.total || 0,
+        count: commissionFromJobs[0]?.count || 0,
+      },
+      penalties: {
+        total: penaltyIncome[0]?.total || 0,
+        count: penaltyIncome[0]?.count || 0,
+      },
+    },
         bookings: {
           total: totalBookings,
           completed: completedBookings,
@@ -137,8 +124,12 @@ export const getPlatformDashboard = async (req, res) => {
         providers: {
           total: totalProviders,
           approved: approvedProviders,
-          pending: pendingProviders,
+          pending: pendingProvidersCount,
         },
+        lists: {
+          pendingWorkers: pendingWorkersList,
+          recentActivities: recentActivities
+        }
       },
       200
     );
@@ -146,7 +137,6 @@ export const getPlatformDashboard = async (req, res) => {
     return errorResponse(res, "Failed to fetch dashboard", 500, err.message);
   }
 };
-
 /* ════════════════════════════════════════════
    GET PLATFORM WALLET
    ════════════════════════════════════════════ */

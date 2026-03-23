@@ -50,6 +50,11 @@ export const topUpWallet = async (req, res) => {
       reason: `Top-up via ${method} (Testing Mode)`,
     });
 
+        req.app.get("io")?.to(req.user._id.toString()).emit("notification", {
+      title: "💳 Wallet Topped Up",
+      message: `Successfully added Rs. ${amount} to your wallet.`,
+    });
+
     return successResponse(res, "Wallet topped up", {
       balance:          wallet.balance,
       lockedAmount:     wallet.lockedAmount,
@@ -88,6 +93,11 @@ export const withdrawFromWallet = async (req, res) => {
       amount: Number(amount),
       type:   "debit",
       reason: `Withdrawal → ${method} ${accountNumber} (Testing Mode)`,
+    });
+
+        req.app.get("io")?.to(req.user._id.toString()).emit("notification", {
+      title: "💳 Wallet Topped Up",
+      message: `Successfully added Rs. ${amount} to your wallet.`,
     });
 
     return successResponse(res, "Withdrawal successful", {

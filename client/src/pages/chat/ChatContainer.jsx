@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import { getMyConversations, getChatMessages, uploadChatFile } from "../../api/chatEndPoints";
 import {
-  FaArrowLeft, FaComments, FaUser, FaCircle, FaChevronRight,
-  FaCheckDouble, FaCheck, FaPaperPlane, FaPaperclip, FaSpinner,
-  FaTools, FaImage, FaVideo
+  FaArrowLeft, FaComments, FaUser, FaCheckDouble, FaCheck,
+  FaPaperPlane, FaPaperclip, FaSpinner, FaTools
 } from "react-icons/fa";
 
 function formatTime(date) {
@@ -24,12 +23,12 @@ export default function ChatContainer() {
   const { user } = useAuth();
   const { bookingId } = useParams(); 
   const navigate = useNavigate();
+  const location = useLocation(); 
   const queryClient = useQueryClient();
 
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
@@ -38,12 +37,16 @@ export default function ChatContainer() {
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const isProvider = user?.role === "serviceprovider";
-  const chatPrefix = isProvider ? "/provider/chat" : "/chat";
-  const jobPrefix = isProvider ? "/provider/job" : "/booking";
-  
-  // 🌟 FIX 1: Explicit exit routes instead of navigate(-1)
-  const exitRoute = isProvider ? "/provider/dashboard" : "/my-bookings";
+  // Routing Logic
+  const isProviderRoute = location.pathname.includes("/provider");
+  const chatPrefix = isProviderRoute ? "/provider/chat" : "/chat";
+  const jobPrefix = isProviderRoute ? "/provider/job" : "/booking";
+  const dashboardRoute = isProviderRoute ? "/provider/dashboard" : "/my-bookings";
+
+  const handleBackToDashboard = () => navigate(dashboardRoute);
+  const handleBackToList = () => navigate(chatPrefix);
+  const handleUserClick = (id) => navigate(`${chatPrefix}/${id}`);
+  const handleGoToJob = (id) => navigate(`${jobPrefix}/${id}`);
 
   // 1. Fetch Inbox list
   const { data: conversations = [], isLoading: loadingInbox } = useQuery({
@@ -55,52 +58,71 @@ export default function ChatContainer() {
     enabled: !!user,
   });
 
-  // 2. Setup Socket
+  // 2. Fetch Messages Safely
+  // 🌟 FIX 1: Removed the '= []' to stop the infinite loop bug!
+  const { data: fetchedMessages, isFetching: loadingMessages } = useQuery({
+    queryKey: ["chatMessages", bookingId],
+    queryFn: async () => {
+      const res = await getChatMessages(bookingId);
+      return res.data.data || [];
+    },
+    enabled: !!bookingId, 
+  });
+
+  // 🌟 FIX 2: Safely update local state without looping
+  useEffect(() => {
+    if (!bookingId) {
+      setMessages([]);
+    } else if (fetchedMessages) {
+      setMessages(fetchedMessages);
+    }
+  }, [fetchedMessages, bookingId]);
+
+  // 3. Setup Global Socket Connection
   useEffect(() => {
     if (!user) return;
-    const token = localStorage.getItem("accessToken") || "";
-    const newSocket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
+    const token = localStorage.getItem("accessToken")
+    
+    // 🌟 FIX 3: Make sure port defaults to 5000 matching your backend!
+    const backendUrl = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+    
+    const newSocket = io(backendUrl, {
       auth: { token },
       withCredentials: true,
     });
+    
     setSocket(newSocket);
-    newSocket.on("data_updated", () => queryClient.invalidateQueries(["chatInbox"]));
+    
+    newSocket.on("data_updated", () => queryClient.invalidateQueries({ queryKey: ["chatInbox"] }));
+    
     return () => newSocket.disconnect();
   }, [user, queryClient]);
 
-  // 3. Handle Active Chat Room
+  // 4. Handle Active Chat Room Events
   useEffect(() => {
     if (!socket || !bookingId) return;
 
-    setLoadingMessages(true);
-    getChatMessages(bookingId).then(res => {
-      setMessages(res.data.data || []);
-      setLoadingMessages(false);
-    }).catch(err => {
-      console.error(err);
-      setLoadingMessages(false);
-    });
-
     socket.emit("join_chat", { bookingId });
 
-    socket.on("receive_message", (msg) => {
+    const handleReceive = (msg) => {
       setMessages((prev) => {
         if (prev.find((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
       });
       if (msg.senderId !== user._id && msg.senderId !== user.user_id) {
         socket.emit("mark_read", { bookingId });
-        queryClient.invalidateQueries(["chatInbox"]);
+        queryClient.invalidateQueries({ queryKey: ["chatInbox"] });
       }
       scrollToBottom();
-    });
+    };
 
+    socket.on("receive_message", handleReceive);
     socket.on("user_typing", ({ isTyping }) => setOtherTyping(isTyping));
     socket.on("messages_read", () => setMessages(prev => prev.map(m => ({ ...m, isRead: true }))));
 
     return () => {
       socket.emit("leave_chat", { bookingId });
-      socket.off("receive_message");
+      socket.off("receive_message", handleReceive);
       socket.off("user_typing");
       socket.off("messages_read");
     };
@@ -109,9 +131,10 @@ export default function ChatContainer() {
   const scrollToBottom = useCallback(() => {
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   }, []);
-  useEffect(() => { scrollToBottom(); }, [messages]);
+  
+  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
 
-  // ── Send Text ──
+  // ── Handlers ──
   const handleSend = () => {
     const text = newMessage.trim();
     if (!text || sending || !socket) return;
@@ -119,40 +142,32 @@ export default function ChatContainer() {
     socket.emit("send_message", { bookingId, message: text, messageType: "text" });
     setNewMessage("");
     setSending(false);
-    queryClient.invalidateQueries(["chatInbox"]); 
+    queryClient.invalidateQueries({ queryKey: ["chatInbox"] }); 
   };
 
-  // ── Send File (Image/Video) ──
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !socket) return;
-
     const fileType = file.type.startsWith("video/") ? "video" : "image";
-    
     try {
       setUploading(true);
       const formData = new FormData();
       formData.append("file", file);
-
-      // Call API to save file to server
+      
       const res = await uploadChatFile(formData);
       const fileUrl = res.data.data.fileUrl;
-
-      // Tell socket to broadcast the new file URL
-      socket.emit("send_message", {
-        bookingId,
-        message: fileType === "video" ? "Sent a video" : "Sent an image",
-        messageType: fileType,
-        fileUrl: fileUrl, // Maps to the new backend field
+      
+      socket.emit("send_message", { 
+        bookingId, 
+        message: fileType === "video" ? "Sent a video" : "Sent an image", 
+        messageType: fileType, 
+        fileUrl: fileUrl 
       });
-
-      queryClient.invalidateQueries(["chatInbox"]);
+      queryClient.invalidateQueries({ queryKey: ["chatInbox"] });
     } catch (err) {
-      console.error("Upload failed", err);
       alert("Failed to upload file. Please try again.");
     } finally {
       setUploading(false);
-      // Reset input
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -185,8 +200,7 @@ export default function ChatContainer() {
       {/* ── LEFT PANEL: INBOX ── */}
       <div className={`w-full md:w-[350px] lg:w-[400px] bg-white border-r border-gray-200 flex flex-col ${showSidebar ? "flex" : "hidden md:flex"}`}>
         <div className="p-4 border-b border-gray-100 flex items-center gap-3">
-          {/* 🌟 FIX: Back button exits chat entirely */}
-          <button onClick={() => navigate(exitRoute)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200">
+          <button onClick={handleBackToDashboard} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
             <FaArrowLeft className="w-4 h-4 text-gray-600" />
           </button>
           <h2 className="text-xl font-bold text-gray-800">Chats</h2>
@@ -199,18 +213,17 @@ export default function ChatContainer() {
             <div className="py-10 text-center text-gray-500 text-sm">No active chats</div>
           ) : (
             conversations.map((conv) => (
-              <div key={conv.bookingId} onClick={() => navigate(`${chatPrefix}/${conv.bookingId}`)}
+              <div key={conv.bookingId} onClick={() => handleUserClick(conv.bookingId)}
                 className={`p-3 rounded-xl cursor-pointer flex items-center gap-3 transition-all ${bookingId === conv.bookingId ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50 border border-transparent"}`}
               >
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-100 flex-shrink-0 relative">
                   {conv.otherPerson.image ? (
-                     <img src={`${import.meta.env.VITE_BASE_URL}/${conv.otherPerson.image}`} className="w-full h-full object-cover"/>
+                     <img src={`${import.meta.env.VITE_BASE_URL}/${conv.otherPerson.image}`} className="w-full h-full object-cover" alt="avatar"/>
                   ) : <div className="w-full h-full flex items-center justify-center bg-blue-100"><FaUser className="text-blue-500" /></div>}
                   {conv.status === "work_in_progress" && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border border-white" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center mb-0.5">
-                    {/* 🌟 Better Names Shown Here */}
                     <h4 className={`font-semibold text-sm truncate ${conv.unreadCount > 0 ? "text-gray-900" : "text-gray-800"}`}>{conv.otherPerson.name}</h4>
                     <span className={`text-xs ${conv.unreadCount > 0 ? "text-blue-600 font-bold" : "text-gray-400"}`}>{formatTime(conv.lastMessage?.time || conv.updatedAt)}</span>
                   </div>
@@ -238,12 +251,11 @@ export default function ChatContainer() {
           <>
             <div className="h-[72px] bg-white border-b border-gray-200 px-4 flex items-center justify-between shadow-sm z-10">
               <div className="flex items-center gap-3">
-                {/* 🌟 Mobile back button goes back to chat list */}
-                <button onClick={() => navigate(chatPrefix)} className="md:hidden p-2 -ml-2 text-gray-600">
+                <button onClick={handleBackToList} className="md:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full">
                   <FaArrowLeft />
                 </button>
                 <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0 border border-gray-200">
-                   {activeConv?.otherPerson?.image ? <img src={`${import.meta.env.VITE_BASE_URL}/${activeConv.otherPerson.image}`} className="w-full h-full object-cover"/> : <FaUser className="text-blue-500" />}
+                   {activeConv?.otherPerson?.image ? <img src={`${import.meta.env.VITE_BASE_URL}/${activeConv.otherPerson.image}`} className="w-full h-full object-cover" alt="avatar"/> : <FaUser className="text-blue-500" />}
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 text-sm leading-tight">{activeConv?.otherPerson?.name || "Loading..."}</h3>
@@ -251,8 +263,7 @@ export default function ChatContainer() {
                 </div>
               </div>
 
-              {/* 🌟 ACTION BUTTON */}
-              <button onClick={() => navigate(`${jobPrefix}/${bookingId}`)} className="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all border border-blue-200 shadow-sm">
+              <button onClick={() => handleGoToJob(bookingId)} className="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all border border-blue-200 shadow-sm">
                 <FaTools /> <span className="hidden sm:inline">Job Dashboard</span>
               </button>
             </div>
@@ -273,25 +284,24 @@ export default function ChatContainer() {
                     <div key={msg._id} className={`flex ${mine ? "justify-end" : "justify-start"} items-end gap-2`}>
                       {!mine && (
                         <div className={`w-6 h-6 rounded-full overflow-hidden flex-shrink-0 ${showAvatar ? "bg-gray-300" : "invisible"}`}>
-                           {activeConv?.otherPerson?.image ? <img src={`${import.meta.env.VITE_BASE_URL}/${activeConv.otherPerson.image}`} className="w-full h-full object-cover"/> : <FaUser className="w-3 h-3 m-1.5 text-white" />}
+                           {activeConv?.otherPerson?.image ? <img src={`${import.meta.env.VITE_BASE_URL}/${activeConv.otherPerson.image}`} className="w-full h-full object-cover" alt="avatar"/> : <FaUser className="w-3 h-3 m-1.5 text-white" />}
                         </div>
                       )}
                       
                       <div className={`max-w-[75%] px-4 py-2 text-[15px] shadow-sm relative ${mine ? "bg-[#d9fdd3] text-gray-800 rounded-2xl rounded-br-none" : "bg-white text-gray-800 rounded-2xl rounded-bl-none border border-gray-100"}`}>
                         
-                        {/* 🌟 RENDER FILES (IMAGE/VIDEO) */}
                         {msg.messageType === "image" && msg.fileUrl && (
                           <a href={`${import.meta.env.VITE_BASE_URL}/${msg.fileUrl}`} target="_blank" rel="noreferrer">
                             <img src={`${import.meta.env.VITE_BASE_URL}/${msg.fileUrl}`} className="w-full max-w-xs rounded-lg mb-2 border cursor-pointer hover:opacity-90" alt="attachment" />
                           </a>
                         )}
                         {msg.messageType === "video" && msg.fileUrl && (
-                          <video controls className="w-full max-w-xs rounded-lg mb-2 border">
+                          <video controls className="w-full max-w-xs rounded-lg mb-2 border bg-black">
                             <source src={`${import.meta.env.VITE_BASE_URL}/${msg.fileUrl}`} type="video/mp4" />
                           </video>
                         )}
 
-                        <p className="leading-relaxed">{msg.message}</p>
+                        {msg.message && <p className="leading-relaxed whitespace-pre-wrap">{msg.message}</p>}
                         
                         <div className={`flex items-center justify-end gap-1 mt-1 -mb-1 ${mine ? "text-gray-500" : "text-gray-400"}`}>
                           <span className="text-[10px]">{formatTime(msg.createdAt)}</span>
@@ -315,26 +325,15 @@ export default function ChatContainer() {
               <div ref={messagesEndRef} className="h-2" />
             </div>
 
-            {/* 🌟 CHAT INPUT & FILE UPLOAD */}
             <div className="bg-[#f0f2f5] p-3 flex items-end gap-2 border-t border-gray-200">
-              
-              {/* File Input Trigger */}
               <input type="file" accept="image/*,video/*" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-              <button 
-                onClick={() => fileInputRef.current?.click()} 
-                disabled={uploading}
-                className="p-3 text-gray-600 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0"
-              >
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="p-3 text-gray-600 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0">
                 {uploading ? <FaSpinner className="animate-spin w-5 h-5" /> : <FaPaperclip className="w-5 h-5" />}
               </button>
               
-              <textarea value={newMessage} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Type a message" rows={1}
-                className="flex-1 max-h-32 min-h-[44px] bg-white rounded-2xl px-4 py-3 text-[15px] outline-none resize-none shadow-sm"
-              />
+              <textarea value={newMessage} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Type a message" rows={1} className="flex-1 max-h-32 min-h-[44px] bg-white rounded-2xl px-4 py-3 text-[15px] outline-none resize-none shadow-sm" />
 
-              <button onClick={handleSend} disabled={!newMessage.trim() || sending}
-                className={`p-3 rounded-full flex-shrink-0 flex items-center justify-center transition-all ${newMessage.trim() ? "bg-[#00a884] text-white shadow-sm" : "bg-gray-200 text-gray-400"}`}
-              >
+              <button onClick={handleSend} disabled={(!newMessage.trim() && !uploading) || sending} className={`p-3 rounded-full flex-shrink-0 flex items-center justify-center transition-all ${newMessage.trim() ? "bg-[#00a884] text-white shadow-sm" : "bg-gray-200 text-gray-400"}`}>
                 {sending ? <FaSpinner className="animate-spin w-5 h-5" /> : <FaPaperPlane className="w-5 h-5 ml-1" />}
               </button>
             </div>
