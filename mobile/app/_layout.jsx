@@ -10,7 +10,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 20,
-      cacheTime: 1000 * 60 * 30,
+      gcTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
     },
   },
@@ -50,7 +50,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(resident)" />
         <Stack.Screen name="(provider)" />
-        <Stack.Screen name="chat/[bookingId]" options={{ headerShown: true, title: 'Chat' }} />
+        <Stack.Screen name="chat/[id]" options={{ headerShown: true, title: 'Chat' }} />
       </Stack>
       <Toast />
     </>

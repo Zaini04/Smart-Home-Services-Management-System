@@ -11,6 +11,8 @@ import { BASE_URL } from '../../src/api/apiInstance';
 
 const statusConfig = {
   open: { color: '#3B82F6', bg: '#EFF6FF', label: 'Open', icon: 'time' },
+  posted: { color: '#3B82F6', bg: '#EFF6FF', label: 'Waiting for Offers', icon: 'time' },
+  offers_received: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offers Received', icon: 'list' },
   offer_accepted: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offer Accepted', icon: 'checkmark-circle' },
   inspection_pending: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Pending', icon: 'time' },
   inspection_scheduled: { color: '#F97316', bg: '#FFF7ED', label: 'Inspection Scheduled', icon: 'calendar' },

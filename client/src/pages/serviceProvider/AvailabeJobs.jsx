@@ -153,7 +153,7 @@ export default function AvailableJobs() {
     // If your app stores it differently (e.g., in context or cookies), let me know.
     const token = localStorage.getItem("accessToken"); 
 
-    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
+    const socket = io(import.meta.env.VITE_BASE_URL || "http://localhost:5000", {
       auth: { token: token },
       withCredentials: true, // 🌟 ADD THIS
     });

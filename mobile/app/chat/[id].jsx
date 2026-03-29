@@ -5,7 +5,9 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getMessages, uploadFile } from '../../src/api/chatEndPoints';
+import { getChatMessages, uploadChatFile } from '../../src/api/chatEndPoints';
+import { getBookingDetails as getResidentBooking } from '../../src/api/residentEndPoints';
+import { getJobDetails as getProviderBooking } from '../../src/api/serviceProviderEndPoints';
 import { useAuth } from '../../src/context/AuthContext';
 import { useSocket } from '../../src/context/SocketContext';
 import { Colors } from '../../src/theme/colors';
@@ -14,7 +16,7 @@ export default function ChatScreen() {
   const { id } = useLocalSearchParams(); // booking ID or User ID (for initial chat, depends on API)
   const router = useRouter();
   const { user } = useAuth();
-  const socket = useSocket();
+  const { socket } = useSocket();
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,17 +62,22 @@ export default function ChatScreen() {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const res = await getMessages(id);
-      setMessages(res.data.data.messages || []);
+      const res = await getChatMessages(id);
+      const msgs = res.data.data?.messages || res.data.data || [];
+      setMessages(msgs);
       
-      // Determine other user for header
-      if (res.data.data.messages.length > 0) {
-        const msg = res.data.data.messages[0];
-        const other = msg.sender._id === user._id ? msg.receiver : msg.sender;
-        setOtherUser(other);
+      // Fetch booking details to get the other person's name accurately
+      if (user?.role === 'resident') {
+        const bookRes = await getResidentBooking(id).catch(() => ({ data: { data: {} } }));
+        const providerName = bookRes.data.data?.booking?.selectedProvider?.name || bookRes.data.data?.selectedProvider?.name;
+        setOtherUser({ name: providerName || 'Worker' });
+      } else {
+        const jobRes = await getProviderBooking(id).catch(() => ({ data: { data: {} } }));
+        const residentName = jobRes.data.data?.resident?.name;
+        setOtherUser({ name: residentName || 'Customer' });
       }
     } catch (err) {
-      console.error(err);
+      console.error('Chat fetch error:', err);
     } finally {
       setLoading(false);
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 200);
@@ -92,6 +99,7 @@ export default function ChatScreen() {
     // Optimistically add message
     const tempMsg = {
       _id: Date.now().toString(),
+      senderId: user._id,
       sender: user,
       message: newMessage.trim(),
       createdAt: new Date().toISOString(),
@@ -118,7 +126,7 @@ export default function ChatScreen() {
   };
 
   const renderMessage = ({ item }) => {
-    const isMe = item.sender._id === user._id;
+    const isMe = (item.senderId || item.sender?._id || item.sender) === user._id;
 
     return (
       <View style={[styles.msgContainer, isMe ? styles.myMsgContainer : styles.otherMsgContainer]}>

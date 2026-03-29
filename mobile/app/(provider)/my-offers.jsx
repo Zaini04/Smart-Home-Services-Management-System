@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  RefreshControl, ActivityIndicator
+  RefreshControl, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform, ScrollView
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getMyOffers } from '../../src/api/serviceProviderEndPoints';
+import { getMyOffers, sendOrUpdateOffer } from '../../src/api/serviceProviderEndPoints';
 import { Colors, Shadows } from '../../src/theme/colors';
+import { calculateCommission } from '../../src/utils/commissionCalc';
 
 export default function MyOffersScreen() {
   const router = useRouter();
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Modal states
+  const [selectedOffer, setSelectedOffer] = useState(null);
+  const [updateLabor, setUpdateLabor] = useState('');
+  const [updateMessage, setUpdateMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchOffers = async () => {
     try {
@@ -38,13 +45,38 @@ export default function MyOffersScreen() {
     }
   };
 
+  const handleUpdatePress = (offer) => {
+    setSelectedOffer(offer);
+    setUpdateLabor(offer.laborEstimate?.toString() || '');
+    setUpdateMessage(offer.message || '');
+  };
+
+  const handleSubmitUpdate = async () => {
+    if (!updateLabor) return Alert.alert("Error", "Please enter a labor estimate.");
+    if (isNaN(updateLabor) || Number(updateLabor) <= 0) return Alert.alert("Error", "Please enter a valid amount.");
+    
+    setIsSubmitting(true);
+    try {
+      const bookingId = selectedOffer.booking?._id || selectedOffer.booking;
+      await sendOrUpdateOffer(bookingId, {
+        laborEstimate: Number(updateLabor),
+        message: updateMessage
+      });
+      Alert.alert("Success", "Your offer has been updated!");
+      setSelectedOffer(null);
+      fetchOffers();
+    } catch (err) {
+      Alert.alert("Error", err.response?.data?.message || "Failed to update offer. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const renderItem = ({ item }) => {
     const styleObj = getStatusStyle(item.status);
     return (
-      <TouchableOpacity
+      <View
         style={styles.offerCard}
-        onPress={() => router.push(`/(provider)/job/${item.booking}`)}
-        activeOpacity={0.7}
       >
         <View style={styles.offerHeader}>
           <View style={styles.catBox}>
@@ -64,7 +96,7 @@ export default function MyOffersScreen() {
 
         <View style={styles.estimateBox}>
           <Text style={styles.estimateLabel}>Estimated Labor Cost</Text>
-          <Text style={styles.estimateValue}>Rs. {item.laborEstimate.toLocaleString()}</Text>
+          <Text style={styles.estimateValue}>Rs. {(item.laborEstimate || 0).toLocaleString()}</Text>
         </View>
 
         {item.message && (
@@ -73,7 +105,27 @@ export default function MyOffersScreen() {
             <Text style={styles.messageText}>{item.message}</Text>
           </View>
         )}
-      </TouchableOpacity>
+
+        {item.status === 'accepted' && (
+          <TouchableOpacity 
+            style={styles.viewJobBtn}
+            onPress={() => router.push(`/(provider)/job/${item.booking?._id || item.booking}`)}
+          >
+            <Ionicons name="eye" size={16} color="#FFF" />
+            <Text style={styles.viewJobBtnText}>View Job Details</Text>
+          </TouchableOpacity>
+        )}
+
+        {item.status === 'pending' && (
+          <TouchableOpacity 
+            style={[styles.viewJobBtn, { backgroundColor: Colors.primary }]}
+            onPress={() => handleUpdatePress(item)}
+          >
+            <Ionicons name="create" size={16} color="#FFF" />
+            <Text style={styles.viewJobBtnText}>Update Offer</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     );
   };
 
@@ -97,6 +149,56 @@ export default function MyOffersScreen() {
           )
         }
       />
+
+      {/* Update Offer Modal */}
+      <Modal visible={!!selectedOffer} animationType="fade" transparent={true} onRequestClose={() => setSelectedOffer(null)}>
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Update Offer</Text>
+                <TouchableOpacity onPress={() => setSelectedOffer(null)}>
+                  <Ionicons name="close" size={24} color={Colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                <Text style={styles.inputLabel}>Your Labor Estimate (Rs.)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. 1500"
+                  keyboardType="numeric"
+                  value={updateLabor}
+                  onChangeText={setUpdateLabor}
+                />
+
+                <Text style={styles.inputLabel}>Message to Resident (Optional)</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Explain why you are the best fit..."
+                  multiline
+                  numberOfLines={4}
+                  value={updateMessage}
+                  onChangeText={setUpdateMessage}
+                  textAlignVertical="top"
+                />
+
+                <TouchableOpacity 
+                  style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]} 
+                  onPress={handleSubmitUpdate}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                     <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <Text style={styles.submitBtnText}>Update Offer</Text>
+                  )}
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -113,9 +215,23 @@ const styles = StyleSheet.create({
   estimateBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F9FAFB', padding: 12, borderRadius: 12, marginBottom: 12 },
   estimateLabel: { fontSize: 13, color: Colors.textSecondary },
   estimateValue: { fontSize: 16, fontWeight: '700', color: Colors.primary },
-  messageBox: { flexDirection: 'row', gap: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.borderLight },
+  messageBox: { flexDirection: 'row', gap: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.borderLight, marginBottom: 8 },
   messageText: { fontSize: 13, color: Colors.textSecondary, flex: 1, fontStyle: 'italic' },
+  viewJobBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.success, paddingVertical: 12, borderRadius: 12, marginTop: 4 },
+  viewJobBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
   emptyState: { alignItems: 'center', paddingVertical: 80 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: Colors.text, marginTop: 16 },
   emptyText: { fontSize: 14, color: Colors.textSecondary, marginTop: 6 },
+  // Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { width: '100%', maxHeight: '90%' },
+  modalContent: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40, maxHeight: '100%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: Colors.text },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: Colors.text, marginBottom: 8 },
+  input: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: Colors.borderLight, borderRadius: 12, padding: 14, fontSize: 15, color: Colors.text, marginBottom: 20 },
+  textArea: { height: 100 },
+  submitBtn: { backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 10 },
+  submitBtnDisabled: { opacity: 0.7 },
+  submitBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
 });

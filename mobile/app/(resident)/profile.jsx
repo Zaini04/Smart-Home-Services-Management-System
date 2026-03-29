@@ -47,14 +47,14 @@ export default function ProfileScreen() {
           <Text style={styles.userEmail}>{user?.email || ''}</Text>
           <View style={styles.roleBadge}>
             <Ionicons name="home" size={12} color={Colors.primary} />
-            <Text style={styles.roleText}>Resident</Text>
+            <Text style={styles.roleText}>{user?.role === 'serviceprovider' ? 'Service Provider' : 'Resident'}</Text>
           </View>
         </View>
 
         {/* Menu Items */}
         <View style={styles.menuCard}>
           {[
-            { icon: 'person-outline', label: 'Edit Profile', onPress: () => {} },
+            { icon: 'person-outline', label: 'Edit Profile', onPress: () => router.push('/(resident)/edit-profile') },
             { icon: 'call-outline', label: user?.phone || 'Phone', onPress: () => {} },
             { icon: 'location-outline', label: user?.address || 'Address', onPress: () => {} },
             { icon: 'business-outline', label: user?.city || 'City', onPress: () => {} },

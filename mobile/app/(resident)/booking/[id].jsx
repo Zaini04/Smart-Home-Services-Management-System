@@ -15,7 +15,12 @@ import { Colors, Shadows } from '../../../src/theme/colors';
 
 const statusConfig = {
   open: { color: '#3B82F6', bg: '#EFF6FF', label: 'Open', icon: 'time' },
+  posted: { color: '#3B82F6', bg: '#EFF6FF', label: 'Waiting for Offers', icon: 'time' },
+  offers_received: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offers Received', icon: 'list' },
   offer_accepted: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offer Accepted', icon: 'checkmark-circle' },
+  provider_selected: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Provider Selected', icon: 'person' },
+  inspection_requested: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Requested', icon: 'search' },
+  inspection_approved: { color: '#10B981', bg: '#D1FAE5', label: 'Inspection Approved', icon: 'checkmark-done' },
   inspection_pending: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Pending', icon: 'time' },
   inspection_scheduled: { color: '#F97316', bg: '#FFF7ED', label: 'Inspection Scheduled', icon: 'calendar' },
   awaiting_price_approval: { color: '#D97706', bg: '#FFFBEB', label: 'Awaiting Price Approval', icon: 'time' },
@@ -33,6 +38,11 @@ export default function BookingDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [showCounterModal, setShowCounterModal] = useState(false);
+  const [counterFee, setCounterFee] = useState('');
+  const [counterMsg, setCounterMsg] = useState('');
+  
+  const [completeOtp, setCompleteOtp] = useState('');
 
   const fetchData = async () => {
     try {
@@ -41,7 +51,7 @@ export default function BookingDetailsScreen() {
         getBookingDetails(id),
         getBookingOffers(id).catch(() => ({ data: { data: [] } })),
       ]);
-      setBooking(bookRes.data.data);
+      setBooking(bookRes.data.data.booking || bookRes.data.data);
       setOffers(offersRes.data.data || []);
     } catch (err) {
       console.error(err);
@@ -178,8 +188,8 @@ export default function BookingDetailsScreen() {
           </View>
         )}
 
-        {/* Offers (if open) */}
-        {booking.status === 'open' && offers.length > 0 && (
+        {/* Offers */}
+        {['open', 'posted', 'offers_received'].includes(booking.status) && offers.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Offers ({offers.length})</Text>
             {offers.map((offer) => (
@@ -217,44 +227,244 @@ export default function BookingDetailsScreen() {
 
         {/* Action Buttons */}
         <View style={styles.actionsCard}>
-          {booking.status === 'awaiting_price_approval' && (
-            <>
+
+          {/* INSPECTION REQUESTED */}
+          {booking.status === 'inspection_requested' && (
+            <View style={[styles.card, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+              {booking.inspection?.status === 'counter_offered' ? (
+                <>
+                  <Text style={styles.cardTitle}>Counter Offer Sent</Text>
+                  <Text style={{ fontSize: 13, color: '#92400E', marginBottom: 4 }}>
+                    Waiting for provider to respond to your counter fee of Rs. {(booking.inspection?.counterFee || 0).toLocaleString()}.
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.cardTitle}>Inspection Requested</Text>
+                  <Text style={{ fontSize: 13, color: '#92400E', marginBottom: 4 }}>
+                    Fee: Rs. {(booking.inspection?.fee || 0).toLocaleString()}
+                  </Text>
+                  {booking.inspection?.scheduledDate && (
+                    <Text style={{ fontSize: 13, color: '#92400E', marginBottom: 4 }}>
+                      Date: {new Date(booking.inspection.scheduledDate).toLocaleDateString()} {booking.inspection.scheduledTime && `at ${booking.inspection.scheduledTime}`}
+                    </Text>
+                  )}
+                  {booking.inspection?.message && (
+                    <Text style={{ fontSize: 13, color: '#92400E', marginBottom: 12 }}>{booking.inspection.message}</Text>
+                  )}
+
+                  {!showCounterModal ? (
+                    <View style={{ gap: 8, marginTop: 8 }}>
+                      <TouchableOpacity
+                        style={styles.actionBtn}
+                        onPress={() => handleAction('Approve inspection', respondToInspection, id, { action: 'approve' })}
+                        disabled={!!actionLoading}
+                      >
+                        <LinearGradient colors={[Colors.success, '#059669']} style={styles.actionGradient}>
+                          <Ionicons name="checkmark" size={18} color="#FFF" />
+                          <Text style={styles.actionBtnText}>Approve Inspection</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.actionBtn}
+                        onPress={() => setShowCounterModal(true)}
+                        disabled={!!actionLoading}
+                      >
+                        <View style={[styles.actionGradient, { backgroundColor: '#FDE68A' }]}>
+                          <Ionicons name="git-compare" size={18} color="#92400E" />
+                          <Text style={[styles.actionBtnText, { color: '#92400E' }]}>Counter Fee</Text>
+                        </View>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.actionBtn}
+                        onPress={() => handleAction('Reject inspection', respondToInspection, id, { action: 'reject' })}
+                        disabled={!!actionLoading}
+                      >
+                        <View style={[styles.actionGradient, { backgroundColor: Colors.dangerLight }]}>
+                          <Ionicons name="close" size={18} color={Colors.danger} />
+                          <Text style={[styles.actionBtnText, { color: Colors.danger }]}>Reject</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={{ marginTop: 12 }}>
+                      <TextInput
+                        style={[styles.input, { backgroundColor: '#FFF' }]}
+                        placeholder="Your Counter Fee (Rs.)"
+                        value={counterFee}
+                        onChangeText={setCounterFee}
+                        keyboardType="numeric"
+                      />
+                      <TextInput
+                        style={[styles.input, { backgroundColor: '#FFF', height: 80, textAlignVertical: 'top', marginTop: 8 }]}
+                        placeholder="Message (Optional)"
+                        value={counterMsg}
+                        onChangeText={setCounterMsg}
+                        multiline
+                      />
+                      <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                        <TouchableOpacity
+                          style={[styles.actionBtn, { flex: 1, backgroundColor: Colors.textSecondary, paddingVertical: 12 }]}
+                          onPress={() => setShowCounterModal(false)}
+                        >
+                          <Text style={[styles.actionBtnText, { textAlign: 'center' }]}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.actionBtn, { flex: 1, backgroundColor: Colors.primary, paddingVertical: 12 }]}
+                          onPress={() => handleAction('Send Counter', respondToInspection, id, { action: 'counter', counterFee, counterMessage: counterMsg })}
+                          disabled={!counterFee}
+                        >
+                          <Text style={[styles.actionBtnText, { textAlign: 'center' }]}>Send</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </>
+              )}
+            </View>
+          )}
+
+          {/* INSPECTION APPROVED */}
+          {booking.status === 'inspection_approved' && (
+            <View style={[styles.card, { backgroundColor: '#D1FAE5', borderColor: '#6EE7B7' }]}>
+              <Text style={styles.cardTitle}>Inspection Approved</Text>
+              <Text style={{ fontSize: 13, color: '#065F46', marginBottom: 4 }}>
+                Agreed Fee: Rs. {(booking.inspection?.agreedFee || 0).toLocaleString()}
+              </Text>
+              {booking.inspection?.scheduledDate && (
+                <Text style={{ fontSize: 13, color: '#065F46' }}>
+                  Worker will visit on: {new Date(booking.inspection.scheduledDate).toLocaleDateString()} {booking.inspection.scheduledTime && `at ${booking.inspection.scheduledTime}`}
+                </Text>
+              )}
+            </View>
+          )}
+
+          {/* SCHEDULE UPDATE pending */}
+          {booking.pendingScheduleUpdate && (
+            <View style={[styles.card, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+              <Text style={styles.cardTitle}>Schedule Update Requested</Text>
+              <Text style={{ fontSize: 13, color: '#1D4ED8', marginBottom: 12 }}>
+                The provider wants to update the job schedule.
+              </Text>
               <TouchableOpacity
                 style={styles.actionBtn}
-                onPress={() => handleAction('Approve price', approveFinalPrice, id)}
+                onPress={() => handleAction('Approve schedule', approveScheduleUpdate, id)}
                 disabled={!!actionLoading}
               >
-                <LinearGradient colors={[Colors.success, '#059669']} style={styles.actionGradient}>
-                  <Ionicons name="checkmark" size={18} color="#FFF" />
-                  <Text style={styles.actionBtnText}>Approve Price</Text>
+                <LinearGradient colors={[Colors.primary, Colors.secondary]} style={styles.actionGradient}>
+                  <Ionicons name="calendar" size={18} color="#FFF" />
+                  <Text style={styles.actionBtnText}>Approve Schedule</Text>
                 </LinearGradient>
               </TouchableOpacity>
+            </View>
+          )}
+
+          {/* AWAITING PRICE APPROVAL */}
+          {booking.status === 'awaiting_price_approval' && (
+            <View style={[styles.card, { backgroundColor: '#EEF2FF', borderColor: '#C3DAFE' }]}>
+              <Text style={styles.cardTitle}>Final Price & Schedule Proposed</Text>
+              <Text style={{ fontSize: 14, color: '#1E40AF', marginBottom: 6, fontWeight: '600' }}>
+                Labor Cost: Rs. {(booking.finalPrice?.laborCost || 0).toLocaleString()}
+              </Text>
+              {booking.schedule?.scheduledStartDate && (
+                <Text style={{ fontSize: 13, color: '#1E40AF', marginBottom: 4 }}>
+                  Start: {new Date(booking.schedule.scheduledStartDate).toLocaleDateString()}
+                </Text>
+              )}
+              {booking.schedule?.estimatedDuration?.value && (
+                <Text style={{ fontSize: 13, color: '#1E40AF', marginBottom: 12 }}>
+                  Est. Duration: {booking.schedule.estimatedDuration.value} {booking.schedule.estimatedDuration.unit}
+                </Text>
+              )}
+              <View style={{ gap: 8 }}>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => handleAction('Approve price', approveFinalPrice, id)}
+                  disabled={!!actionLoading}
+                >
+                  <LinearGradient colors={[Colors.success, '#059669']} style={styles.actionGradient}>
+                    <Ionicons name="checkmark" size={18} color="#FFF" />
+                    <Text style={styles.actionBtnText}>Approve Proposal</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => handleAction('Reject price', rejectFinalPrice, id, { reason: 'Too expensive' })}
+                  disabled={!!actionLoading}
+                >
+                  <View style={[styles.actionGradient, { backgroundColor: Colors.dangerLight }]}>
+                    <Ionicons name="close" size={18} color={Colors.danger} />
+                    <Text style={[styles.actionBtnText, { color: Colors.danger }]}>Reject & Cancel</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* EVENT: PENDING PRICE REVISION DURING WORK */}
+          {booking.status === 'work_in_progress' && booking.priceRevisions?.length > 0 && booking.priceRevisions.at(-1).status === 'pending' && (
+            <View style={[styles.card, { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' }]}>
+              <Text style={styles.cardTitle}>Price Revision Requested</Text>
+              <Text style={{ fontSize: 14, color: '#991B1B', fontWeight: '600', marginBottom: 4 }}>
+                New Labor Cost: Rs. {booking.priceRevisions.at(-1).laborCost.toLocaleString()}
+              </Text>
+              {booking.priceRevisions.at(-1).reason && (
+                <Text style={{ fontSize: 13, color: '#991B1B', marginBottom: 12 }}>
+                  Reason: {booking.priceRevisions.at(-1).reason}
+                </Text>
+              )}
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={[styles.actionBtn, { flex: 1, backgroundColor: Colors.success, paddingVertical: 12 }]}
+                  onPress={() => handleAction('Approve revision', approvePriceRevision, id, booking.priceRevisions.at(-1)._id, { approve: true })}
+                >
+                  <Text style={[styles.actionBtnText, { textAlign: 'center' }]}>Approve</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionBtn, { flex: 1, backgroundColor: Colors.danger, paddingVertical: 12 }]}
+                  onPress={() => handleAction('Reject revision', approvePriceRevision, id, booking.priceRevisions.at(-1)._id, { approve: false })}
+                >
+                  <Text style={[styles.actionBtnText, { textAlign: 'center' }]}>Reject</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* WORK IN PROGRESS: Confirm Payment & Enter OTP */}
+          {booking.status === 'work_in_progress' && (
+            <View style={[styles.card, { backgroundColor: '#EEF2FF', borderColor: '#C3DAFE' }]}>
+              <Text style={styles.cardTitle}>Complete Job & Confirm Payment</Text>
+              <Text style={{ fontSize: 13, color: '#1E40AF', marginBottom: 16 }}>
+                Work is done? Enter the 4-digit Complete OTP from the worker to confirm and pay Rs. {(booking.finalPrice?.totalAmount || 0).toLocaleString()}.
+              </Text>
+              
+              <Text style={styles.inputLabel}>Complete OTP</Text>
+              <TextInput 
+                style={[styles.input, { backgroundColor: '#FFF', marginBottom: 12, fontSize: 24, textAlign: 'center', letterSpacing: 8 }]} 
+                keyboardType="numeric" 
+                maxLength={4}
+                value={completeOtp} 
+                onChangeText={setCompleteOtp} 
+                placeholder="----" 
+              />
+              
               <TouchableOpacity
                 style={styles.actionBtn}
-                onPress={() => handleAction('Reject price', rejectFinalPrice, id, { reason: 'Too expensive' })}
+                onPress={() => {
+                  if (completeOtp.length !== 4) return Alert.alert('Validation Error', 'Enter 4-digit Complete OTP');
+                  handleAction('Confirm payment', confirmPayment, id, { otp: completeOtp, paymentMethod: 'cash' });
+                }}
                 disabled={!!actionLoading}
               >
-                <View style={[styles.actionGradient, { backgroundColor: Colors.dangerLight }]}>
-                  <Ionicons name="close" size={18} color={Colors.danger} />
-                  <Text style={[styles.actionBtnText, { color: Colors.danger }]}>Reject</Text>
-                </View>
+                <LinearGradient colors={[Colors.primary, Colors.secondary]} style={styles.actionGradient}>
+                  <Ionicons name="wallet" size={18} color="#FFF" />
+                  <Text style={styles.actionBtnText}>Confirm Payment</Text>
+                </LinearGradient>
               </TouchableOpacity>
-            </>
+            </View>
           )}
 
-          {booking.status === 'price_approved' && (
-            <TouchableOpacity
-              style={styles.actionBtn}
-              onPress={() => handleAction('Confirm payment', confirmPayment, id, { method: 'cash' })}
-              disabled={!!actionLoading}
-            >
-              <LinearGradient colors={[Colors.primary, Colors.secondary]} style={styles.actionGradient}>
-                <Ionicons name="wallet" size={18} color="#FFF" />
-                <Text style={styles.actionBtnText}>Confirm Payment</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-
+          {/* COMPLETED: Write Review */}
           {booking.status === 'completed' && !booking.review && (
             <TouchableOpacity
               style={styles.actionBtn}
@@ -267,6 +477,7 @@ export default function BookingDetailsScreen() {
             </TouchableOpacity>
           )}
 
+          {/* CANCEL BOOKING */}
           {!['completed', 'cancelled'].includes(booking.status) && (
             <TouchableOpacity
               style={styles.actionBtn}
@@ -332,4 +543,13 @@ const styles = StyleSheet.create({
   actionBtn: { borderRadius: 14, overflow: 'hidden' },
   actionGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 14 },
   actionBtnText: { fontSize: 15, fontWeight: '600', color: '#FFF' },
+  inputLabel: { fontSize: 13, color: Colors.textSecondary, marginBottom: 6 },
+  input: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 15,
+    color: Colors.text,
+  },
 });

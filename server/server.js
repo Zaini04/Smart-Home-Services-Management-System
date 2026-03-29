@@ -10,11 +10,11 @@ import serviceProviderRouter from './routes/serviceProviderRoutes.js'
 import residentRouter from './routes/residentRoutes.js'
 import adminRouter from './routes/adminRoutes.js'
 import cookieParser from 'cookie-parser'
-import http       from "http";
+import http from "http";
 import { Server } from "socket.io";
 import ChatMessage from "./models/chatModel.js";
 // import Booking     from "./models/bookingModel.js";
-import jwt         from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import chatRouter from './routes/chatRoutes.js';
 import Booking from './models/bookingModel.js';
 import notificationRouter from './routes/notificationRoutes.js';
@@ -23,34 +23,39 @@ dotenv.config()
 const app = express()
 
 await connectDb()
-           
+
 const allowedOrigins = [
-  'http://localhost:5173', 
+  'http://localhost:5173',
   'http://localhost:8081',
   'http://localhost:8082',
   process.env.FRONTEND_URL || 'http://localhost:5173'
 ];
 
+// Add wildcard for local IP in development for Expo Mobile devices
+if (process.env.NODE_ENV !== 'production') {
+  allowedOrigins.push('*');
+}
+
 app.use(cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }))
 
 app.use(cookieParser())
 app.use(express.json())
 app.use("/uploads", express.static("uploads"));
 
-app.use('/api/user',userRouter)
-app.use('/api/serviceProvider',serviceProviderRouter)
-app.use('/api/residents',residentRouter)
-app.use('/api/admin',adminRouter)
-app.use('/api/chat',chatRouter)
+app.use('/api/user', userRouter)
+app.use('/api/serviceProvider', serviceProviderRouter)
+app.use('/api/residents', residentRouter)
+app.use('/api/admin', adminRouter)
+app.use('/api/chat', chatRouter)
 app.use('/api/notifications', notificationRouter);
 
 
@@ -65,7 +70,7 @@ const io = new Server(server, {
   },
 });
 
-app.set("io", io); 
+app.set("io", io);
 
 /* ── Socket Auth Middleware ── */
 io.use((socket, next) => {
@@ -86,7 +91,7 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.userId);
 
-  socket.join(socket.userId.toString()); 
+  socket.join(socket.userId.toString());
 
   /* Join a booking chat room */
   socket.on("join_chat", async ({ bookingId }) => {
@@ -112,7 +117,7 @@ io.on("connection", (socket) => {
   });
 
   /* Send message */
-  socket.on("send_message", async ({ bookingId, message, messageType = "text",fileUrl }) => {
+  socket.on("send_message", async ({ bookingId, message, messageType = "text", fileUrl }) => {
     try {
       const booking = await Booking.findById(bookingId)
         .populate("selectedProvider");
@@ -129,7 +134,7 @@ io.on("connection", (socket) => {
       // Save to DB
       const newMsg = await ChatMessage.create({
         bookingId,
-        senderId:   socket.userId,
+        senderId: socket.userId,
         senderRole: isResident ? "resident" : "provider",
         message,
         messageType,
@@ -138,19 +143,19 @@ io.on("connection", (socket) => {
 
       // Broadcast to everyone in this chat room
       io.to(`chat_${bookingId}`).emit("receive_message", {
-        _id:        newMsg._id,
+        _id: newMsg._id,
         bookingId,
-        senderId:   socket.userId,
+        senderId: socket.userId,
         senderRole: isResident ? "resident" : "provider",
         message,
         messageType,
         fileUrl,
-        isRead:     false,
-        createdAt:  newMsg.createdAt,
+        isRead: false,
+        createdAt: newMsg.createdAt,
       });
 
       io.emit("data_updated"); // Notify all clients to refresh data (e.g. last message preview)
-  const receiverId = isResident 
+      const receiverId = isResident
         ? booking.selectedProvider.userId.toString() // If resident sent it, send toast to Provider
         : booking.resident.toString();               // If provider sent it, send toast to Resident
 
@@ -188,8 +193,8 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT 
+const PORT = process.env.PORT || 5000;
 
-server.listen(PORT,()=>{
-    console.log(`Server is running on PORT ${PORT}`)
-})
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on PORT ${PORT} and bound to 0.0.0.0 for mobile access`);
+});

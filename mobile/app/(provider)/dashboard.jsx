@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { getProviderDashboard } from '../../src/api/serviceProviderEndPoints';
 import { Colors, Shadows } from '../../src/theme/colors';
+import DrawerMenu from '../../components/DrawerMenu';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +31,7 @@ export default function ProviderDashboard() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const fetchDashboard = async () => {
     try {
@@ -61,6 +63,9 @@ export default function ProviderDashboard() {
       {/* Header Profile Area */}
       <LinearGradient colors={['#1E3A8A', '#2563EB']} style={styles.header}>
         <View style={styles.headerTopRow}>
+          <TouchableOpacity style={styles.hamburgerBtn} onPress={() => setDrawerOpen(true)}>
+            <Ionicons name="menu" size={24} color="#FFF" />
+          </TouchableOpacity>
           <View>
             <Text style={styles.greeting}>Welcome back,</Text>
             <Text style={styles.name}>{user?.full_name}</Text>
@@ -70,18 +75,24 @@ export default function ProviderDashboard() {
           </View>
         </View>
 
-        {/* Wallet Strip */}
-        <TouchableOpacity style={styles.walletStrip} onPress={() => router.push('/(provider)/wallet')}>
+        {/* Wallet Card — inside blue gradient */}
+        <TouchableOpacity
+          style={styles.walletCard}
+          onPress={() => router.push('/(provider)/wallet')}
+          activeOpacity={0.85}
+        >
           <View style={styles.walletLeft}>
             <View style={styles.walletIcon}>
-              <Ionicons name="wallet" size={20} color="#3B82F6" />
+              <Ionicons name="wallet" size={22} color="#FFF" />
             </View>
             <View>
               <Text style={styles.walletLabel}>Wallet Balance</Text>
               <Text style={styles.walletAmount}>Rs. {(walletBalance || 0).toLocaleString()}</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
+          <View style={styles.walletArrow}>
+            <Ionicons name="arrow-forward" size={16} color="rgba(255,255,255,0.8)" />
+          </View>
         </TouchableOpacity>
       </LinearGradient>
 
@@ -185,6 +196,9 @@ export default function ProviderDashboard() {
           </>
         )}
       </ScrollView>
+
+      {/* Drawer */}
+      <DrawerMenu isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} role="provider" />
     </View>
   );
 }
@@ -193,15 +207,34 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: { paddingTop: 60, paddingBottom: 40, paddingHorizontal: 20 },
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  hamburgerBtn: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center', alignItems: 'center',
+  },
   greeting: { fontSize: 14, color: 'rgba(255,255,255,0.8)' },
   name: { fontSize: 22, fontWeight: '700', color: '#FFF' },
   avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   avatarText: { fontSize: 20, fontWeight: '700', color: '#FFF' },
-  walletStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginTop: -60, elevation: 4, marginHorizontal: 20 },
+  walletCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16, padding: 16, marginTop: 16,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+  },
   walletLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  walletIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center' },
-  walletLabel: { fontSize: 12, color: Colors.textSecondary },
-  walletAmount: { fontSize: 18, fontWeight: '700', color: Colors.text },
+  walletIcon: {
+    width: 42, height: 42, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  walletLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
+  walletAmount: { fontSize: 20, fontWeight: '700', color: '#FFF', marginTop: 2 },
+  walletArrow: {
+    width: 32, height: 32, borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center', alignItems: 'center',
+  },
   scrollContent: { padding: 20 },
   quickActions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 30, marginBottom: 24 },
   actionBtn: { alignItems: 'center', width: '30%' },

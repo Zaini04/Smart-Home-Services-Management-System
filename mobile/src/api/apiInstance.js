@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getSecureItem, setSecureItem, removeSecureItem } from '../utils/storage';
 
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 
 // Use localhost for Web to prevent Chrome cross-site strict cookie blocking
 // Use specific IP for actual physical devices to find the server
@@ -35,6 +35,10 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     if (!error.response) {
+      console.error('[Network Error]: Server unreachable.', error.message);
+      if (Platform.OS !== 'web') {
+        Alert.alert('Network Error', 'Cannot connect to Server. If using a physical device, ensure your PC and phone are on the exact same Wi-Fi network, and Windows Defender Firewall is turned OFF for Private networks (or it explicitly allows port 5000 inbound). If using Android Emulator, set BASE_URL to 10.0.2.2.');
+      }
       return Promise.reject(error);
     }
 

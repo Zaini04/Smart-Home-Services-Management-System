@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   StyleSheet, Image, ActivityIndicator, Alert, Platform,
@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { useAuth } from '../../src/context/AuthContext';
 import { getCategories, createBooking } from '../../src/api/residentEndPoints';
 import { Colors, Shadows } from '../../src/theme/colors';
@@ -20,8 +21,10 @@ export default function PostJobScreen() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
+  const [coords, setCoords] = useState(null); // { lat, lng }
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
@@ -36,6 +39,48 @@ export default function PostJobScreen() {
       setError('Failed to load categories.');
     } finally {
       setCategoriesLoading(false);
+    }
+  };
+
+  const handleUseLocation = async () => {
+    setLocationLoading(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Location permission is needed to auto-fill your address.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const { latitude, longitude } = loc.coords;
+      setCoords({ lat: latitude, lng: longitude });
+
+      // Reverse geocode using Nominatim (free, no API key)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+        { headers: { 'Accept-Language': 'en', 'User-Agent': 'ServiceHubApp/1.0' } }
+      );
+      const data = await response.json();
+      if (data?.display_name) {
+        // Extract a clean address from the result
+        const addr = data.address;
+        const parts = [
+          addr?.house_number,
+          addr?.road || addr?.street,
+          addr?.neighbourhood || addr?.suburb,
+          addr?.city || addr?.town || addr?.village,
+          addr?.state,
+        ].filter(Boolean);
+        setAddress(parts.join(', '));
+      }
+    } catch (err) {
+      Alert.alert('Location Error', 'Could not fetch your location. Please enter manually.');
+    } finally {
+      setLocationLoading(false);
     }
   };
 
@@ -67,6 +112,10 @@ export default function PostJobScreen() {
       formData.append('category', selectedCategory._id);
       formData.append('description', description.trim());
       formData.append('address', address.trim());
+      if (coords) {
+        formData.append('lat', String(coords.lat));
+        formData.append('lng', String(coords.lng));
+      }
 
       images.forEach((img, i) => {
         const name = img.uri.split('/').pop();
@@ -92,13 +141,13 @@ export default function PostJobScreen() {
     return (
       <View style={styles.successContainer}>
         <View style={styles.successCard}>
-          <View style={styles.successIcon}>
-            <Ionicons name="checkmark-circle" size={48} color={Colors.success} />
-          </View>
+          <LinearGradient colors={['#22C55E', '#059669']} style={styles.successIconBg}>
+            <Ionicons name="checkmark" size={40} color="#FFF" />
+          </LinearGradient>
           <Text style={styles.successTitle}>Job Posted! 🎉</Text>
           <Text style={styles.successText}>Workers will start sending their offers soon.</Text>
           <ActivityIndicator color={Colors.primary} style={{ marginTop: 16 }} />
-          <Text style={{ color: Colors.primary, fontSize: 13, marginTop: 8 }}>Redirecting to My Bookings...</Text>
+          <Text style={{ color: Colors.primary, fontSize: 13, marginTop: 8 }}>Redirecting...</Text>
         </View>
       </View>
     );
@@ -106,7 +155,11 @@ export default function PostJobScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingTop: 50 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ padding: 20, paddingTop: 56 }}
+      >
         {/* Header */}
         <View style={styles.header}>
           <LinearGradient colors={[Colors.primary, Colors.secondary]} style={styles.headerIcon}>
@@ -170,7 +223,7 @@ export default function PostJobScreen() {
             style={styles.textarea}
             value={description}
             onChangeText={setDescription}
-            placeholder="Example: My ceiling fan is making noise..."
+            placeholder="Example: My ceiling fan is making noise and sparking..."
             placeholderTextColor={Colors.textLight}
             multiline
             numberOfLines={4}
@@ -201,21 +254,60 @@ export default function PostJobScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <Text style={styles.helperText}>Upload up to 5 photos</Text>
+          <Text style={styles.helperText}>Upload up to 5 photos of the problem</Text>
         </View>
 
-        {/* Address */}
+        {/* Location / Address */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="location" size={18} color={Colors.primary} />
             <Text style={styles.cardTitle}>Your Address</Text>
             <Text style={{ color: Colors.danger }}>*</Text>
           </View>
+
+          {/* GPS Button */}
+          <TouchableOpacity
+            style={styles.gpsBtn}
+            onPress={handleUseLocation}
+            disabled={locationLoading}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={locationLoading ? ['#9CA3AF', '#9CA3AF'] : ['#0EA5E9', '#0284C7']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={styles.gpsBtnGradient}
+            >
+              {locationLoading ? (
+                <>
+                  <ActivityIndicator size="small" color="#FFF" />
+                  <Text style={styles.gpsBtnText}>Getting location...</Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons name="navigate" size={16} color="#FFF" />
+                  <Text style={styles.gpsBtnText}>Use My Current Location</Text>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {coords && (
+            <View style={styles.coordBadge}>
+              <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
+              <Text style={styles.coordText}>
+                GPS: {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+              </Text>
+            </View>
+          )}
+
+          <Text style={[styles.cardTitle, { fontSize: 13, fontWeight: '500', marginTop: 10, marginBottom: 6, color: Colors.text }]}>
+            Or enter manually:
+          </Text>
           <TextInput
             style={styles.textarea}
             value={address}
             onChangeText={setAddress}
-            placeholder="House/Flat number, Street, Area, City..."
+            placeholder="House/Flat #, Street, Area, City..."
             placeholderTextColor={Colors.textLight}
             multiline
             numberOfLines={2}
@@ -248,14 +340,20 @@ export default function PostJobScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   successContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background, padding: 20 },
-  successCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 32, alignItems: 'center', ...Shadows.medium },
-  successIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.successLight, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  successTitle: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 8 },
+  successCard: {
+    backgroundColor: '#FFF', borderRadius: 24, padding: 36, alignItems: 'center',
+    ...Shadows.medium, width: '100%',
+  },
+  successIconBg: {
+    width: 80, height: 80, borderRadius: 24,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 20,
+  },
+  successTitle: { fontSize: 24, fontWeight: '700', color: Colors.text, marginBottom: 8 },
   successText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
   header: { alignItems: 'center', marginBottom: 24 },
   headerIcon: { width: 56, height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.text },
-  headerSubtitle: { fontSize: 13, color: Colors.textSecondary, marginTop: 4 },
+  headerSubtitle: { fontSize: 13, color: Colors.textSecondary, marginTop: 4, textAlign: 'center' },
   errorBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.dangerLight, borderRadius: 12, padding: 12, marginBottom: 16 },
   errorText: { fontSize: 13, color: Colors.danger, flex: 1 },
   card: { backgroundColor: '#FFF', borderRadius: 16, padding: 18, marginBottom: 14, ...Shadows.small, borderWidth: 1, borderColor: Colors.borderLight },
@@ -283,6 +381,11 @@ const styles = StyleSheet.create({
   },
   addImageText: { fontSize: 10, fontWeight: '600', color: Colors.textLight, marginTop: 2 },
   helperText: { fontSize: 11, color: Colors.textLight, marginTop: 8 },
+  gpsBtn: { marginBottom: 12, borderRadius: 12, overflow: 'hidden' },
+  gpsBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 13, paddingHorizontal: 16 },
+  gpsBtnText: { fontSize: 14, fontWeight: '600', color: '#FFF' },
+  coordBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10, backgroundColor: '#F0FDF4', borderRadius: 8, padding: 8 },
+  coordText: { fontSize: 12, color: Colors.success, fontWeight: '500' },
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16, borderRadius: 14, marginTop: 6 },
   submitText: { fontSize: 16, fontWeight: '600', color: '#FFF' },
 });

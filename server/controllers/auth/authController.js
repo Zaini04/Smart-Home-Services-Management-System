@@ -123,10 +123,10 @@ export const loginUser = async (req, res) => {
       return errorResponse(res, "Invalid Credentials", 400);
     }
 
-     if (!user.isEmailVerified) {
-      // Logic to generate and send a new OTP could go here
-      return errorResponse(res, "Please verify your email before logging in.", 403);
-    }
+    //  if (!user.isEmailVerified) {
+    //   // Logic to generate and send a new OTP could go here
+    //   return errorResponse(res, "Please verify your email before logging in.", 403);
+    // }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {

@@ -11,6 +11,9 @@ import { Colors, Shadows } from '../../src/theme/colors';
 const filters = ['all', 'active', 'completed', 'cancelled'];
 
 const statusConfig = {
+  provider_selected: { color: '#059669', bg: '#D1FAE5', label: 'Assigned' },
+  inspection_requested: { color: '#D97706', bg: '#FEF3C7', label: 'Insp. Requested' },
+  inspection_approved: { color: '#EA580C', bg: '#FFEDD5', label: 'Insp. Approved' },
   offer_accepted: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offer Accepted' },
   inspection_pending: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Pending' },
   inspection_scheduled: { color: '#F97316', bg: '#FFF7ED', label: 'Inspection Scheduled' },

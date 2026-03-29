@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
+import Toast from 'react-native-toast-message';
 import { useAuth } from './AuthContext';
 import { BASE_URL } from '../api/apiInstance';
 
@@ -28,6 +29,16 @@ export function SocketProvider({ children }) {
     socketRef.current.on('disconnect', () => {
       setIsConnected(false);
       console.log('Socket disconnected');
+    });
+
+    socketRef.current.on('notification', (data) => {
+      Toast.show({
+        type: 'info',
+        text1: data.title || 'Notification',
+        text2: data.message || '',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     });
 
     return () => {

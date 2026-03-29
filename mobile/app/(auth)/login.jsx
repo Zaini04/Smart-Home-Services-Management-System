@@ -54,7 +54,7 @@ export default function LoginScreen() {
         style={styles.gradient}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
         >
           <ScrollView
@@ -148,6 +148,14 @@ export default function LoginScreen() {
                     </>
                   )}
                 </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Forgot Password */}
+              <TouchableOpacity
+                onPress={() => router.push('/(auth)/forgot-password')}
+                style={styles.forgotBtn}
+              >
+                <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
 
               {/* Sign Up Link */}
@@ -290,6 +298,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  forgotBtn: {
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  forgotText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.primary,
   },
   signupRow: {
     flexDirection: 'row',

@@ -27,7 +27,7 @@ export default function ResidentLayout() {
         name="home"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color }) => (
             <Ionicons name="home" size={22} color={color} />
           ),
         }}
@@ -36,7 +36,7 @@ export default function ResidentLayout() {
         name="post-job"
         options={{
           title: 'Post Job',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color }) => (
             <Ionicons name="add-circle" size={26} color={color} />
           ),
         }}
@@ -45,7 +45,7 @@ export default function ResidentLayout() {
         name="my-bookings"
         options={{
           title: 'Bookings',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color }) => (
             <Ionicons name="calendar" size={22} color={color} />
           ),
         }}
@@ -54,8 +54,17 @@ export default function ResidentLayout() {
         name="chat-inbox"
         options={{
           title: 'Chat',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color }) => (
             <Ionicons name="chatbubbles" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: 'Alerts',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="notifications" size={22} color={color} />
           ),
         }}
       />
@@ -63,7 +72,7 @@ export default function ResidentLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color }) => (
             <Ionicons name="person" size={22} color={color} />
           ),
         }}
@@ -71,6 +80,8 @@ export default function ResidentLayout() {
       {/* Hidden screens accessible via navigation */}
       <Tabs.Screen name="booking/[id]" options={{ href: null, headerShown: true, title: 'Booking Details' }} />
       <Tabs.Screen name="review/[bookingId]" options={{ href: null, headerShown: true, title: 'Write Review' }} />
+      <Tabs.Screen name="edit-profile" options={{ href: null }} />
     </Tabs>
   );
 }
+

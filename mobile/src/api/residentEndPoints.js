@@ -12,9 +12,24 @@ export const getCategories = () => {
   return axiosInstance.get('/api/residents/getCategories');
 };
 
+// Account & Profile — correct server routes
+export const getUserProfile = () => {
+  return axiosInstance.get('/api/residents/profile');
+};
+
+export const updateUserProfile = (data) => {
+  return axiosInstance.put('/api/residents/profile', data);
+};
+
+export const changePassword = (data) => {
+  return axiosInstance.put('/api/residents/change-password', data);
+};
+
 // Booking routes
 export const createBooking = (formData) => {
-  return axiosInstance.post('/api/residents/create-booking', formData);
+  return axiosInstance.post('/api/residents/create-booking', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 };
 
 export const getMyBookings = (params) => {

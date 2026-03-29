@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
-import { signUp } from '../../src/api/authEndPoints';
+import { signUp, verifyEmailOTP } from '../../src/api/authEndPoints';
 import { Colors } from '../../src/theme/colors';
 
 // Step indicator component
@@ -70,6 +70,41 @@ const PasswordStrength = ({ password }) => {
   );
 };
 
+const RoleCard = ({ icon, title, desc, value, role, setRole }) => (
+  <TouchableOpacity
+    style={[styles.roleCard, role === value && styles.roleCardActive]}
+    onPress={() => setRole(value)}
+    activeOpacity={0.7}
+  >
+    <View style={[styles.roleIcon, role === value && styles.roleIconActive]}>
+      <Ionicons name={icon} size={24} color={role === value ? '#FFF' : Colors.textSecondary} />
+    </View>
+    <Text style={[styles.roleTitle, role === value && { color: '#1E40AF' }]}>{title}</Text>
+    <Text style={[styles.roleDesc, role === value && { color: '#3B82F6' }]}>{desc}</Text>
+    {role === value && (
+      <View style={styles.checkBadge}>
+        <Ionicons name="checkmark" size={12} color="#FFF" />
+      </View>
+    )}
+  </TouchableOpacity>
+);
+
+const InputField = ({ icon, label, value, onChangeText, ...props }) => (
+  <View style={{ marginBottom: 14 }}>
+    <Text style={styles.label}>{label}</Text>
+    <View style={styles.inputContainer}>
+      <Ionicons name={icon} size={20} color={Colors.textLight} />
+      <TextInput
+        style={styles.input}
+        value={value}
+        onChangeText={onChangeText}
+        placeholderTextColor={Colors.textLight}
+        {...props}
+      />
+    </View>
+  </View>
+);
+
 export default function SignupScreen() {
   const router = useRouter();
   const { loginUser } = useAuth();
@@ -88,6 +123,14 @@ export default function SignupScreen() {
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Step 5 - OTP
+  const [otp, setOtp] = useState('');
+  const [pendingToken, setPendingToken] = useState(null); // store token after signup
+  const [pendingRole, setPendingRole] = useState(null);
+  const [pendingUserData, setPendingUserData] = useState(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpResending, setOtpResending] = useState(false);
 
   const validateStep = (s) => {
     switch (s) {
@@ -109,19 +152,16 @@ export default function SignupScreen() {
   const handleSubmit = async () => {
     if (password !== confirm) { setError('Passwords do not match'); return; }
     if (!agreed) { setError('Please agree to terms'); return; }
-
     setError('');
     setLoading(true);
-
     try {
       const res = await signUp({ full_name: name, email, phone, password, role, city, address });
       if (res.status === 201) {
-        await loginUser(res.data.data, res.data.data.accessToken);
-        if (res.data.data.role === 'serviceprovider') {
-          router.replace('/(provider)/complete-profile');
-        } else {
-          router.replace('/(resident)/home');
-        }
+        // Store user data, advance to OTP step
+        setPendingUserData(res.data.data);
+        setPendingToken(res.data.data.accessToken);
+        setPendingRole(res.data.data.role);
+        setStep(5);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed. Please try again.');
@@ -130,46 +170,39 @@ export default function SignupScreen() {
     }
   };
 
-  const RoleCard = ({ icon, title, desc, value }) => (
-    <TouchableOpacity
-      style={[styles.roleCard, role === value && styles.roleCardActive]}
-      onPress={() => setRole(value)}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.roleIcon, role === value && styles.roleIconActive]}>
-        <Ionicons name={icon} size={24} color={role === value ? '#FFF' : Colors.textSecondary} />
-      </View>
-      <Text style={[styles.roleTitle, role === value && { color: '#1E40AF' }]}>{title}</Text>
-      <Text style={[styles.roleDesc, role === value && { color: '#3B82F6' }]}>{desc}</Text>
-      {role === value && (
-        <View style={styles.checkBadge}>
-          <Ionicons name="checkmark" size={12} color="#FFF" />
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+  const handleVerifyOTP = async () => {
+    if (!otp.trim() || otp.length < 4) { setOtpError('Please enter a valid OTP code'); return; }
+    setOtpError('');
+    setOtpLoading(true);
+    try {
+      await verifyEmailOTP({ email, otp: otp.trim() });
+      await loginUser(pendingUserData, pendingToken);
+      if (pendingRole === 'serviceprovider') {
+        router.replace('/(provider)/complete-profile');
+      } else {
+        router.replace('/(resident)/home');
+      }
+    } catch (err) {
+      setOtpError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
-  const InputField = ({ icon, label, value, onChangeText, ...props }) => (
-    <View style={{ marginBottom: 14 }}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputContainer}>
-        <Ionicons name={icon} size={20} color={Colors.textLight} />
-        <TextInput
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholderTextColor={Colors.textLight}
-          {...props}
-        />
-      </View>
-    </View>
-  );
+  const handleResendOTP = async () => {
+    setOtpResending(true);
+    try {
+      await signUp({ full_name: name, email, phone, password, role, city, address });
+      setOtpError('');
+    } catch (err) { /* silently fail */ }
+    finally { setOtpResending(false); }
+  };
 
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#F8FAFC', '#EFF6FF', '#E0E7FF']} style={styles.gradient}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{ flex: 1 }}
         >
           <ScrollView
@@ -188,7 +221,7 @@ export default function SignupScreen() {
               <Text style={styles.title}>Create account</Text>
               <Text style={styles.subtitle}>Get started with your free account</Text>
 
-              <StepIndicator currentStep={step} totalSteps={4} />
+              <StepIndicator currentStep={step} totalSteps={5} />
 
               {error ? (
                 <View style={styles.errorBox}>
@@ -202,8 +235,8 @@ export default function SignupScreen() {
                 <View>
                   <Text style={styles.stepTitle}>Choose your account type</Text>
                   <View style={styles.roleRow}>
-                    <RoleCard icon="home-outline" title="Resident" desc="Book services" value="resident" />
-                    <RoleCard icon="briefcase-outline" title="Provider" desc="Offer services" value="serviceprovider" />
+                    <RoleCard icon="home-outline" title="Resident" desc="Book services" value="resident" role={role} setRole={setRole} />
+                    <RoleCard icon="briefcase-outline" title="Provider" desc="Offer services" value="serviceprovider" role={role} setRole={setRole} />
                   </View>
                 </View>
               )}
@@ -287,59 +320,131 @@ export default function SignupScreen() {
                 </View>
               )}
 
-              {/* Navigation Buttons */}
-              <View style={styles.navRow}>
-                {step > 1 && (
+              {/* Step 5: OTP Verification */}
+              {step === 5 && (
+                <View>
+                  <View style={styles.otpHeaderBox}>
+                    <View style={styles.otpIconCircle}>
+                      <Ionicons name="mail-open" size={28} color={Colors.primary} />
+                    </View>
+                    <Text style={styles.stepTitle}>Verify Your Email</Text>
+                    <Text style={styles.otpHint}>
+                      We've sent a verification code to{' '}
+                      <Text style={{ fontWeight: '700', color: Colors.text }}>{email}</Text>
+                    </Text>
+                  </View>
+
+                  {otpError ? (
+                    <View style={styles.errorBox}>
+                      <Ionicons name="close-circle" size={18} color={Colors.danger} />
+                      <Text style={styles.errorText}>{otpError}</Text>
+                    </View>
+                  ) : null}
+
+                  <Text style={styles.label}>Enter OTP Code</Text>
+                  <TextInput
+                    style={styles.otpInput}
+                    value={otp}
+                    onChangeText={setOtp}
+                    placeholder="e.g. 123456"
+                    placeholderTextColor={Colors.textLight}
+                    keyboardType="number-pad"
+                    maxLength={8}
+                    autoFocus
+                    textAlign="center"
+                  />
+
                   <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => { setStep(step - 1); setError(''); }}
-                  >
-                    <Ionicons name="arrow-back" size={18} color={Colors.text} />
-                    <Text style={styles.backText}>Back</Text>
-                  </TouchableOpacity>
-                )}
-                {step < 4 ? (
-                  <TouchableOpacity
-                    onPress={handleNext}
-                    disabled={!validateStep(step)}
-                    style={{ flex: 1 }}
+                    onPress={handleVerifyOTP}
+                    disabled={otpLoading}
+                    style={{ marginTop: 16 }}
                     activeOpacity={0.8}
                   >
                     <LinearGradient
-                      colors={!validateStep(step) ? ['#D1D5DB', '#D1D5DB'] : [Colors.primary, Colors.secondary]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
+                      colors={otpLoading ? ['#9CA3AF', '#9CA3AF'] : ['#22C55E', '#059669']}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                       style={styles.nextButton}
                     >
-                      <Text style={styles.nextText}>Continue</Text>
-                      <Ionicons name="arrow-forward" size={18} color="#FFF" />
-                    </LinearGradient>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    onPress={handleSubmit}
-                    disabled={loading || !validateStep(4)}
-                    style={{ flex: 1 }}
-                    activeOpacity={0.8}
-                  >
-                    <LinearGradient
-                      colors={loading || !validateStep(4) ? ['#9CA3AF', '#9CA3AF'] : ['#22C55E', '#059669']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.nextButton}
-                    >
-                      {loading ? (
+                      {otpLoading ? (
                         <ActivityIndicator color="#FFF" size="small" />
                       ) : (
                         <>
-                          <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-                          <Text style={styles.nextText}>Create Account</Text>
+                          <Ionicons name="shield-checkmark" size={20} color="#FFF" />
+                          <Text style={styles.nextText}>Verify & Continue</Text>
                         </>
                       )}
                     </LinearGradient>
                   </TouchableOpacity>
-                )}
-              </View>
+
+                  <TouchableOpacity
+                    style={styles.resendRow}
+                    onPress={handleResendOTP}
+                    disabled={otpResending}
+                  >
+                    {otpResending ? (
+                      <ActivityIndicator size="small" color={Colors.primary} />
+                    ) : (
+                      <Text style={styles.resendText}>Didn't receive code? <Text style={{ color: Colors.primary, fontWeight: '600' }}>Resend</Text></Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Navigation Buttons — hide on step 5 */}
+              {step < 5 && (
+                <View style={styles.navRow}>
+                  {step > 1 && (
+                    <TouchableOpacity
+                      style={styles.backButton}
+                      onPress={() => { setStep(step - 1); setError(''); }}
+                    >
+                      <Ionicons name="arrow-back" size={18} color={Colors.text} />
+                      <Text style={styles.backText}>Back</Text>
+                    </TouchableOpacity>
+                  )}
+                  {step < 4 ? (
+                    <TouchableOpacity
+                      onPress={handleNext}
+                      disabled={!validateStep(step)}
+                      style={{ flex: 1 }}
+                      activeOpacity={0.8}
+                    >
+                      <LinearGradient
+                        colors={!validateStep(step) ? ['#D1D5DB', '#D1D5DB'] : [Colors.primary, Colors.secondary]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.nextButton}
+                      >
+                        <Text style={styles.nextText}>Continue</Text>
+                        <Ionicons name="arrow-forward" size={18} color="#FFF" />
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={handleSubmit}
+                      disabled={loading || !validateStep(4)}
+                      style={{ flex: 1 }}
+                      activeOpacity={0.8}
+                    >
+                      <LinearGradient
+                        colors={loading || !validateStep(4) ? ['#9CA3AF', '#9CA3AF'] : ['#22C55E', '#059669']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.nextButton}
+                      >
+                        {loading ? (
+                          <ActivityIndicator color="#FFF" size="small" />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark-circle" size={20} color="#FFF" />
+                            <Text style={styles.nextText}>Create Account</Text>
+                          </>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
 
               {/* Login Link */}
               <View style={styles.loginRow}>
@@ -434,4 +539,17 @@ const styles = StyleSheet.create({
   loginRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
   loginText: { fontSize: 14, color: Colors.textSecondary },
   loginLink: { fontSize: 14, fontWeight: '600', color: Colors.primary },
+  otpHeaderBox: { alignItems: 'center', marginBottom: 20 },
+  otpIconCircle: {
+    width: 64, height: 64, borderRadius: 20, backgroundColor: '#EFF6FF',
+    justifyContent: 'center', alignItems: 'center', marginBottom: 12,
+  },
+  otpHint: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', lineHeight: 18, marginTop: 6 },
+  otpInput: {
+    fontSize: 28, fontWeight: '700', color: Colors.text, borderWidth: 2,
+    borderColor: Colors.primary, borderRadius: 16, paddingVertical: 16,
+    paddingHorizontal: 24, letterSpacing: 8, backgroundColor: '#F0F7FF',
+  },
+  resendRow: { alignItems: 'center', marginTop: 16 },
+  resendText: { fontSize: 13, color: Colors.textSecondary },
 });
