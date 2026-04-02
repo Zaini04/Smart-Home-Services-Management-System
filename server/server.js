@@ -34,20 +34,18 @@ await connectDb()
 const allowedOrigins = [
   process.env.FRONTEND_URL, // your deployed frontend
 ];
-
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // mobile apps
+    if (!origin) return callback(null, true); // mobile
 
-    if (allowedOrigins.includes(origin)) {
+    if (origin === process.env.FRONTEND_URL) {
       return callback(null, true);
     }
 
-    return callback(new Error("Not allowed by CORS"));
+    return callback(null, true); // TEMP allow all
   },
   credentials: true,
 }));
-
 app.use(cookieParser())
 app.use(express.json())
 app.use("/uploads", express.static("uploads"));
@@ -67,9 +65,8 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: true,
     methods: ["GET", "POST"],
-    credentials: true,
   },
 });
 
