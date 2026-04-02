@@ -14,20 +14,61 @@ import {
   respondToCounterFee,
 } from '../../../src/api/serviceProviderEndPoints';
 import { Colors, Shadows } from '../../../src/theme/colors';
+import { useSocket } from '../../../src/context/SocketContext';
 
 const statusConfig = {
-  open: { color: '#3B82F6', bg: '#EFF6FF', label: 'Open', icon: 'time' },
-  provider_selected: { color: '#059669', bg: '#D1FAE5', label: 'Assigned', icon: 'star' },
-  inspection_requested: { color: '#D97706', bg: '#FEF3C7', label: 'Inspection Requested', icon: 'time' },
-  inspection_approved: { color: '#EA580C', bg: '#FFEDD5', label: 'Inspection Approved', icon: 'checkmark-circle' },
-  offer_accepted: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offer Accepted', icon: 'checkmark-circle' },
-  inspection_pending: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Pending', icon: 'time' },
-  inspection_scheduled: { color: '#F97316', bg: '#FFF7ED', label: 'Inspection Scheduled', icon: 'calendar' },
-  awaiting_price_approval: { color: '#D97706', bg: '#FFFBEB', label: 'Awaiting Price Approval', icon: 'time' },
-  price_approved: { color: '#14B8A6', bg: '#F0FDFA', label: 'Price Approved', icon: 'checkmark-circle' },
-  work_in_progress: { color: '#6366F1', bg: '#EEF2FF', label: 'Work in Progress', icon: 'construct' },
-  completed: { color: '#22C55E', bg: '#DCFCE7', label: 'Completed', icon: 'checkmark-done-circle' },
-  cancelled: { color: '#EF4444', bg: '#FEE2E2', label: 'Cancelled', icon: 'close-circle' },
+  open: { color: '#3B82F6', bg: '#EFF6FF', label: 'Open', icon: 'time', step: 1 },
+  provider_selected: { color: '#059669', bg: '#D1FAE5', label: 'Assigned', icon: 'star', step: 3 },
+  inspection_requested: { color: '#D97706', bg: '#FEF3C7', label: 'Inspection Requested', icon: 'time', step: 3 },
+  inspection_approved: { color: '#EA580C', bg: '#FFEDD5', label: 'Inspection Approved', icon: 'checkmark-circle', step: 3 },
+  offer_accepted: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offer Accepted', icon: 'checkmark-circle', step: 3 },
+  inspection_pending: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Pending', icon: 'time', step: 3 },
+  inspection_scheduled: { color: '#F97316', bg: '#FFF7ED', label: 'Inspection Scheduled', icon: 'calendar', step: 3 },
+  awaiting_price_approval: { color: '#D97706', bg: '#FFFBEB', label: 'Awaiting Price Approval', icon: 'time', step: 4 },
+  price_approved: { color: '#14B8A6', bg: '#F0FDFA', label: 'Price Approved', icon: 'checkmark-circle', step: 5 },
+  work_in_progress: { color: '#6366F1', bg: '#EEF2FF', label: 'Work in Progress', icon: 'construct', step: 6 },
+  completed: { color: '#22C55E', bg: '#DCFCE7', label: 'Completed', icon: 'checkmark-done-circle', step: 7 },
+  cancelled: { color: '#EF4444', bg: '#FEE2E2', label: 'Cancelled', icon: 'close-circle', step: 0 },
+};
+
+const lifecycleSteps = [
+  { step: 1, label: 'Posted' },
+  { step: 2, label: 'Offers' },
+  { step: 3, label: 'Inspection' },
+  { step: 4, label: 'Pricing' },
+  { step: 5, label: 'Approved' },
+  { step: 6, label: 'Working' },
+  { step: 7, label: 'Done' },
+];
+
+const ProgressBar = ({ currentStep, cancelled }) => {
+  if (cancelled) {
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, backgroundColor: '#FEF2F2', borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: '#FCA5A5' }}>
+        <Ionicons name="close-circle" size={20} color="#EF4444" />
+        <Text style={{ color: '#DC2626', fontWeight: '600', fontSize: 14 }}>Booking Cancelled</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ marginBottom: 20 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 4 }}>
+        {lifecycleSteps.map((s, i) => {
+          const done = currentStep > s.step;
+          const active = currentStep === s.step;
+          return (
+            <View key={s.step} style={{ alignItems: 'center', width: 64, marginRight: i === lifecycleSteps.length - 1 ? 0 : 4 }}>
+               <View style={[{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 2, backgroundColor: done ? '#3B82F6' : '#FFF', borderColor: done || active ? '#3B82F6' : '#D1D5DB' }, active && { shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 }]}>
+                 {done ? <Ionicons name="checkmark" size={16} color="#FFF" /> : <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#3B82F6' : '#9CA3AF' }}>{s.step}</Text>}
+               </View>
+               <Text style={{ fontSize: 10, marginTop: 4, fontWeight: '500', color: active ? '#2563EB' : done ? '#4B5563' : '#9CA3AF' }}>{s.label}</Text>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
 };
 
 export default function JobDetailsScreen() {
@@ -58,7 +99,24 @@ export default function JobDetailsScreen() {
     }
   };
 
-  useEffect(() => { fetchJob(); }, [id]);
+  const { socket } = useSocket();
+
+  useEffect(() => { 
+    fetchJob(); 
+  }, [id]);
+
+  useEffect(() => {
+    if (socket && job?._id) {
+      socket.emit('join_booking', job._id);
+      socket.on('booking_updated', () => {
+        fetchJob();
+      });
+
+      return () => {
+        socket.off('booking_updated');
+      };
+    }
+  }, [socket, job?._id]);
 
   const handleAction = async (action, fn, ...args) => {
     setActionLoading(action);
@@ -226,13 +284,11 @@ export default function JobDetailsScreen() {
           <Text style={styles.backText}>Job Details</Text>
         </TouchableOpacity>
 
-        {/* Status Card */}
-        <View style={[styles.statusCard, { borderLeftColor: conf.color }]}>
-          <View style={[styles.statusBadge, { backgroundColor: conf.bg }]}>
-            <Ionicons name={conf.icon} size={16} color={conf.color} />
-            <Text style={[styles.statusBadgeText, { color: conf.color }]}>{conf.label}</Text>
-          </View>
-        </View>
+        {/* Progress Bar */}
+        <ProgressBar 
+          currentStep={conf.step || 1} 
+          cancelled={job.status === 'cancelled'} 
+        />
 
         {/* Description + Location */}
         <View style={styles.card}>
@@ -333,7 +389,7 @@ export default function JobDetailsScreen() {
           )}
 
           {/* OTP Verification */}
-          {(job.status === 'offer_accepted' || job.status === 'inspection_scheduled') && (
+          {job.status === 'price_approved' && !job.otp?.start?.verified && (
             <View style={styles.formCard}>
               <Text style={styles.formTitle}>Verify Start OTP</Text>
               <Text style={styles.inputLabel}>Enter OTP from customer</Text>
@@ -341,7 +397,7 @@ export default function JobDetailsScreen() {
               <TouchableOpacity style={styles.actionBtn} onPress={onVerifyOTP} disabled={!!actionLoading}>
                 <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.actionGradient}>
                   <Ionicons name="key" size={18} color="#FFF" />
-                  <Text style={styles.actionBtnText}>Verify OTP & Start</Text>
+                  <Text style={styles.actionBtnText}>Verify OTP to Start Work</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -451,7 +507,7 @@ export default function JobDetailsScreen() {
           )}
 
           {/* START WORK */}
-          {job.status === 'price_approved' && (
+          {job.status === 'price_approved' && job.otp?.start?.verified && (
             <TouchableOpacity style={styles.actionBtn} onPress={() => handleAction('Start Work', startWork, id)} disabled={!!actionLoading}>
               <LinearGradient colors={[Colors.primary, Colors.secondary]} style={styles.actionGradient}>
                 <Ionicons name="play" size={18} color="#FFF" />

@@ -1,0 +1,392 @@
+
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <title>Smart Home FYP Report</title>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
+    h1 { font-size: 20pt; text-align: center; }
+    h2 { font-size: 16pt; margin-top: 10pt; }
+    h3 { font-size: 14pt; margin-top: 10pt; }
+    p { margin-bottom: 8pt; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+    td, th { border: 1px solid black; padding: 5px; text-align: left; }
+  </style>
+</head>
+<body>
+<p>Smart Home Services Management System</p>
+<p>PID-BSIT-00000</p>
+<p>Project Advisor:          [Enter Advisor Name Here]</p>
+<p>Submitted By:</p>
+<p>[Your Name 1]                                [Roll No 1]
+[Your Name 2]                                 [Roll No 2]</p>
+<p>University of Education, Lahore</p>
+<p>© Copyright [Your Name 1], [Your Name 2] created by 2026</p>
+<p>DECLARATION</p>
+<p>I claim that this project identify entitled “Smart Home Services Management System” is the result of my very own studies and development except as referred to inside the references. This project has no longer been regularly occurring for any degree and is not simultaneously submitted in candidate for some other degree. At any time if my declaration is observed to be erroneous even after finishing touch of BS Information Technology, the university has the right to withdraw my BS Information Technology degree.</p>
+<pre><code>  Name: [Your Name 1]                                                Name: [Your Name 2]
+</code></pre>
+<p>Signature: <strong><em><em></em></strong><strong></em></strong>                                               Signature: <strong><em><strong><em></em></em></strong></strong>___ 
+ Roll no: [Roll No 1]                                                        Roll no: [Roll No 2]
+ Date: __<em><strong><em></em></em></strong><strong><em></strong></em>                        Date: <strong><em><strong><em></em></em></strong><strong><em>_</em></strong></strong></p>
+<p>PLAGIARISM UNDERTAKEN</p>
+<p>I solemnly declare that project work presented in this documentation entitles “Smart Home Services Management System” is my own work without any significant contribution from any other person. Small contribution/help wherever taken has been acknowledged and that complete project has been written by myself. </p>
+<p>I understand that zero tolerance policy of the HEC and University of Education, Lahore towards plagiarism. Therefore, we as an author of the above titled project declare that no portion of my project documentation and any material used as reference is properly referred. </p>
+<p>I undertake that if I am found guilty of any formal plagiarism in the above titled project even after award of BS degree, the University reserve the rights to withdraw/revoke my BS degree and that HEC and the University has the right to publish my name on the HEC/University Website on which names of students are place who submitted plagiarized projects.</p>
+<p>Name: [Your Name 1]                         Name: [Your Name 2]
+ Signature: <strong><em><em></em></strong><strong></em></strong>                      Signature: <strong><em><strong><em></em></em></strong></strong>_ 
+ Roll no: [Roll No 1]                     Roll no: [Roll No 2]
+ Date: <strong><em><em></em></strong><strong><em></em></em></strong>__                       Date: <strong><em><em></em></strong><strong><em></em></em></strong>___</p>
+<p>CERTIFICATE OF APPROVAL
+This is to certify that the project work presented in this documentation entitled, "Smart Home Services Management System", was conducted by "[Your Name 1]" &amp; "[Your Name 2]" under the supervision of "[Advisor Name]". No part of this project has been submitted anywhere else for any degree. This project is submitted to the "University of Education, Lahore" is partial fulfillment of the requirements of the degree of BS in Information Technology.</p>
+<p>Signature: <strong><em><em></em></strong><strong><em></em></em></strong>_                         Signature:<strong><em><em></em></strong><strong><em></em></em></strong>_
+Name: [Your Name 1]                          Name: [Your Name 2]
+Date:                                      Date:</p>
+<p><strong><em><em></em></strong><strong><em></em></em></strong><strong><em></strong>                                            <strong></em><strong><em><em></em></strong><strong><em></em></em></strong></strong>
+Project Primary Supervisor                         Project External Examiner
+Name: [Advisor Name]                            Name: [Examiner Name]<br />
+Designation: Lecturer CS/IT                                Designation: Lecturer CS/IT
+University of Education                        University of Education</p>
+<p>OFFICE OF CONTROLLER OF EXAMINATION
+NOTIFICATION
+No:<strong><em><em></em></strong><strong><em></em></em></strong>_                                                                                   Date:<strong><em><em></em></strong><strong><em></em></em></strong>
+It is notified for the nomination of all the concerned that Mr./Miss ([Your Name 1]), Mr./Miss ([Your Name 2]) BS student Of IT Department of University of Education has completed all the requirements for the award of BS Degree in the discipline of Information Technology as per detail given hereunder.
+                                 <strong><em><em></em></strong><strong><em></em></em></strong><strong><em><em></em></strong><strong><em></em></em></strong><strong><em><em></em></strong><strong><em></em></em></strong><strong><em><em></em></strong><strong><em></em></em></strong><strong><em></strong></em>
+ BS in Information Technology/                                       Cumulative Result
+                                                                                             <strong><em><strong><em></em></em></strong><strong><em><em></em></strong><strong><em></em></em></strong><strong><em><em></em></strong></strong></em>
+                                                                                             Credit Hours 6(0+6)
+Registration No    Complete Name   Course Work Project Total   Cumulative Grades Point Average (CGPA)
+[Reg No 1]    [Your Name 1]    0   6   6<br />
+[Reg No 2]    [Your Name 2]    0   6   6  </p>
+<p>Project Title: Smart Home Services Management System</p>
+<p>Name of Supervisor: [Advisor Name]
+    Signed By
+                                                                                                            Controller of Examination                                                <strong><em><em></em></strong><strong><em></em></em></strong><strong><em><em></em></strong></em>__</p>
+<p>ACKNOWLEDGEMENT</p>
+<p>We truly acknowledge the cooperation and assist make by using [Advisor Name] Lecturer of University of Education. He/She has been a constant supply of steering during the course of this Project. We might additionally want to thank for his/her proper assist and steering all through this project.</p>
+<p>We also convey our regards to all the faculty members of Department of Information Technology, University of Education. We also are thankful to our friends and families whose silent support led us to complete our project.</p>
+<p>1-    [Your Name 1] [Reg No 1]</p>
+<p>2-    [Your Name 2] [Reg No 2]</p>
+<p>Date: <strong><em><em></em></strong><strong><em></em></em></strong></p>
+<p>ABSTRACT</p>
+<p>The Smart Home Services Management System is an online platform that allows users to seamlessly book multiple home maintenance services such as plumbing, electrical work, cleaning, and painting. The platform maintains a powerful Admin dashboard that allows syncing of data across the web and mobile interfaces automatically. You can effortlessly request a service online by picking your preferred service category. Once tailored features like time slots and addresses are finalized, the request is dispatched to nearby Service Providers. </p>
+<p>Admins monitor everything in the management system. Admins can upload and update the service categories, calculate platform commissions, and verify the KYC (Know Your Customer) documentation of service providers to ensure safety. The resident (user) can view service details, use GPS location to provide exact coordinates, and fill out job requirements. The application features a real-time Chat and Notification system utilizing WebSockets.</p>
+<p>This Smart Home Services Management System is developed using the MERN stack (MongoDB, Express, React, Node.js) for the Web Client and Backend Server, alongside React Native for the cross-platform Mobile Application, storing all crucial operational data securely.</p>
+<p>Table of Contents</p>
+<p>Smart Home Services Management System ----------------------------------------------------------------1 
+CHAPTER 1
+Introduction-------------------------------------------------------------------------------------------------11
+1.1 Introduction ----------------------------------------------------------------------------------------------12 
+Admin Features -----------------------------------------------------------------------------------------12
+User &amp; Provider Features ---------------------------------------------------------------------------------12
+1.2 Objectives of Project -----------------------------------------------------------------------------------13
+1.3 Organization of Project --------------------------------------------------------------------------------13
+1.4 Programming Language -------------------------------------------------------------------------------13
+1.5 Background of Project ---------------------------------------------------------------------------------14
+1.6 Operational Environment ------------------------------------------------------------------------------14
+1.7 Advantages ----------------------------------------------------------------------------------------------14
+1.8 Disadvantages -------------------------------------------------------------------------------------------14
+CHAPTER 2 
+System Analysis --------------------------------------------------------------------------------------------15
+ 2.1 Software Requirements Specifications --------------------------------------------------------------16
+       2.1.1 General Description -----------------------------------------------------------------------------16
+                Problem Statement ------------------------------------------------------------------------------16
+       2.1.2 System Objectives ------------------------------------------------------------------------------16
+       2.1.3 System Requirements ---------------------------------------------------------------------------17
+                 2.1.3.1 Functional Requirements -------------------------------------------------------------17
+                 2.1.3.2 Non Functional Requirements -------------------------------------------------------17
+        2.1.4 Software and Hardware Requirements ------------------------------------------------------18
+                 2.1.4.1 Software Requirements ---------------------------------------------------------------18
+                 2.1.4.2 Hardware Requirements --------------------------------------------------------------18
+ 2.2 Existing System ----------------------------------------------------------------------------------------19
+ 2.3 Proposed System ---------------------------------------------------------------------------------------19
+ 2.4 Tools and Techniques ---------------------------------------------------------------------------------19
+CHAPTER 3 
+System Design ----------------------------------------------------------------------------------------------20
+ 3.1 Use case Diagram --------------------------------------------------------------------------------------21
+ 3.2 Class Diagram ------------------------------------------------------------------------------------------22
+ 3.3 DFD Level 0 --------------------------------------------------------------------------------------------23
+ 3.4 DFD Level 1 ---------------------------------------------------------------------------------------------24
+ 3.5 Entity Relationship Diagram -------------------------------------------------------------------------25
+CHAPTER 4 
+Graphical User Interface ---------------------------------------------------------------------------------26
+User/Provider Module Interface ----------------------------------------------------------------------------27
+ 4.1 Splash screen -------------------------------------------------------------------------------------------27
+ 4.2 Sign up &amp; Login screen ------------------------------------------------------------------------------------------28
+ 4.3 Resident Home Screen --------------------------------------------------------------------------------------------29
+ 4.4 Service Category Screen------------------------------------------------------------------------------------------30
+ 4.5 Booking/Job Post screen------------------------------------------------------------------------------------------31
+ 4.6 Real-Time Chat Screen--------------------------------------------------------------------------------------------32
+4.7 Payment &amp; Wallet Screen ---------------------------------------------------------------------------------------33
+ 4.8 Provider Dashboard Screen---------------------------------------------------------------------------------------34
+4.9 Orders Details and Status Screen--------------------------------------------------------------------------------35
+Admin Module Interface ----------------------------------------------------------------------------------------------36
+ 4.10 Admin Web Login ------------------------------------------------------------------------------------------------36
+ 4.11 Home Dashboard -------------------------------------------------------------------------------------------------37
+ 4.12 Manage Providers (KYC) ---------------------------------------------------------------------------------------38
+ 4.13 Booking Details --------------------------------------------------------------------------------------------------39
+ 4.14 Commission Management Screen ----------------------------------------------------------------------------40
+ 4.15 Logout ------------------------------------------------------------------------------------------------------------41
+CHAPTER 5 
+Backend Database and Server Cloud -------------------------------------------------------------------------------42
+ 5.1 Node.js &amp; Express ------------------------------------------------------------------------------------------------43
+ 5.2 JWT Authentication ----------------------------------------------------------------------------------------------44
+ 5.3 MongoDB Realtime Database -----------------------------------------------------------------------------------45
+ 5.4 Socket.io Messaging ---------------------------------------------------------------------------------------------46
+CHAPTER 6 
+Testing ------------------------------------------------------------------------------------------------------------------47
+  6.1 Test Case Scenario ----------------------------------------------------------------------------------------------48
+        Test case 1 --------------------------------------------------------------------------------------------------------48
+           Preconditions ---------------------------------------------------------------------------------------------------48
+           Post Conditions ------------------------------------------------------------------------------------------------48
+        Test Case 2 -------------------------------------------------------------------------------------------------------49
+            Preconditions --------------------------------------------------------------------------------------------------49
+            Post conditions ------------------------------------------------------------------------------------------------49
+6.2 Test Case Specifications -----------------------------------------------------------------------------------------50
+       6.2.1 White Box Testing -----------------------------------------------------------------------------------------50
+       6.2.2 Black Box Testing -----------------------------------------------------------------------------------------50
+CHAPTER 7 
+Conclusion -------------------------------------------------------------------------------------------------------------51
+ 7.1 Conclusion --------------------------------------------------------------------------------------------------------52
+ 7.2 Future Work -------------------------------------------------------------------------------------------------------52
+Chapter 8 
+References --------------------------------------------------------------------------------------------------------------53
+ 8.1 References ---------------------------------------------------------------------------------------------------------54</p>
+<p>Chapter 1
+Introduction</p>
+<p>1.1    Introduction
+The proposed service management system is an intelligent application that provides many features such as it offers verified professional home service workers connecting directly with households. It contains different categories targeting all levels of users including electricians, plumbers, home appliance repairers, and regular laborers. Those features are all integrated to attract customers with their various daily problems. We aim to be a point of confidence among the community with high service quality, verified backgrounds (KYC), and instant communication with users in general. Furthermore, it utilizes Socket.io to be more flexible and elastic in communication queries and has a robust security system to make users feel confident to share their locations. Applications in general can facilitate people's lives faster. We worked with everything we could to simplify our application in the form of a gig-economy marketplace so that people in our dear country can keep pace with technological development.</p>
+<p>Smart Home Services Management System is divided into three modules-
+    Admin
+    User (Resident)
+    Provider</p>
+<p>Admins Features:
+    Admins Dashboard via Web browser.
+    Admins can add/edit and delete service categories.
+    Admins can calculate and track platform commissions.
+    Admins can verify Service Provider KYC (Know Your Customer) documentation.
+    Admins can search all users by a search field.
+    Admins can view all system bookings and resolve disputes.</p>
+<p>User &amp; Provider Features:
+     User can register themselves via an OTP system and after registration they will login by email/password.
+    After login, Resident or Provider can view their respective dashboards.
+    User can fetch exact Geolocation via GPS to send providers accurate addresses.
+    User can read job description and provider's reviews from their dashboard.
+    Provider can Accept, Reject, or Complete active jobs.
+    Real-time chat enables Resident and Provider to talk instantly inside the app.</p>
+<p>1.2 Objectives of the Project
+The main objectives of this projects are:
+    To develop customer trust in local home service laborers.
+    To deploy a highly scalable app using the MERN stack and React Native.
+    To develop an instant searching and chat feature. 
+    To provide a transparent, GPS-driven, secure environment.
+    Prevent time-wasting in physically looking for handymen.</p>
+<p>1.3 Organization of the Project
+In this project we have developed an Android based online Service Management Application along with a React.js Admin backend. It is a dynamic system that can easily be maintained and modified due to its NoSQL database nature. The application generates results in real time, incorporating Javascript source code. It is designed to ensure complete security against unauthorized access, providing a safe environment. 
+This application leverages JSON as one of the main payload structures for data exchange, enabling the creation of interactive and customizable user interfaces. React components play a crucial role in structuring and organizing the screens within the application, ensuring efficient data management. 
+To develop the application, we have adopted the incremental model, which allows adding features like Sockets and Maps at different stages of development. </p>
+<p>1.4 Programming Languages
+    JavaScript and Node.js using for backend server logic.
+    React JSX using for frontend web UI.
+    React Native using for mobile Android Application.
+    MongoDB for storing data entities.
+    Socket.io for Realtime data messaging.</p>
+<p>1.5 Background of Project
+Smart Home Services is a digital marketplace that stocks a range of everyday service professionals such as plumbers, electricians, and cleaners. This app differs from traditional classifieds in that they are actively tracked in real-time. From the app, users can easily purchase local service visits. Admins can moderate the platform safely via the web client.</p>
+<p>1.6 Operational Environment
+ANDROID     OS 8.0 or completely updated iOS.
+RAM            3 GB OR MORE SMART DEVICE
+SERVER      Node.js Server Runtime Environment
+DATABASE    MongoDB Cloud Atlas</p>
+<p>1.7 Advantages
+    Booking local home services online is cost-effective as it allows price negotiations beforehand.
+    The app is very convenient. Not only does it make physical travel unnecessary, but it simplifies the process of tracking your worker on a map.
+    With Provider KYC verified, safety and peace of mind are significantly enhanced over calling random unverified workers into a house.
+    The system allows a real-time Chat interface avoiding expensive GSM phone calls.</p>
+<p>1.8 Disadvantages
+    As with most online gig-economy transactions, a level of trust is still required before letting a stranger into a private home.
+    For workers (Providers), keeping GPS running actively consumes battery life.
+    Requires active and stable internet connection throughout the transaction (to send start/complete status signals).</p>
+<p>Chapter 2
+System Analysis</p>
+<p>2.1 Software Requirement Specification</p>
+<p>2.1.1 General Description</p>
+<p>This chapter will cover the software requirements specification (SRS), a comparison of the existing and proposed systems, and an analysis of the Smart Home Services development process. Before beginning development, the SRS section contains both functional and non-functional requirements to give a thorough explanation and overview of the system requirements. </p>
+<p>Problem Statement :</p>
+<p>Taking into account the parameters, the home service industry is massive but extremely unorganized. We all require plumbers or electricians for sudden domestic emergencies. Searching for professional help has traditionally been slow and unreliable. For a variety of reasons, including high-pressure jobs, managing home maintenance is exhausting. However, there are certain difficulties with online home service delivery that both customers and service providers encounter over time, such as trust issues, fair pricing, and exact location tracking. Long work hours are pushing homeowners toward the convenience of apps to dispatch handymen. </p>
+<p>2.1.2 System Objectives</p>
+<pre><code>The main goal is to improve the speed of resolving home maintenance issues.
+It saves the effort required to physically find available workers.
+It introduces a fair commission and wallet system to digitize gig-working.
+User will be able to select the interested service category and chat with the provider instantly.
+</code></pre>
+<p>2.1.3 System Requirements</p>
+<p>2.1.3.1 Functional Requirements:</p>
+<p>Table 1 Functional Requirements
+No    Requirements    Description
+FR1    User Registration   When making an account, the user enters details including Email, Phone, and Password, strictly verified by OTP.
+FR2    User Login  User clicks on login button, puts email and password, returning a secure JWT token.
+FR3    Admin Actions       Admin can add new service categories and approve Provider documents.
+FR4    Search/Post Jobs    Resident can post a job specifying address, time, and service type. 
+FR5    Provider Accept     Provider can view nearby jobs and select Accept or Reject.
+FR6    Live Chat           Once accepted, a socket connection opens for real-time text chatting.
+FR7    Status Updates      Admins and Providers can change order status (Pending → Completed).</p>
+<p>2.1.3.2 Non-Functional Requirements
+ Non-Functional requirement is used to define the performance of system.</p>
+<p>Table 2 Non Functional Requirements
+No    Requirements    Description
+NFR1    Performance Response Time: Within two seconds, the application will respond. User interface must be interactive (60 FPS).
+NFR2    Reliability The System must be trustworthy using encrypted JWT sessions.
+NFR3    Usability   The software mobile app must be easy to navigate using drawer and stack systems.
+NFR4    Security    All passwords are systematically hashed (bcrypt).
+NFR5    Portability The backend must run anywhere Node.js is installed. </p>
+<p>2.1.4 Software and Hardware Requirements</p>
+<p>2.1.4.1 Software Requirements</p>
+<pre><code>Operating System: The application should be compatible with Android and iOS.
+Integrated Development Environment (IDE): VS Code for all React and Express coding.
+Programming Languages: JavaScript, JSX.
+Backend Development: Node.js and Express framework configuration.
+Database Management System: MongoDB NoSQL structure.
+Web Services/APIs: Google Maps API or Expo Location API.
+</code></pre>
+<p>2.1.4.2 Hardware Requirements</p>
+<pre><code>Development Machine: A laptop with at least 8GB RAM to run React Native emulators.
+Mobile Device: A physical Android device with GPS hardware enabled for thorough testing.
+</code></pre>
+<p>2.2 Existing System</p>
+<p>Right now, when we want to fix a broken pipe or electrical board, we have to ask neighbors or visit a local market to find a technician. Plumbers or electricians usually don't have a structured schedule and might overcharge based on circumstances. Finding verified profiles is extremely difficult. </p>
+<p>2.3 Proposed System</p>
+<p>To solve the problem with the current system, we have come up with a new way to hire services using our phones. We can easily open the app, drop a pin on our GPS location, and dispatch a request for an electrician. A verified electrician accepts it and uses the map to arrive. Real-time chat helps clarify issues before arrival. When done, payments and commissions are documented transparently. </p>
+<p>2.4 Tools and Techniques Used</p>
+<p>The whole Project is divided into parts ranging from front-end to backend.</p>
+<pre><code>Operating System: Windows, Android OS
+IDEs: Visual Studio Code, Android Studio Emulators
+Libraries: React.js, React Native, Tailwind/CSS
+Backend Tools: Node.js, Express.js, Socket.io
+Database: MongoDB, Mongoose
+</code></pre>
+<p>Chapter 3
+System Design</p>
+<p> 
+3.1 Use case Diagram
+The use case diagram depicts the interactions in a gig-economy system where residents authenticate themselves, post job requests, and chat. Admins have the capability to verify providers and observe transactions. Providers seek available jobs, accept them, and update statuses.</p>
+<p>[ Insert Figure 3.1: Use Case Diagram Here ]</p>
+<p>3.2 Class Diagram</p>
+<p>The system database schema essentially consists of Collections: Admin, Users (Resident/Provider), Bookings, Services, and Chat Messages. Users are linked to Bookings. Messages are linked directly to Bookings to maintain chat history.</p>
+<p>[ Insert Figure 3.2: Class Diagram Here ]</p>
+<p>3.3 DFD Level 0</p>
+<p>The diagram illustrates the basic interaction. A user sends a request string to the App System. The App System processes logic to find available workers and returns an assigned provider variable. </p>
+<p>[ Insert Figure 3.3: DFD Level 0 Here ]</p>
+<p>3.4 DFD Level 1 </p>
+<p>This diagram represents the interactions more deeply, showing the exact steps required to complete KYC for a provider before they are allowed access to the "Available Jobs" data store.</p>
+<p>[ Insert Figure 3.4: DFD Level 1 Here ]</p>
+<p>3.5 ER Diagram</p>
+<p>The diagram illustrates a streamlined representation of Collections. The User Collection relates 1-to-many with the Bookings Collection. The Booking Collection relates 1-to-many with Messages.</p>
+<p>[ Insert Figure 3.5: ER Diagram Here ]</p>
+<p>Chapter 4
+Graphical User Interface and Tools</p>
+<p>User/Provider Module Interface</p>
+<p>4.1 Splash Screen
+Splash screen that appears at the first when user opens the app.</p>
+<p>[ Insert Figure 4.1: Splash Screen Screenshot ]</p>
+<p>4.2: Signup/ Login page
+Shows signup/login page, user can signup/login to app by entering email, password and solving OTP logic.</p>
+<p>[ Insert Figure 4.2: Signup/Login Screen Screenshot ]</p>
+<p>4.3 Resident Home Screen
+Shows Home screen which is the first screen after logging in which all the Service item categories and banners are listed. </p>
+<p>[ Insert Figure 4.3: Resident Home Screen Screenshot ]</p>
+<p>4.4 Service Category &amp; Job Post Screen
+User can select specific category and open a form to provide their address/GPS and job descriptions.</p>
+<p>[ Insert Figure 4.4: Category &amp; Post Job Screen Screenshot ]</p>
+<p>4.5 Real-time Chat
+Displays the duplex messaging interface allowing users to converse interactively.</p>
+<p>[ Insert Figure 4.5: App Chat Window Screenshot ]</p>
+<p>4.6 Orders Details and Status Screen
+User can see job detail like accepted, completed, or canceled.</p>
+<p>[ Insert Figure 4.6: History View Screenshot ]</p>
+<p>Admin Module Interface (Web Client)</p>
+<p>4.10 Admin Web Login
+Web interface for platform administration.</p>
+<p>[ Insert Figure 4.10: Admin Login Webpage Screenshot ]</p>
+<p>4.11 Home Dashboard
+Shows table graphs and statistics for overall platform health.</p>
+<p>[ Insert Figure 4.11: Admin Dashboard Screenshot ]</p>
+<p>4.12 Manage Providers (KYC)
+Admin can approve or reject identity documents uploaded by service providers.</p>
+<p>[ Insert Figure 4.12: Admin Document Verification Screenshot ]</p>
+<p>4.13 Commission &amp; Wallet Management
+Shows how much the platform earned through active transaction cuts.</p>
+<p>[ Insert Figure 4.13: Finance UI Screenshot ]</p>
+<p>Chapter 5
+Backend Database and Server Cloud</p>
+<p> 
+5.1 Node.js &amp; Express</p>
+<p>The Smart Home Services Management system relies completely on a Node.js runtime environment. Express.js acts as the fundamental web framework that routes API requests between the Mobile App, Web App, and the Database gracefully.</p>
+<p>[ Insert Figure 5.1: Node.js Logo/Architecture Diagram ]</p>
+<p>5.2 JWT Authentication</p>
+<p>JSON Web Tokens (JWT) allows users to sign up and log in securely. The Express backend generates a cryptographic token upon correct password matching, and this token acts as the user's permanent passport to make authorized changes.</p>
+<p>[ Insert Figure 5.2: JWT Auth Flow ]</p>
+<p>5.3 MongoDB Realtime Database</p>
+<p>MongoDB is a cloud-hosted NoSQL database that lets us store arrays of JSON data efficiently. It is perfect for handling our complex user schemas, varying booking coordinates, and extensive chat arrays.</p>
+<p>[ Insert Figure 5.3: MongoDB Atlas Logo ]</p>
+<p>5.4 Socket.io Messaging</p>
+<p>Socket.io enables real-time, bi-directional communication between web clients and servers. This allows our chat application to instantly deliver messages and booking updates without the user needing to manually refresh.</p>
+<p>[ Insert Figure 5.4: Socket.io Flow Diagram ]</p>
+<p>Chapter 6
+Testing</p>
+<p>6.1 Test Case Scenario
+Test Case ID: 01
+Test Case Name: Sign In
+Test Priority: High
+Preconditions: The user must have a valid registered account.
+Post conditions: User accesses dashboard with Bearer JWT.</p>
+<p>Table 3 Test Case 1
+SN    Action  Inputs  Expected Outcome    Actual Outcome  Test Result </p>
+<ol>
+<li>Enter Correct Email &amp; Password  Email: resident@test.com
+Password: password123    Login Success   Login Success   Pass    </li>
+<li>Enter Invalid email &amp; Password  Email: admin123 
+Password: 111    Invalid Email format    Invalid Email format    Pass    </li>
+</ol>
+<p>Test Case ID: 02
+Test Case Name: Create Booking
+Test Priority: High
+Preconditions: User is signed in and location permissions are granted.
+Post conditions: Booking status becomes Pending in Database.</p>
+<p>Table 4 Test Case 2
+SN    Action  Inputs  Expected Outcome    Actual Outcome  Test Result </p>
+<ol>
+<li>Complete Job Request Form   Category: Plumbing, Location: Allowed   Booking Creation Success    Success Pass    </li>
+<li>Incomplete Data Category: Blank System throws "Category Required" Error Error displayed Pass    </li>
+</ol>
+<p>6.2 Test Cases Specifications</p>
+<p>6.2.1 Black Box Test
+Tests are solely based on functionality and requirements, verifying that when a provider clicks 'Accept', the resident sees 'Accepted' on their end without examining the internal DB queries.</p>
+<p>6.2.2 White Box Testing
+Checking out the code's internal logic. This involved verifying the Mongoose Schema relationships and ensuring the Commission logic precisely calculates math formulas.</p>
+<p>Chapter 7
+Conclusion</p>
+<p>7.1 Conclusion
+The Smart Home Services Management System has been successfully developed to provide a convenient and efficient way for users to manage home maintenance using their mobile devices. The application bridges the gap between verified local technicians and households rapidly. The platform utilizes robust technologies including MERN and React Native to assure speed and scalability.
+The application has been tested thoroughly to ensure that it operates effectively, specifically measuring the reliability of the real-time Sockets and MongoDB clusters. The system possesses significant potential to formalize gig-economy work.</p>
+<p>7.2 Future Work</p>
+<pre><code>Examining the role of AI in quoting price estimates based on images uploaded by the user.
+Integrating native Digital Wallets (like Stripe or Google Pay) for direct in-app transactions.
+Investigating continuous Background GPS tracking so the resident can see the technician's car moving toward their house in real-time.
+Exploring Blockchain strategies to provide totally immutable logs for user review authenticity.
+</code></pre>
+<p>Chapter 8
+References</p>
+<p>8.1 References</p>
+<p>Table 5 References
+References:</p>
+<p>I)    React Native Documentation: https://reactnative.dev/
+II)    Node JS &amp; Express Frameworks: https://expressjs.com/
+III)    MongoDB Atlas &amp; Mongoose: https://mongoosejs.com/
+IV)    Socket.io Realtime Websocket Protocols: https://socket.io/docs/v4/
+V)    JSON Web Token RFC Standards: https://jwt.io/</p>
+<p>Thank You</p>
+</body>
+</html>

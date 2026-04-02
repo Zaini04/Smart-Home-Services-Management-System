@@ -1,0 +1,520 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <title>Smart Home Services Management System SRS</title>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; }
+    h1 { font-size: 20pt; text-align: center; font-weight: bold; }
+    h2 { font-size: 16pt; margin-top: 20pt; font-weight: bold; }
+    h3 { font-size: 14pt; margin-top: 15pt; font-weight: bold; }
+    p { margin-bottom: 10pt; text-align: justify; }
+    ul { margin-bottom: 10pt; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10pt; margin-bottom: 15pt;}
+    td, th { border: 1px solid black; padding: 6px; text-align: left; }
+    .page-break { page-break-before: always; }
+    .center { text-align: center; }
+    .figure-placeholder { text-align: center; font-style: italic; color: #555; margin: 20px 0; padding: 20px; border: 1px dashed #999; }
+  </style>
+</head>
+<body>
+
+<div class="center" style="margin-top: 50pt;">
+  <h1>Smart Home Services Management System</h1>
+  <br/><br/><br/>
+  <p>PID-BSIT-00000</p>
+  <p>Project Advisor: Mr. Munawar Hussain</p>
+  <br/><br/><br/>
+  <p>Submitted By:</p>
+  <p>[Your Name 1] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [Roll No 1]</p>
+  <p>[Your Name 2] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [Roll No 2]</p>
+  <br/><br/><br/><br/><br/>
+  <p>University of Education Lahore, [Your Campus]</p>
+  <br/><br/><br/><br/>
+  <p>© Copyright [Your Name 1], [Your Name 2] created by 2026</p>
+</div>
+
+<div class="page-break"></div>
+
+<h2 class="center">DECLARATION</h2>
+<p>I claim that this project identify entitled “Smart Home Services Management System” is the result of my very own studies and development except as referred to inside the references. This project has no longer been regularly occurring for any degree and is not simultaneously submitted in candidate for some other degree. At any time if my declaration is observed to be erroneous even after finishing touch of BS Information Technology, the university has the right to withdraw my BS Information Technology degree.</p>
+<br/><br/>
+<table style="border:none;">
+<tr style="border:none;">
+<td style="border:none;">Name: [Your Name 1]<br/>Signature: ____________<br/>Roll no: [Roll No 1]<br/>Date: ________________</td>
+<td style="border:none;">Name: [Your Name 2]<br/>Signature: ____________<br/>Roll no: [Roll No 2]<br/>Date: ________________</td>
+</tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2 class="center">PLAGIARISM UNDERTAKEN</h2>
+<p>I solemnly declare that project work presented in this documentation entitles “Smart Home Services Management System” is my own work without any significant contribution from any other person. Small contribution/help wherever taken has been acknowledged and that complete project has been written by myself.</p>
+<p>I understand the zero tolerance policy of the HEC and University of Education, Lahore towards plagiarism. Therefore, we as an author of the above titled project declare that no portion of my project documentation and any material used as reference is properly referred.</p>
+<p>I undertake that if I am found guilty of any formal plagiarism in the above titled project even after award of BS degree, the University reserves the rights to withdraw/revoke my BS degree and that HEC and the University has the right to publish my name on the HEC/University Website on which names of students are place who submitted plagiarized projects.</p>
+<br/><br/>
+<table style="border:none;">
+<tr style="border:none;">
+<td style="border:none;">Name: [Your Name 1]<br/>Signature: ____________<br/>Roll no: [Roll No 1]<br/>Date: ________________</td>
+<td style="border:none;">Name: [Your Name 2]<br/>Signature: ____________<br/>Roll no: [Roll No 2]<br/>Date: ________________</td>
+</tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2 class="center">CERTIFICATE OF APPROVAL</h2>
+<p>This is to certify that the project work presented in this documentation entitled, "Smart Home Services Management System", was conducted by "[Your Name 1]" & "[Your Name 2]" under the supervision of "Mr. Munawar Hussain". No part of this project has been submitted anywhere else for any degree. This project is submitted to the "University of Education" in partial fulfillment of the requirements of the degree of BS in Information Technology.</p>
+<br/><br/>
+<table style="border:none;">
+<tr style="border:none;">
+<td style="border:none;">Signature: ____________<br/>Name: [Your Name 1]<br/>Date: ________________</td>
+<td style="border:none;">Signature: ____________<br/>Name: [Your Name 2]<br/>Date: ________________</td>
+</tr>
+<tr style="border:none;">
+<td style="border:none;"><br/><br/>Signature: ____________<br/>Project Primary Supervisor<br/>Name: Mr. Munawar Hussain<br/>Designation: Lecturer CS/IT<br/>University of Education</td>
+<td style="border:none;"><br/><br/>Signature: ____________<br/>Project External Examiner<br/>Name: ____________________<br/>Designation: Lecturer CS/IT<br/>University of Education</td>
+</tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2 class="center">OFFICE OF CONTROLLER OF EXAMINATION NOTIFICATION</h2>
+<p>No:_______________ Date:______________</p>
+<p>It is notified for the nomination of all the concerned that Mr. ([Your Name 1]), Miss/Mr. ([Your Name 2]) BS student Of IT Department of University of Education has completed all the requirements for the award of BS Degree in the discipline of Information Technology as per detail given hereunder.</p>
+<table border="1">
+<tr>
+<th>Registration No</th><th>Complete Name</th><th>Course Work</th><th>Project</th><th>Total</th><th>Cumulative Grades Point Average (CGPA)</th>
+</tr>
+<tr>
+<td>[Reg No 1]</td><td>[Your Name 1]</td><td>0</td><td>6</td><td>6</td><td></td>
+</tr>
+<tr>
+<td>[Reg No 2]</td><td>[Your Name 2]</td><td>0</td><td>6</td><td>6</td><td></td>
+</tr>
+</table>
+<br/>
+<p>Project Title: Smart Home Services Management System</p>
+<p>Name of Supervisor: Mr. Munawar Hussain</p>
+<p>Signed By: ________________________ (Controller of Examination)</p>
+
+<div class="page-break"></div>
+
+<h2 class="center">ACKNOWLEDGEMENT</h2>
+<p>We truly acknowledge the cooperation and help given by Mr. Munawar Hussain, Lecturer of University of Education. He has been a constant source of guidance during the course of this Project. We would also like to thank him for his proper support and guidance all through this project.</p>
+<p>We also convey our regards to all the faculty members of the Department of Information Technology, UE Campus. We are also thankful to our friends and families whose silent support led us to complete our project.</p>
+<br/>
+<p>1- [Your Name 1] &nbsp; &nbsp; [Roll No 1]</p>
+<p>2- [Your Name 2] &nbsp; &nbsp; [Roll No 2]</p>
+<p>Date: ______________</p>
+
+<div class="page-break"></div>
+
+<h2 class="center">ABSTRACT</h2>
+<p>The Smart Home Services Management System is an online platform that connects people at home with verified, professional service workers like electricians, plumbers, painters, and cleaners. Our system includes a fully developed Web Application for Residents and Providers, and a Mobile App that has exactly the same features and is currently in its final steps of completion. Both the Web and Mobile apps are connected to a powerful Web Admin dashboard.</p>
+<p>Users can easily request a service online. Residents can choose their required service category, write their job details, and use a GPS map to select their exact location. Once a job is posted, nearby verified Providers can see it and offer a price. When both sides agree, they go through a clear, step-by-step booking process (like waiting for inspection, working, and finally completing the job using an OTP verification). The app also has a real-time live chat system where they can talk and share photos easily.</p>
+<p>Admins can watch and manage everything. Admins can add or update service categories, check the ID cards (CNIC) of service providers to make sure they are real, and see the profits and total earnings of the platform.</p>
+<p>This system is built using the MERN Stack (MongoDB, Express.js, React, Node.js) for the web views and servers, and React Native for the Mobile App. </p>
+
+<div class="page-break"></div>
+
+<h2 class="center">Table of Contents</h2>
+<p>Smart Home Services Management System -------------------------------------------------------------1</p>
+<p>CHAPTER 1 Introduction--------------------------------------------------------------------------------------11<br/>
+1.1 Introduction ----------------------------------------------------------------------------------------------12<br/>
+Admin Features -----------------------------------------------------------------------------------------12<br/>
+User & Provider Features ---------------------------------------------------------------------------------12<br/>
+1.2 Objectives of Project -----------------------------------------------------------------------------------13<br/>
+1.3 Organization of Project --------------------------------------------------------------------------------13<br/>
+1.4 Programming Language -------------------------------------------------------------------------------13<br/>
+1.5 Background of Project ---------------------------------------------------------------------------------14<br/>
+1.6 Operational Environment ------------------------------------------------------------------------------14<br/>
+1.7 Advantages ----------------------------------------------------------------------------------------------14<br/>
+1.8 Disadvantages -------------------------------------------------------------------------------------------14</p>
+<p>CHAPTER 2 System Analysis -------------------------------------------------------------------------------15<br/>
+2.1 Software Requirements Specifications --------------------------------------------------------------16<br/>
+2.1.1 General Description -----------------------------------------------------------------------------16<br/>
+Problem Statement ------------------------------------------------------------------------------16<br/>
+2.1.2 System Objectives ------------------------------------------------------------------------------16<br/>
+2.1.3 System Requirements ---------------------------------------------------------------------------17<br/>
+2.1.3.1 Functional Requirements -------------------------------------------------------------17<br/>
+2.1.3.2 Non Functional Requirements -------------------------------------------------------17<br/>
+2.1.4 Software and Hardware Requirements ------------------------------------------------------18<br/>
+2.1.4.1 Software Requirements ---------------------------------------------------------------18<br/>
+2.1.4.2 Hardware Requirements --------------------------------------------------------------18<br/>
+2.2 Existing System ----------------------------------------------------------------------------------------19<br/>
+2.3 Proposed System ---------------------------------------------------------------------------------------19<br/>
+2.4 Tools and Techniques ---------------------------------------------------------------------------------19</p>
+<p>CHAPTER 3 System Design ----------------------------------------------------------------------------------20<br/>
+3.1 Use case Diagram --------------------------------------------------------------------------------------21<br/>
+3.2 Class Diagram ------------------------------------------------------------------------------------------22<br/>
+3.3 DFD Level 0 --------------------------------------------------------------------------------------------23<br/>
+3.4 DFD Level 1 ---------------------------------------------------------------------------------------------24<br/>
+3.5 Entity Relationship Diagram -------------------------------------------------------------------------25</p>
+<p>CHAPTER 4 Graphical User Interface ---------------------------------------------------------------------26<br/>
+Resident & Provider Module Interface -------------------------------------------------------------------27<br/>
+4.1 Splash screen & Signup ------------------------------------------------------------------------------27<br/>
+4.2 Resident Home Dashboard --------------------------------------------------------------------------28<br/>
+4.3 Post Job (GPS Map) ----------------------------------------------------------------------------------29<br/>
+4.4 Real-time Chat Screen --------------------------------------------------------------------------------30<br/>
+4.5 Booking Details & Tracking -------------------------------------------------------------------------31<br/>
+Admin Module Interface ------------------------------------------------------------------------------------32<br/>
+4.6 Admin Login & Dashboard --------------------------------------------------------------------------32<br/>
+4.7 KYC Document Verification -------------------------------------------------------------------------33<br/>
+4.8 Manage Categories & Wallets ----------------------------------------------------------------------34</p>
+<p>CHAPTER 5 Backend Database and Server Cloud --------------------------------------------------------35<br/>
+5.1 Node.js & Express ---------------------------------------------------------------------------------------35<br/>
+5.2 JWT Authentication -------------------------------------------------------------------------------------36<br/>
+5.3 MongoDB Database ------------------------------------------------------------------------------------37<br/>
+5.4 Live Socket Chat -----------------------------------------------------------------------------------------38</p>
+<p>CHAPTER 6 Testing ---------------------------------------------------------------------------------------------39<br/>
+6.1 Test Case Scenario ---------------------------------------------------------------------------------------40<br/>
+6.2 Test Case Specifications --------------------------------------------------------------------------------41</p>
+<p>CHAPTER 7 Conclusion ----------------------------------------------------------------------------------------42<br/>
+7.1 Conclusion ------------------------------------------------------------------------------------------------42<br/>
+7.2 Future Work -----------------------------------------------------------------------------------------------42<br/>
+Chapter 8 References -------------------------------------------------------------------------------------------43</p>
+
+<div class="page-break"></div>
+
+<h2 class="center">Chapter 1</h2>
+<h2 class="center">Introduction</h2>
+
+<h3>1.1 Introduction</h3>
+<p>The Smart Home Services Management System connects households with local service workers like electricians, plumbers, and painters. Our system guarantees safety by verifying every worker's ID documents and tracking jobs from start to finish. We have built this app to have the exact same features on both the Web Application (which is fully completed) and the Mobile Application (which is just in its final few steps). Therefore, when we mention Resident and Provider features, they are available on both the website and the mobile phone.</p>
+<p>Smart Home Services Management System is divided into three main parts:</p>
+<ul>
+    <li><b>Admin (Web Dashboard)</b></li>
+    <li><b>Resident (Web Site & Mobile App)</b></li>
+    <li><b>Service Provider (Web Site & Mobile App)</b></li>
+</ul>
+
+<p><b>Admin Features:</b></p>
+<ul>
+<li>Admins can log into a Web Dashboard to see total earnings and user graphs.</li>
+<li>Admins can add, edit, or delete Service Categories like "Plumbing" or "Cleaning".</li>
+<li>Admins check and verify Service Providers by looking at their real CNIC pictures (KYC Approval).</li>
+<li>Admins manage platform commissions and money in the wallets.</li>
+</ul>
+
+<p><b>User (Resident) & Provider Features:</b></p>
+<ul>
+<li>Both users sign up using an OTP check for security.</li>
+<li>Residents can mark their exact home address on a GPS Map when asking for a service.</li>
+<li>Providers can view nearby "Available Jobs" and send a price offer back to the Resident.</li>
+<li>Both users can talk in a built-in Live Chat where they can send text, pictures, or videos.</li>
+<li>The job has a safe step-by-step design: It goes from 'Requested' tracking, to 'Working', and then 'Completed' using an OTP code given to the provider to confirm the work is done.</li>
+</ul>
+
+<h3>1.2 Objectives of the Project</h3>
+<ul>
+<li>To create trust between people and online home service workers using secure ID verification (KYC).</li>
+<li>To build a fast and easy-to-use Web and Mobile App.</li>
+<li>To offer real-time live chat so users don't have to make phone calls.</li>
+<li>To save time for people who normally have to go outside to find physical workers.</li>
+<li>To create a safe and fair payment system with a platform wallet.</li>
+</ul>
+
+<h3>1.3 Organization of the Project</h3>
+<p>This project uses modern web programming tools to work. The Web Application is fast and changes dynamically without needing the page to reload every time. We used a NoSQL database, which makes storing different types of data very simple. The same database and server connect the React Web Application and the React Native Mobile Application at the same time.</p>
+
+<h3>1.4 Programming Languages</h3>
+<ul>
+<li><b>JavaScript</b> is the main language used.</li>
+<li><b>Node.js and Express</b> are used for the backend server.</li>
+<li><b>React.js</b> is used for the Resident, Provider, and Admin Web pages.</li>
+<li><b>React Native</b> is used for building the Mobile App.</li>
+<li><b>MongoDB</b> is used as the database to store our records.</li>
+<li><b>Socket.io</b> is used to make the chat messages appear instantly.</li>
+</ul>
+
+<h3>1.5 Background of Project</h3>
+<p>We saw that when a pipe breaks or a fan stops working at home, finding a reliable worker is very hard and unsafe. People have to ask neighbors or go to a market to find someone. Our platform solves this by bringing workers directly to the mobile phone or computer. All workers are checked by the Admin, and prices are agreed upon before the worker starts.</p>
+
+<h3>1.6 Operational Environment</h3>
+<p><b>Mobile Phones:</b> Any modern Android phone or iPhone.<br/>
+<b>Web Browser:</b> Google Chrome, Safari, Firefox, etc.<br/>
+<b>DATABASE:</b> MongoDB Cloud.<br/>
+<b>SERVER:</b> Node.js Server Environment.</p>
+
+<h3>1.7 Advantages</h3>
+<ul>
+<li>Finding a worker is very fast and can be done from a mobile phone or laptop.</li>
+<li>Safety is high because the Admin checks the Provider's real ID card first.</li>
+<li>Using the GPS map means the worker will not get lost finding the house.</li>
+<li>Live chat makes it easy to share pictures of the broken item before the worker arrives.</li>
+</ul>
+
+<h3>1.8 Disadvantages</h3>
+<ul>
+<li>It requires a good internet connection from both the Resident and the Provider for the app to update the live locations and chat.</li>
+<li>Users need some basic knowledge of how to use smartphones or websites to book a job.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2 class="center">Chapter 2</h2>
+<h2 class="center">System Analysis</h2>
+
+<h3>2.1 Software Requirement Specification</h3>
+<h4>2.1.1 General Description</h4>
+<p><b>Problem Statement:</b><br/>
+Right now, the home service industry is very disorganized. People face problems finding good plumbers or electricians quickly. Customers have trust issues because they don't know who is coming into their homes. Workers also want an easy way to find nearby jobs without waiting in markets. We need an application that is available on Web and Mobile, allowing customers to book services safely by tracking the location and checking identities.</p>
+
+<h4>2.1.2 System Objectives</h4>
+<ul>
+<li>To save the effort needed to physically search for workers.</li>
+<li>To provide a live chat so users can explain their problems clearly.</li>
+<li>To organize jobs clearly, showing their status (Pending, Working, Completed).</li>
+</ul>
+
+<h4>2.1.3 System Requirements</h4>
+<h5>2.1.3.1 Functional Requirements</h5>
+<table>
+<tr><th>No</th><th>Requirements</th><th>Description</th></tr>
+<tr><td>FR1</td><td>User Registration</td><td>A user can make an account by providing an Email and Password. They verify it using an OTP code sent to their email.</td></tr>
+<tr><td>FR2</td><td>User Login</td><td>The user enters their email and password to safely log into their Web or Mobile dashboard.</td></tr>
+<tr><td>FR3</td><td>Admin Verification (KYC)</td><td>Service Providers upload pictures of their ID cards. The Admin looks at these and clicks "Approve" or "Reject".</td></tr>
+<tr><td>FR4</td><td>Post a Job (With GPS)</td><td>Residents enter test details and pick their exact house location on a live GPS map to post a job request.</td></tr>
+<tr><td>FR5</td><td>Provider Offers Price</td><td>Providers see the job on their screen and can send back a price they want to charge.</td></tr>
+<tr><td>FR6</td><td>Live Socket Chat</td><td>Resident and Provider can instantly message each other or send pictures without reloading the page.</td></tr>
+<tr><td>FR7</td><td>Status & OTP Verification</td><td>When finishing the job, the Provider changes the status to "Completed", and the Resident gives them an OTP code to verify it.</td></tr>
+<tr><td>FR8</td><td>Manage Wallet</td><td>Providers can view their wallet balance and see the platform commissions deducted from their earnings.</td></tr>
+<tr><td>FR9</td><td>Submit Reviews</td><td>Residents can give a star rating and write a review about the service provider after the job is finished.</td></tr>
+<tr><td>FR10</td><td>View Notifications</td><td>Users receive instant notifications for new messages, offers, and job status changes.</td></tr>
+</table>
+
+<h5>2.1.3.2 Non-Functional Requirements</h5>
+<table>
+<tr><th>No</th><th>Requirements</th><th>Description</th></tr>
+<tr><td>NFR1</td><td>Performance</td><td>The app must load fast. When someone sends a message, it should show up instantly.</td></tr>
+<tr><td>NFR2</td><td>Reliability</td><td>The system should not crash or lose important job data.</td></tr>
+<tr><td>NFR3</td><td>Usability</td><td>The Web site and Mobile App should be very simple, so anyone can use it without confusion.</td></tr>
+<tr><td>NFR4</td><td>Security</td><td>Passwords must be hidden and users must log in safely using secure tokens (JWT).</td></tr>
+</table>
+
+<h4>2.1.4 Software and Hardware Requirements</h4>
+<h5>2.1.4.1 Software Requirements</h5>
+<ul>
+<li>Operating System: Works on Windows, Android, and iOS.</li>
+<li>Editor: Visual Studio Code.</li>
+<li>Frontend Languages: React JS (For Web) and React Native (For Mobile).</li>
+<li>Backend Languages: Node.js and Express.</li>
+<li>Database: MongoDB.</li>
+</ul>
+
+<h5>2.1.4.2 Hardware Requirements</h5>
+<ul>
+<li>A laptop for development.</li>
+<li>A smartphone with an internet connection and GPS location services turned on.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2 class="center">Chapter 3</h2>
+<h2 class="center">System Design</h2>
+
+<h3>3.1 Use case Diagram</h3>
+<p>The Use Case diagram shows how users interact with the app. Residents can log in, post jobs, and chat. Providers can upload KYC documents and view nearby jobs. Admins can verify documents and check earnings.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 3.1 Here: Use Case Diagram Image generated from PlantUML ]
+</div>
+
+<h3>3.2 Class Diagram</h3>
+<p>The Class Diagram shows the main parts of our database like User, Resident, Provider, Booking, and Category, and how they connect to each other.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 3.2 Here: Class Diagram Image generated from PlantUML ]
+</div>
+
+<h3>3.3 DFD Level 0</h3>
+<p>This diagram shows the basic flow of the whole system. The Resident gives job details, the Provider accepts it, and the Admin checks the system health overall.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 3.3 Here: DFD Level 0 Image generated from PlantUML ]
+</div>
+
+<h3>3.4 DFD Level 1</h3>
+<p>This shows more details. It shows how the Admin specifically approves the KYC document before the Provider is allowed to see the "Available Jobs" window.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 3.4 Here: DFD Level 1 Image generated from PlantUML ]
+</div>
+
+<h3>3.5 Entity Relationship Diagram (ERD)</h3>
+<p>The ER Diagram shows exactly how the MongoDB database collections link together. For example, a User ID is saved inside a Booking so we know who ordered the service.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 3.5 Here: ER Diagram Image generated from PlantUML ]
+</div>
+
+<div class="page-break"></div>
+
+<h2 class="center">Chapter 4</h2>
+<h2 class="center">Graphical User Interface</h2>
+<p><i>Note: The features below are identical on both our fully completed Web Application and our Mobile Application which is in its final completion stages.</i></p>
+
+<h3>Resident & Provider Module Interface</h3>
+
+<h4>4.1 Splash Screen & Signup</h4>
+<p>When the user opens the Web or Mobile app, they see a clean welcome screen. They can choose to create a new account by receiving a safe OTP code on their email to confirm their identity.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 4.1 Here: Screenshot of Signup / Login Page ]
+</div>
+
+<h4>4.2 Resident Home Dashboard</h4>
+<p>After logging in, the Resident sees a beautiful list of service categories like Electrician, Plumber, or Cleaner. They can also see their recent active bookings on this page.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 4.2 Here: Screenshot of Resident Dashboard ]
+</div>
+
+<h4>4.3 Post Job (GPS Map)</h4>
+<p>When a Resident wants to order a service, they see a map. They can search for their city and pin their exact house location so the provider knows where to go. They also type what help they need.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 4.3 Here: Screenshot of the GPS Map Job Post Form ]
+</div>
+
+<h4>4.4 Real-time Chat Screen</h4>
+<p>Once a provider accepts the job, both users can open the Chat Screen. It looks like WhatsApp. They can type messages, and even send pictures or video clips to show the problem clearly.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 4.4 Here: Screenshot of the Live Chat Screen ]
+</div>
+
+<h4>4.5 Booking Details & Tracking</h4>
+<p>This screen shows the job status. It shows buttons allowing the Provider to click "Start Work" and "Finish Work". It also has the OTP lock where the Resident gives a code to finalize the payment.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 4.5 Here: Screenshot of Booking Tracking Page ]
+</div>
+
+<h3>Admin Module Interface</h3>
+
+<h4>4.6 Admin Login & Dashboard</h4>
+<p>The Admin logs in securely on the web to see graphs and charts showing how many users have joined and how many total jobs have been completed.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 4.6 Here: Screenshot of Admin Web Analytics Dashboard ]
+</div>
+
+<h4>4.7 KYC Document Verification</h4>
+<p>The Admin looks at a list of new Providers. The Admin clicks on an image to zoom in and read the Provider's ID card. Then the Admin clicks "Approve" or "Reject".</p>
+<div class="figure-placeholder">
+  [ Insert Figure 4.7 Here: Screenshot of Admin Document Verification popup ]
+</div>
+
+<h4>4.8 Manage Categories & Wallets</h4>
+<p>Admins can add new services (like "AC Repair") easily. They can also view how much commission money the platform has earned from Provider Wallets.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 4.8 Here: Screenshot of Admin Categories / Earnings ]
+</div>
+
+<div class="page-break"></div>
+
+<h2 class="center">Chapter 5</h2>
+<h2 class="center">Backend Database and Server Cloud</h2>
+<p><i>Our project uses a modern custom server instead of Firebase.</i></p>
+
+<h3>5.1 Node.js & Express API</h3>
+<p>The brain of the system is built with Node.js. Express is used to create simple rules (APIs) so the Web App and Mobile App can easily talk to the database securely.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 5.1 Here: Logo of Node.js ]
+</div>
+
+<h3>5.2 JWT Authentication</h3>
+<p>To make logging in very safe, we use JWT (JSON Web Tokens). When a user logs in, the server gives them a secret digital key. The Web or Mobile app uses this key to prove it is the real user without sending the password again.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 5.2 Here: Diagram of JWT Token flow ]
+</div>
+
+<h3>5.3 MongoDB Database</h3>
+<p>MongoDB is our online storage. MongoDB is flexible and fast. It stores complex information like GPS coordinates, user profile details, chat histories, and ID image links perfectly.</p>
+<div class="figure-placeholder">
+  [ Insert Figure 5.3 Here: MongoDB Cloud Dashboard ]
+</div>
+
+<h3>5.4 Live Socket Chat</h3>
+<p>We use Socket.io to allow the Resident and Provider to talk instantly without refreshing their screens. It makes the chat feel alive, just like normal chatting apps.</p>
+
+<div class="page-break"></div>
+
+<h2 class="center">Chapter 6</h2>
+<h2 class="center">Testing</h2>
+<p>We tested the application on both Web and Mobile interfaces to ensure it works correctly.</p>
+
+<h3>6.1 Test Case Scenario</h3>
+
+<p><b>Test Case ID: 01</b><br/>
+<b>Test Case Name:</b> Sign In<br/>
+<b>Test Priority:</b> High<br/>
+<b>Preconditions:</b> The user must have a registered account.</p>
+<table border="1">
+<tr><th>SN</th><th>Action Inputs</th><th>Expected Outcome</th><th>Actual Outcome</th><th>Test Result</th></tr>
+<tr>
+<td>1.</td><td>Email: user@test.com<br/>Pass: 123456</td><td>Login Success, dashboard opens.</td><td>Login Success.</td><td>Pass</td>
+</tr>
+<tr>
+<td>2.</td><td>Email: wrong@test.com<br/>Pass: 000</td><td>"Invalid Email or Password" error box displays.</td><td>Error displayed correctly.</td><td>Pass</td>
+</tr>
+</table>
+
+<p><b>Test Case ID: 02</b><br/>
+<b>Test Case Name:</b> Post a Job Request<br/>
+<b>Test Priority:</b> High<br/>
+<b>Preconditions:</b> Resident is logged in and selects a location on the map.</p>
+<table border="1">
+<tr><th>SN</th><th>Action Inputs</th><th>Expected Outcome</th><th>Actual Outcome</th><th>Test Result</th></tr>
+<tr>
+<td>1.</td><td>Category: Cleaning<br/>Location: Selected<br/>Description: "Clean my fan"</td><td>Job is created and nearby Providers get a new job notification.</td><td>Job created successfully.</td><td>Pass</td>
+</tr>
+<tr>
+<td>2.</td><td>Category: Left Blank<br/>Location: Selected</td><td>System tells the user "Please select a category".</td><td>Error displayed prohibiting blank job.</td><td>Pass</td>
+</tr>
+</table>
+
+<p><b>Test Case ID: 03</b><br/>
+<b>Test Case Name:</b> Admin Accept KYC Document<br/>
+<b>Test Priority:</b> High<br/>
+<b>Preconditions:</b> Provider uploaded images. Admin is logged in to Dashboard.</p>
+<table border="1">
+<tr><th>SN</th><th>Action Inputs</th><th>Expected Outcome</th><th>Actual Outcome</th><th>Test Result</th></tr>
+<tr>
+<td>1.</td><td>Admin clicks "Approve" button on pending Provider.</td><td>Provider status changes to Approved and Provider can now see available jobs.</td><td>Status updated beautifully.</td><td>Pass</td>
+</tr>
+</table>
+
+<h3>6.2 Test Case Specifications</h3>
+
+<h4>6.2.1 Black Box Testing</h4>
+<p>We tested the system functionality like normal users. For example, we clicked the "Send Message" button in the chat on the Web, and checked if it appeared instantly on the Mobile phone screen without looking at the backend code.</p>
+
+<h4>6.2.2 White Box Testing</h4>
+<p>We looked precisely at the code. We checked if the math formulas inside our backend successfully subtracted the correct platform commission percentage from the provider's wallet balance when a job was finished.</p>
+
+<div class="page-break"></div>
+
+<h2 class="center">Chapter 7</h2>
+<h2 class="center">Conclusion</h2>
+
+<h3>7.1 Conclusion</h3>
+<p>The Smart Home Services Management System provides an incredibly easy and safe way for households to find technical workers directly from their laptops or mobile phones. It solves the problem of finding trustworthy people because every worker's ID is checked by an Admin. The platform is built using very fast and popular tools like React JS for the Web and React Native for the Mobile Application, connected together by Node.js and MongoDB. The system successfully provides GPS tracking and a live chat to make the user experience amazing.</p>
+
+<h3>7.2 Future Work</h3>
+<ul>
+<li><b>Adding Real Payment Methods:</b> We plan to integrate easy popular payment systems directly into the app, such as <b>EasyPaisa, JazzCash, and SadaPay</b>. This makes it so users can pay for services directly from their digital wallets easily without needing hard cash.</li>
+<li><b>AI Photo Helper:</b> Letting users upload a picture of a broken pipe so that the app can auto-guess the problem and recommend a price instantly.</li>
+<li><b>Live Movement Tracking:</b> Adding a feature so the user can see a tiny car icon moving on the map when the Provider is driving to their house.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2 class="center">Chapter 8</h2>
+<h2 class="center">References</h2>
+
+<h3>8.1 References</h3>
+<p><b>Table 5 References</b></p>
+<p>I) &nbsp; React Native Official Documentation: https://reactnative.dev/</p>
+<p>II) &nbsp; Node JS & Express Framework System: https://expressjs.com/</p>
+<p>III) &nbsp; MongoDB Atlas Database: https://mongoosejs.com/</p>
+<p>IV) &nbsp; Socket.io Live Chat System: https://socket.io/</p>
+<p>V) &nbsp; Leaflet Maps (For GPS Location): https://leafletjs.com/</p>
+<p>VI) &nbsp; JSON Web Tokens: https://jwt.io/</p>
+
+<br/><br/><br/>
+<h3 class="center">Thank You</h3>
+
+</body>
+</html>

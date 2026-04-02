@@ -81,20 +81,6 @@ const FormInput = ({
 
 /* ------------------ SOCIAL BUTTON COMPONENT ------------------ */
 
-const SocialButton = ({ icon: Icon, label, color, hoverColor }) => (
-  <button
-    type="button"
-    className={`
-      flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl
-      border-2 border-gray-200 bg-white text-gray-600 font-medium
-      hover:border-gray-300 hover:bg-gray-50 transition-all duration-200
-      group
-    `}
-  >
-    <Icon className={`w-5 h-5 ${color} group-hover:scale-110 transition-transform`} />
-    <span className="hidden sm:inline text-sm">{label}</span>
-  </button>
-);
 
 /* ------------------ MAIN COMPONENT ------------------ */
 
@@ -238,11 +224,7 @@ export default function Login() {
               )}
 
               {/* Social Login */}
-              <div className="flex gap-3 mb-6">
-                <SocialButton icon={FaGoogle} label="Google" color="text-red-500" />
-                <SocialButton icon={FaFacebook} label="Facebook" color="text-blue-600" />
-                <SocialButton icon={FaApple} label="Apple" color="text-gray-800" />
-              </div>
+              
 
               {/* Divider */}
               <div className="relative my-6">

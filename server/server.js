@@ -1,5 +1,4 @@
-import dns from 'dns'
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 
 import express from 'express'
 import dotenv from 'dotenv'
@@ -24,28 +23,30 @@ const app = express()
 
 await connectDb()
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:8081',
-  'http://localhost:8082',
-  process.env.FRONTEND_URL || 'http://localhost:5173'
-];
+// const allowedOrigins = [
+//   'http://localhost:5173',
+//   'http://localhost:8081',
+//   'http://localhost:8082',
+//   process.env.FRONTEND_URL || 'http://localhost:5173'
+// ];
 
 // Add wildcard for local IP in development for Expo Mobile devices
-if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.push('*');
-}
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // your deployed frontend
+];
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    if (!origin) return callback(null, true); // mobile apps
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
+
+    return callback(new Error("Not allowed by CORS"));
   },
-  credentials: true
-}))
+  credentials: true,
+}));
 
 app.use(cookieParser())
 app.use(express.json())
@@ -64,7 +65,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: '*',
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -130,6 +131,10 @@ io.on("connection", (socket) => {
         booking.selectedProvider?.userId?.toString() === socket.userId.toString();
 
       if (!isResident && !isProvider) return;
+
+      if (["completed", "cancelled"].includes(booking.status)) {
+        return; // Prevent chat on closed/cancelled jobs
+      }
 
       // Save to DB
       const newMsg = await ChatMessage.create({

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import axiosRetry from 'axios-retry';
 import { getSecureItem, setSecureItem, removeSecureItem } from '../utils/storage';
 
 import { Platform, Alert } from 'react-native';
@@ -12,7 +13,17 @@ const BASE_URL = Platform.OS === 'web'
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
-  timeout: 15000,
+  timeout: 30000,
+});
+
+axiosRetry(axiosInstance, { 
+  retries: 4, 
+  retryDelay: (retryCount) => 1000 * retryCount, // 1s, 2s, 3s, 4s
+  retryCondition: (error) => {
+    // React Native specifically throws a string message 'Network Error' without standard Node error codes
+    const isNetworkError = error.message === 'Network Error';
+    return isNetworkError || error.code === 'ECONNABORTED' || axiosRetry.isNetworkOrIdempotentRequestError(error);
+  }
 });
 
 // Request interceptor → attach token before every request
@@ -35,9 +46,12 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     if (!error.response) {
-      console.error('[Network Error]: Server unreachable.', error.message);
+      console.error('[Network Error API Failed]:', error.message);
       if (Platform.OS !== 'web') {
-        Alert.alert('Network Error', 'Cannot connect to Server. If using a physical device, ensure your PC and phone are on the exact same Wi-Fi network, and Windows Defender Firewall is turned OFF for Private networks (or it explicitly allows port 5000 inbound). If using Android Emulator, set BASE_URL to 10.0.2.2.');
+        Alert.alert(
+          'Network Error', 
+          'The server took too long to respond or the connection dropped. We tried 4 times automatically. Please check your WiFi and try again.'
+        );
       }
       return Promise.reject(error);
     }

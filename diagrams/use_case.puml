@@ -1,0 +1,39 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Resident" as R
+actor "Service Provider" as SP
+actor "Admin" as A
+
+rectangle "Smart Home Services System" {
+  usecase "Register/Login / Forgot Password" as UC1
+  usecase "Post Job with GPS Address" as UC2
+  usecase "Browse Service Categories" as UC3
+  usecase "Real-time Chat & Media" as UC4
+  usecase "Submit KYC Docs (CNIC)" as UC5
+  usecase "View Nearby Jobs & Quote" as UC6
+  usecase "Update Booking Status (OTP)" as UC7
+  usecase "Manage Categories" as UC8
+  usecase "Verify Provider KYC" as UC9
+  usecase "View Platform Earnings/Analytics" as UC10
+}
+
+R --> UC1
+R --> UC2
+R --> UC3
+R --> UC4
+R --> UC7
+
+SP --> UC1
+SP --> UC5
+SP --> UC6
+SP --> UC4
+SP --> UC7
+
+A --> UC1
+A --> UC8
+A --> UC9
+A --> UC10
+
+@enduml

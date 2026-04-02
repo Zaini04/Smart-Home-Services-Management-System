@@ -70,40 +70,7 @@ const PasswordStrength = ({ password }) => {
   );
 };
 
-const RoleCard = ({ icon, title, desc, value, role, setRole }) => (
-  <TouchableOpacity
-    style={[styles.roleCard, role === value && styles.roleCardActive]}
-    onPress={() => setRole(value)}
-    activeOpacity={0.7}
-  >
-    <View style={[styles.roleIcon, role === value && styles.roleIconActive]}>
-      <Ionicons name={icon} size={24} color={role === value ? '#FFF' : Colors.textSecondary} />
-    </View>
-    <Text style={[styles.roleTitle, role === value && { color: '#1E40AF' }]}>{title}</Text>
-    <Text style={[styles.roleDesc, role === value && { color: '#3B82F6' }]}>{desc}</Text>
-    {role === value && (
-      <View style={styles.checkBadge}>
-        <Ionicons name="checkmark" size={12} color="#FFF" />
-      </View>
-    )}
-  </TouchableOpacity>
-);
 
-const InputField = ({ icon, label, value, onChangeText, ...props }) => (
-  <View style={{ marginBottom: 14 }}>
-    <Text style={styles.label}>{label}</Text>
-    <View style={styles.inputContainer}>
-      <Ionicons name={icon} size={20} color={Colors.textLight} />
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChangeText}
-        placeholderTextColor={Colors.textLight}
-        {...props}
-      />
-    </View>
-  </View>
-);
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -235,8 +202,39 @@ export default function SignupScreen() {
                 <View>
                   <Text style={styles.stepTitle}>Choose your account type</Text>
                   <View style={styles.roleRow}>
-                    <RoleCard icon="home-outline" title="Resident" desc="Book services" value="resident" role={role} setRole={setRole} />
-                    <RoleCard icon="briefcase-outline" title="Provider" desc="Offer services" value="serviceprovider" role={role} setRole={setRole} />
+                    <TouchableOpacity
+                      style={[styles.roleCard, role === 'resident' && styles.roleCardActive]}
+                      onPress={() => setRole('resident')}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.roleIcon, role === 'resident' && styles.roleIconActive]}>
+                        <Ionicons name="home-outline" size={24} color={role === 'resident' ? '#FFF' : Colors.textSecondary} />
+                      </View>
+                      <Text style={[styles.roleTitle, role === 'resident' && { color: '#1E40AF' }]}>Resident</Text>
+                      <Text style={[styles.roleDesc, role === 'resident' && { color: '#3B82F6' }]}>Book services</Text>
+                      {role === 'resident' && (
+                        <View style={styles.checkBadge}>
+                          <Ionicons name="checkmark" size={12} color="#FFF" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={[styles.roleCard, role === 'serviceprovider' && styles.roleCardActive]}
+                      onPress={() => setRole('serviceprovider')}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.roleIcon, role === 'serviceprovider' && styles.roleIconActive]}>
+                        <Ionicons name="briefcase-outline" size={24} color={role === 'serviceprovider' ? '#FFF' : Colors.textSecondary} />
+                      </View>
+                      <Text style={[styles.roleTitle, role === 'serviceprovider' && { color: '#1E40AF' }]}>Provider</Text>
+                      <Text style={[styles.roleDesc, role === 'serviceprovider' && { color: '#3B82F6' }]}>Offer services</Text>
+                      {role === 'serviceprovider' && (
+                        <View style={styles.checkBadge}>
+                          <Ionicons name="checkmark" size={12} color="#FFF" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
                   </View>
                 </View>
               )}
@@ -245,9 +243,29 @@ export default function SignupScreen() {
               {step === 2 && (
                 <View>
                   <Text style={styles.stepTitle}>Personal Information</Text>
-                  <InputField icon="person-outline" label="Full Name" value={name} onChangeText={setName} placeholder="Enter your full name" />
-                  <InputField icon="mail-outline" label="Email" value={email} onChangeText={setEmail} placeholder="Enter your email" keyboardType="email-address" autoCapitalize="none" />
-                  <InputField icon="call-outline" label="Phone" value={phone} onChangeText={setPhone} placeholder="03XXXXXXXXX" keyboardType="phone-pad" />
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={styles.label}>Full Name</Text>
+                    <View style={styles.inputContainer}>
+                      <Ionicons name="person-outline" size={20} color={Colors.textLight} />
+                      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Enter your full name" placeholderTextColor={Colors.textLight} />
+                    </View>
+                  </View>
+                  
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={styles.label}>Email</Text>
+                    <View style={styles.inputContainer}>
+                      <Ionicons name="mail-outline" size={20} color={Colors.textLight} />
+                      <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="Enter your email" placeholderTextColor={Colors.textLight} keyboardType="email-address" autoCapitalize="none" />
+                    </View>
+                  </View>
+                  
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={styles.label}>Phone</Text>
+                    <View style={styles.inputContainer}>
+                      <Ionicons name="call-outline" size={20} color={Colors.textLight} />
+                      <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="03XXXXXXXXX" placeholderTextColor={Colors.textLight} keyboardType="phone-pad" />
+                    </View>
+                  </View>
                 </View>
               )}
 
@@ -303,8 +321,21 @@ export default function SignupScreen() {
               {step === 4 && (
                 <View>
                   <Text style={styles.stepTitle}>Location Details</Text>
-                  <InputField icon="location-outline" label="Address" value={address} onChangeText={setAddress} placeholder="House #123, Street 4" />
-                  <InputField icon="business-outline" label="City" value={city} onChangeText={setCity} placeholder="Enter your city" />
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={styles.label}>Address</Text>
+                    <View style={styles.inputContainer}>
+                      <Ionicons name="location-outline" size={20} color={Colors.textLight} />
+                      <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="House #123, Street 4" placeholderTextColor={Colors.textLight} />
+                    </View>
+                  </View>
+                  
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={styles.label}>City</Text>
+                    <View style={styles.inputContainer}>
+                      <Ionicons name="business-outline" size={20} color={Colors.textLight} />
+                      <TextInput style={styles.input} value={city} onChangeText={setCity} placeholder="Enter your city" placeholderTextColor={Colors.textLight} />
+                    </View>
+                  </View>
                   <TouchableOpacity
                     style={styles.checkboxRow}
                     onPress={() => setAgreed(!agreed)}

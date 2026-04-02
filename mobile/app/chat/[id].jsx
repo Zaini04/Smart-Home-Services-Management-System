@@ -22,6 +22,7 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
   const [otherUser, setOtherUser] = useState(null);
+  const [bookingStatus, setBookingStatus] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -69,12 +70,16 @@ export default function ChatScreen() {
       // Fetch booking details to get the other person's name accurately
       if (user?.role === 'resident') {
         const bookRes = await getResidentBooking(id).catch(() => ({ data: { data: {} } }));
-        const providerName = bookRes.data.data?.booking?.selectedProvider?.name || bookRes.data.data?.selectedProvider?.name;
+        const booking = bookRes.data.data?.booking || bookRes.data.data;
+        const providerName = booking?.selectedProvider?.name;
         setOtherUser({ name: providerName || 'Worker' });
+        setBookingStatus(booking?.status);
       } else {
         const jobRes = await getProviderBooking(id).catch(() => ({ data: { data: {} } }));
-        const residentName = jobRes.data.data?.resident?.name;
+        const job = jobRes.data.data;
+        const residentName = job?.resident?.name;
         setOtherUser({ name: residentName || 'Customer' });
+        setBookingStatus(job?.status);
       }
     } catch (err) {
       console.error('Chat fetch error:', err);
@@ -176,27 +181,33 @@ export default function ChatScreen() {
       )}
 
       {/* Input */}
-      <View style={styles.inputContainer}>
-        <TouchableOpacity style={styles.attachBtn}>
-          <Ionicons name="image" size={24} color={Colors.textLight} />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          value={newMessage}
-          onChangeText={handleTyping}
-          placeholder="Type a message..."
-          placeholderTextColor={Colors.textLight}
-          multiline
-          maxLength={500}
-        />
-        <TouchableOpacity 
-          style={[styles.sendBtn, !newMessage.trim() && { opacity: 0.5 }]} 
-          onPress={handleSend}
-          disabled={!newMessage.trim()}
-        >
-          <Ionicons name="send" size={20} color="#FFF" />
-        </TouchableOpacity>
-      </View>
+      {['completed', 'cancelled'].includes(bookingStatus) ? (
+        <View style={{ padding: 16, backgroundColor: '#F3F4F6', alignItems: 'center', borderTopWidth: 1, borderColor: '#E5E7EB' }}>
+          <Text style={{ color: '#6B7280', fontWeight: '500' }}>This job is {bookingStatus}. The chat is closed.</Text>
+        </View>
+      ) : (
+        <View style={styles.inputContainer}>
+          <TouchableOpacity style={styles.attachBtn}>
+            <Ionicons name="image" size={24} color={Colors.textLight} />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            value={newMessage}
+            onChangeText={handleTyping}
+            placeholder="Type a message..."
+            placeholderTextColor={Colors.textLight}
+            multiline
+            maxLength={500}
+          />
+          <TouchableOpacity 
+            style={[styles.sendBtn, !newMessage.trim() && { opacity: 0.5 }]} 
+            onPress={handleSend}
+            disabled={!newMessage.trim()}
+          >
+            <Ionicons name="send" size={20} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }

@@ -12,22 +12,63 @@ import {
   cancelBooking, respondToInspection, approvePriceRevision, approveScheduleUpdate,
 } from '../../../src/api/residentEndPoints';
 import { Colors, Shadows } from '../../../src/theme/colors';
+import { useSocket } from '../../../src/context/SocketContext';
 
 const statusConfig = {
-  open: { color: '#3B82F6', bg: '#EFF6FF', label: 'Open', icon: 'time' },
-  posted: { color: '#3B82F6', bg: '#EFF6FF', label: 'Waiting for Offers', icon: 'time' },
-  offers_received: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offers Received', icon: 'list' },
-  offer_accepted: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offer Accepted', icon: 'checkmark-circle' },
-  provider_selected: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Provider Selected', icon: 'person' },
-  inspection_requested: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Requested', icon: 'search' },
-  inspection_approved: { color: '#10B981', bg: '#D1FAE5', label: 'Inspection Approved', icon: 'checkmark-done' },
-  inspection_pending: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Pending', icon: 'time' },
-  inspection_scheduled: { color: '#F97316', bg: '#FFF7ED', label: 'Inspection Scheduled', icon: 'calendar' },
-  awaiting_price_approval: { color: '#D97706', bg: '#FFFBEB', label: 'Awaiting Price Approval', icon: 'time' },
-  price_approved: { color: '#14B8A6', bg: '#F0FDFA', label: 'Price Approved', icon: 'checkmark-circle' },
-  work_in_progress: { color: '#6366F1', bg: '#EEF2FF', label: 'Work in Progress', icon: 'construct' },
-  completed: { color: '#22C55E', bg: '#DCFCE7', label: 'Completed', icon: 'checkmark-done-circle' },
-  cancelled: { color: '#EF4444', bg: '#FEE2E2', label: 'Cancelled', icon: 'close-circle' },
+  open: { color: '#3B82F6', bg: '#EFF6FF', label: 'Open', icon: 'time', step: 1 },
+  posted: { color: '#3B82F6', bg: '#EFF6FF', label: 'Waiting for Offers', icon: 'time', step: 1 },
+  offers_received: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offers Received', icon: 'list', step: 2 },
+  offer_accepted: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Offer Accepted', icon: 'checkmark-circle', step: 3 },
+  provider_selected: { color: '#8B5CF6', bg: '#F3E8FF', label: 'Provider Selected', icon: 'person', step: 3 },
+  inspection_requested: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Requested', icon: 'search', step: 3 },
+  inspection_approved: { color: '#10B981', bg: '#D1FAE5', label: 'Inspection Approved', icon: 'checkmark-done', step: 3 },
+  inspection_pending: { color: '#F59E0B', bg: '#FEF3C7', label: 'Inspection Pending', icon: 'time', step: 3 },
+  inspection_scheduled: { color: '#F97316', bg: '#FFF7ED', label: 'Inspection Scheduled', icon: 'calendar', step: 3 },
+  awaiting_price_approval: { color: '#D97706', bg: '#FFFBEB', label: 'Awaiting Price Approval', icon: 'time', step: 4 },
+  price_approved: { color: '#14B8A6', bg: '#F0FDFA', label: 'Price Approved', icon: 'checkmark-circle', step: 5 },
+  work_in_progress: { color: '#6366F1', bg: '#EEF2FF', label: 'Work in Progress', icon: 'construct', step: 6 },
+  completed: { color: '#22C55E', bg: '#DCFCE7', label: 'Completed', icon: 'checkmark-done-circle', step: 7 },
+  cancelled: { color: '#EF4444', bg: '#FEE2E2', label: 'Cancelled', icon: 'close-circle', step: 0 },
+};
+
+const lifecycleSteps = [
+  { step: 1, label: 'Posted' },
+  { step: 2, label: 'Offers' },
+  { step: 3, label: 'Inspection' },
+  { step: 4, label: 'Pricing' },
+  { step: 5, label: 'Approved' },
+  { step: 6, label: 'Working' },
+  { step: 7, label: 'Done' },
+];
+
+const ProgressBar = ({ currentStep, cancelled }) => {
+  if (cancelled) {
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, backgroundColor: '#FEF2F2', borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: '#FCA5A5' }}>
+        <Ionicons name="close-circle" size={20} color="#EF4444" />
+        <Text style={{ color: '#DC2626', fontWeight: '600', fontSize: 14 }}>Booking Cancelled</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ marginBottom: 20 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 4 }}>
+        {lifecycleSteps.map((s, i) => {
+          const done = currentStep > s.step;
+          const active = currentStep === s.step;
+          return (
+            <View key={s.step} style={{ alignItems: 'center', width: 64, marginRight: i === lifecycleSteps.length - 1 ? 0 : 4 }}>
+               <View style={[{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 2, backgroundColor: done ? '#3B82F6' : '#FFF', borderColor: done || active ? '#3B82F6' : '#D1D5DB' }, active && { shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 }]}>
+                 {done ? <Ionicons name="checkmark" size={16} color="#FFF" /> : <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#3B82F6' : '#9CA3AF' }}>{s.step}</Text>}
+               </View>
+               <Text style={{ fontSize: 10, marginTop: 4, fontWeight: '500', color: active ? '#2563EB' : done ? '#4B5563' : '#9CA3AF' }}>{s.label}</Text>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
 };
 
 export default function BookingDetailsScreen() {
@@ -61,7 +102,24 @@ export default function BookingDetailsScreen() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [id]);
+  const { socket } = useSocket();
+
+  useEffect(() => { 
+    fetchData(); 
+  }, [id]);
+
+  useEffect(() => {
+    if (socket && booking?._id) {
+      socket.emit('join_booking', booking._id);
+      socket.on('booking_updated', () => {
+        fetchData();
+      });
+
+      return () => {
+        socket.off('booking_updated');
+      };
+    }
+  }, [socket, booking?._id]);
 
   const handleAction = async (action, fn, ...args) => {
     setActionLoading(action);
@@ -107,13 +165,11 @@ export default function BookingDetailsScreen() {
           <Text style={styles.backText}>Booking Details</Text>
         </TouchableOpacity>
 
-        {/* Status Card */}
-        <View style={[styles.statusCard, { borderLeftColor: conf.color }]}>
-          <View style={[styles.statusBadge, { backgroundColor: conf.bg }]}>
-            <Ionicons name={conf.icon} size={16} color={conf.color} />
-            <Text style={[styles.statusBadgeText, { color: conf.color }]}>{conf.label}</Text>
-          </View>
-        </View>
+        {/* Progress Bar */}
+        <ProgressBar 
+          currentStep={conf.step || 1} 
+          cancelled={booking.status === 'cancelled'} 
+        />
 
         {/* Description */}
         <View style={styles.card}>
@@ -176,14 +232,14 @@ export default function BookingDetailsScreen() {
         )}
 
         {/* OTP */}
-        {booking.otp && (booking.status === 'offer_accepted' || booking.status === 'inspection_scheduled') && (
+        {booking.otp?.start?.code && !booking.otp?.start?.verified && ['offer_accepted', 'inspection_scheduled', 'inspection_approved', 'awaiting_price_approval', 'price_approved'].includes(booking.status) && (
           <View style={[styles.card, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
             <Text style={styles.cardTitle}>Start OTP</Text>
             <Text style={{ fontSize: 28, fontWeight: '800', color: '#D97706', textAlign: 'center', marginTop: 8 }}>
-              {booking.otp}
+              {booking.otp.start.code}
             </Text>
             <Text style={{ fontSize: 12, color: '#92400E', textAlign: 'center', marginTop: 4 }}>
-              Share this with the provider when they arrive
+              Share this with the provider when they arrive to start the work.
             </Text>
           </View>
         )}
@@ -340,7 +396,7 @@ export default function BookingDetailsScreen() {
           )}
 
           {/* SCHEDULE UPDATE pending */}
-          {booking.pendingScheduleUpdate && (
+          {booking.status === 'work_in_progress' && booking.schedule?.approvedByResident === false && (
             <View style={[styles.card, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
               <Text style={styles.cardTitle}>Schedule Update Requested</Text>
               <Text style={{ fontSize: 13, color: '#1D4ED8', marginBottom: 12 }}>

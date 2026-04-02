@@ -193,6 +193,7 @@ export default function ChatContainer() {
   const activeConv = conversations.find(c => c.bookingId === bookingId);
   const showSidebar = !bookingId; 
   const showChatArea = !!bookingId;
+  const isChatClosed = ['completed', 'cancelled'].includes(activeConv?.status);
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-gray-50 overflow-hidden">
@@ -323,8 +324,14 @@ export default function ChatContainer() {
                 </div>
               )}
               <div ref={messagesEndRef} className="h-2" />
-            </div>
+          </div>
 
+          {isChatClosed ? (
+            <div className="bg-gray-100 p-5 flex items-center justify-center border-t border-gray-200 text-gray-500 font-medium shadow-inner">
+              <FaCheckDouble className="w-5 h-5 mr-3 text-gray-400" />
+              This job is marked as {activeConv?.status}. The chat has been closed.
+            </div>
+          ) : (
             <div className="bg-[#f0f2f5] p-3 flex items-end gap-2 border-t border-gray-200">
               <input type="file" accept="image/*,video/*" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
               <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="p-3 text-gray-600 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0">
@@ -337,7 +344,8 @@ export default function ChatContainer() {
                 {sending ? <FaSpinner className="animate-spin w-5 h-5" /> : <FaPaperPlane className="w-5 h-5 ml-1" />}
               </button>
             </div>
-          </>
+          )}
+        </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
             <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-sm mb-6"><FaComments className="w-12 h-12 text-blue-200" /></div>

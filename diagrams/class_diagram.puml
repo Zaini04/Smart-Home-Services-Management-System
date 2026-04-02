@@ -1,0 +1,67 @@
+@startuml
+class User {
+  +String name
+  +String email
+  +String password
+  +String role
+  +String phone
+  +login()
+  +signup()
+}
+
+class Resident {
+  +String address
+  +Location gpsLocation
+  +postBooking()
+  +chatWithProvider()
+}
+
+class ServiceProvider {
+  +String kycStatus
+  +Decimal walletBalance
+  +Decimal rating
+  +acceptBooking()
+  +submitKYC()
+}
+
+class Admin {
+  +verifyKYC()
+  +manageCategories()
+  +viewAnalytics()
+}
+
+class Booking {
+  +String status
+  +Date scheduledDate
+  +Location address
+  +Decimal totalAmount
+  +updateStatus()
+  +calculateCommission()
+}
+
+class ServiceCategory {
+  +String name
+  +String description
+  +String icon
+  +addCategory()
+  +updateCategory()
+}
+
+class ChatMessage {
+  +String text
+  +String fileUrl
+  +Boolean isRead
+  +send()
+  +receive()
+}
+
+User <|-- Resident
+User <|-- ServiceProvider
+User <|-- Admin
+
+Resident "1" -- "0..*" Booking : places
+ServiceProvider "1" -- "0..*" Booking : accepts
+Booking "1" -- "0..*" ChatMessage : contains
+Booking "*" -- "1" ServiceCategory : belongs to
+
+@enduml
