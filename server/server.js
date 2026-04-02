@@ -59,7 +59,9 @@ app.use('/api/admin', adminRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/notifications', notificationRouter);
 
-
+app.get("/", (req, res) => {
+  res.send("API is running 🚀");
+});
 
 const server = http.createServer(app);
 
