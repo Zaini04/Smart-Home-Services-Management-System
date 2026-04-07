@@ -1,4 +1,4 @@
-import axiosInstance from "./apiinstance"
+import axiosInstance from "./apiInstance"
 
 export const completeProfile = (profileData) => {
   return axiosInstance.post('/api/serviceProvider/completeProfile', profileData)

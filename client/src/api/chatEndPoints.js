@@ -1,6 +1,6 @@
 // api/chatEndpoints.js
 
-import axiosInstance from "./apiinstance";
+import axiosInstance from "./apiInstance";
 
 
 export const getChatMessages = (bookingId) =>{

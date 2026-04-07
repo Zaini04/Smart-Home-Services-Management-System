@@ -1,4 +1,4 @@
-import axiosInstance from "./apiinstance";
+import axiosInstance from "./apiInstance";
 
 
 
