@@ -312,7 +312,7 @@ const CategoryWithSubcategories = ({
 };
 /* ------------------ MAIN COMPONENT ------------------ */
 
-export default function SubCategories() {
+export default function CreateSubCategories() {
   const [categories, setCategories] = useState([]); 
   const [categoriesWithSkills, setCategoriesWithSkills] = useState([]); 
 

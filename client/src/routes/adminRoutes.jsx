@@ -3,7 +3,7 @@ import AdminProtectedRoute from "../pages/admin/AdminProtectedRoute";
 import AdminHomePage from "../pages/admin/AdminHomePage";
 import AdminDashboard from "../pages/admin/AdminDashbord";
 import CreateCategory from "../pages/admin/CreateCategory";
-import CreateSubCategory from "../pages/admin/createSubCategory";
+import CreateSubCategory from "../pages/admin/CreateSubCategory";
 import GetPendingWorkers from "../pages/admin/GetPendingWorkers";
 import UpdateKyc from "../pages/admin/UpdateKyc";
 import AllWorkers from "../pages/admin/AllWorkers";
