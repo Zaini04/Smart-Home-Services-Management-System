@@ -1,4 +1,4 @@
-import axiosInstance from "./apiinstance"
+import axiosInstance from "./apiInstance"
 
 export const login = (credientals)=>{
     return axiosInstance.post('/api/user/login',credientals)

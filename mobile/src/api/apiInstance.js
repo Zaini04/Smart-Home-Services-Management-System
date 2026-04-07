@@ -7,8 +7,8 @@ import { Platform, Alert } from 'react-native';
 // Use localhost for Web to prevent Chrome cross-site strict cookie blocking
 // Use specific IP for actual physical devices to find the server
 const BASE_URL = Platform.OS === 'web' 
-  ? 'http://localhost:5000' 
-  : 'http://192.168.100.58:5000';
+  ? 'https://smart-home-services-management-system-production.up.railway.app/' 
+  : 'https://smart-home-services-management-system-production.up.railway.app/';
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
