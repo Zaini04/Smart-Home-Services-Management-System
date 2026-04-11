@@ -19,12 +19,12 @@ export const signupUser = async (req, res) => {
     const { full_name, email, phone, password, role, city, address } = req.body;
 
     const emailExists = await User.findOne({ email });
-    // if (emailExists) {
-    //   if (!emailExists.isEmailVerified) {
-    //     return errorResponse(res, "Account exists but is unverified. Please login to verify.", 400);
-    //   }
-    //   return errorResponse(res, "Email already taken", 400);
-    // }
+    if (emailExists) {
+      if (!emailExists.isEmailVerified) {
+        return errorResponse(res, "Account exists but is unverified. Please login to verify.", 400);
+      }
+      return errorResponse(res, "Email already taken", 400);
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     

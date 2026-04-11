@@ -6,6 +6,7 @@ import Hero from "../components/Hero";
 import Features from "../components/Features";
 import Footer from "../components/Footer";
 import HowItWorks from "../components/HowItWorks";
+import Slider from "../components/Slider";
 import { FaArrowUp } from "react-icons/fa";
 
 /* ------------------ SCROLL TO TOP BUTTON ------------------ */
@@ -54,6 +55,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
+        <Slider/>
         <Hero />
 
         {/* Features Section - ID for scroll navigation */}
