@@ -10,9 +10,6 @@ import {
   FaSpinner,
   FaCheckCircle,
   FaTimesCircle,
-  FaGoogle,
-  FaFacebook,
-  FaApple,
   FaArrowRight,
   FaShieldAlt,
 } from "react-icons/fa";
@@ -38,7 +35,7 @@ const FormInput = ({
       </label>
       <div
         className={`
-          relative flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 
+          relative flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-3.5 rounded-xl border-2 
           transition-all duration-300 bg-white
           ${error 
             ? "border-red-300 bg-red-50" 
@@ -49,7 +46,7 @@ const FormInput = ({
         `}
       >
         {Icon && (
-          <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${
+          <Icon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 transition-colors ${
             isFocused ? "text-blue-500" : "text-gray-400"
           }`} />
         )}
@@ -64,12 +61,12 @@ const FormInput = ({
             setIsFocused(false);
             props.onBlur?.(e);
           }}
-          className="flex-1 outline-none bg-transparent text-gray-800 placeholder-gray-400"
+          className="flex-1 outline-none bg-transparent text-gray-800 placeholder-gray-400 text-sm sm:text-base"
         />
         {rightElement}
       </div>
       {error && (
-        <p className="text-sm text-red-500 flex items-center gap-1">
+        <p className="text-xs sm:text-sm text-red-500 flex items-center gap-1">
           <FaTimesCircle className="w-3 h-3" />
           {error}
         </p>
@@ -77,9 +74,6 @@ const FormInput = ({
     </div>
   );
 };
-
-/* ------------------ SOCIAL BUTTON COMPONENT ------------------ */
-
 
 /* ------------------ MAIN COMPONENT ------------------ */
 
@@ -101,11 +95,7 @@ export default function Login() {
 
     try {
       const res = await login({email,password})
-
-      console.log(res)
-
       const data = res.data.data;
-      console.log("Login Response Data:", data);
       loginUser(data, data.accessToken);
 
       if (data.role === "resident") {
@@ -128,11 +118,11 @@ export default function Login() {
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4">
-        <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
           
           {/* Left Side - Branding */}
-          <div className="hidden lg:flex flex-col justify-center p-8">
+          <div className="hidden lg:flex flex-col justify-center p-6 xl:p-8">
             <div className="space-y-6">
               {/* Logo/Brand */}
               <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
@@ -144,13 +134,13 @@ export default function Login() {
 
               {/* Heading */}
               <div className="space-y-4">
-                <h1 className="text-4xl xl:text-5xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-3xl xl:text-5xl font-bold text-gray-900 leading-tight">
                   Welcome back to
                   <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     ServiceHub
                   </span>
                 </h1>
-                <p className="text-lg text-gray-600 max-w-md">
+                <p className="text-base xl:text-lg text-gray-600 max-w-md">
                   Connect with trusted service providers in your area. Quality services at your fingertips.
                 </p>
               </div>
@@ -200,43 +190,40 @@ export default function Login() {
           </div>
 
           {/* Right Side - Login Form */}
-          <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
-            <div className="bg-white rounded-3xl shadow-2xl shadow-gray-200/50 p-8 sm:p-10 border border-gray-100">
+          <div className="w-full max-w-md mx-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-gray-200/50 p-6 sm:p-8 lg:p-10 border border-gray-100">
               {/* Header */}
-              <div className="text-center mb-8">
-                <div className="lg:hidden inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
-                  <FaShieldAlt className="w-7 h-7 text-white" />
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="lg:hidden inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
+                  <FaShieldAlt className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Sign in</h2>
-                <p className="text-gray-500 mt-2">Welcome back! Please enter your details.</p>
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Sign in</h2>
+                <p className="text-sm sm:text-base text-gray-500 mt-2">Welcome back! Please enter your details.</p>
               </div>
 
               {/* Error Message */}
               {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
-                  <FaTimesCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2 sm:gap-3">
+                  <FaTimesCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-red-800">Login failed</p>
-                    <p className="text-sm text-red-600">{error}</p>
+                    <p className="text-sm sm:text-base font-medium text-red-800">Login failed</p>
+                    <p className="text-xs sm:text-sm text-red-600">{error}</p>
                   </div>
                 </div>
               )}
 
-              {/* Social Login */}
-              
-
               {/* Divider */}
-              <div className="relative my-6">
+              <div className="relative my-4 sm:my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-white px-4 text-sm text-gray-500">or continue with email</span>
+                  <span className="bg-white px-3 sm:px-4 text-xs sm:text-sm text-gray-500">Continue with email</span>
                 </div>
               </div>
 
               {/* Form */}
-              <form onSubmit={handleLogin} className="space-y-5">
+              <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
                 <FormInput
                   icon={FaEnvelope}
                   label="Email Address"
@@ -261,7 +248,7 @@ export default function Login() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+                      {showPassword ? <FaEyeSlash className="w-4 h-4 sm:w-5 sm:h-5" /> : <FaEye className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
                   }
                 />
@@ -275,11 +262,11 @@ export default function Login() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-600">Remember me</span>
+                    <span className="text-xs sm:text-sm text-gray-600">Remember me</span>
                   </label>
                   <Link 
                     to="/forgot-password" 
-                    className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                    className="text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -290,7 +277,7 @@ export default function Login() {
                   type="submit"
                   disabled={loading}
                   className={`
-                    w-full py-4 rounded-xl font-semibold text-white
+                    w-full py-3 sm:py-4 rounded-xl font-semibold text-white text-sm sm:text-base
                     flex items-center justify-center gap-2 transition-all duration-300
                     ${loading 
                       ? "bg-gray-400 cursor-not-allowed" 
@@ -300,20 +287,20 @@ export default function Login() {
                 >
                   {loading ? (
                     <>
-                      <FaSpinner className="w-5 h-5 animate-spin" />
+                      <FaSpinner className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                       Signing in...
                     </>
                   ) : (
                     <>
                       Sign in
-                      <FaArrowRight className="w-4 h-4" />
+                      <FaArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
                     </>
                   )}
                 </button>
               </form>
 
               {/* Sign Up Link */}
-              <p className="mt-8 text-center text-gray-600">
+              <p className="mt-6 sm:mt-8 text-center text-sm sm:text-base text-gray-600">
                 Don't have an account?{" "}
                 <Link 
                   to="/signup" 
@@ -325,7 +312,7 @@ export default function Login() {
             </div>
 
             {/* Footer Note */}
-            <p className="text-center text-xs text-gray-500 mt-6">
+            <p className="text-center text-xs text-gray-500 mt-4 sm:mt-6 px-4">
               By signing in, you agree to our{" "}
               <a href="#" className="underline hover:text-gray-700">Terms of Service</a>
               {" "}and{" "}

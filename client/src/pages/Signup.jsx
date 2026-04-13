@@ -14,8 +14,6 @@ import {
   FaSpinner,
   FaCheckCircle,
   FaTimesCircle,
-  FaGoogle,
-  FaFacebook,
   FaArrowRight,
   FaArrowLeft,
   FaUserTie,
@@ -24,7 +22,7 @@ import {
   FaCheck,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
-import { signUp, verifyEmailOTP } from "../api/authorEndPoints"; // ✅ Make sure verifyEmailOTP is imported!
+import { signUp, verifyEmailOTP } from "../api/authorEndPoints";
 import { toast } from "react-hot-toast";
 
 /* ------------------ CUSTOM INPUT COMPONENT ------------------ */
@@ -45,7 +43,7 @@ const FormInput = ({
       </label>
       <div
         className={`
-          relative flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 
+          relative flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-3.5 rounded-xl border-2 
           transition-all duration-300 bg-white
           ${error 
             ? "border-red-300 bg-red-50" 
@@ -56,7 +54,7 @@ const FormInput = ({
         `}
       >
         {Icon && (
-          <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${
+          <Icon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 transition-colors ${
             isFocused ? "text-blue-500" : "text-gray-400"
           }`} />
         )}
@@ -71,12 +69,12 @@ const FormInput = ({
             setIsFocused(false);
             props.onBlur?.(e);
           }}
-          className="flex-1 outline-none bg-transparent text-gray-800 placeholder-gray-400"
+          className="flex-1 outline-none bg-transparent text-gray-800 placeholder-gray-400 text-sm sm:text-base"
         />
         {rightElement}
       </div>
       {error && (
-        <p className="text-sm text-red-500 flex items-center gap-1">
+        <p className="text-xs sm:text-sm text-red-500 flex items-center gap-1">
           <FaTimesCircle className="w-3 h-3" />
           {error}
         </p>
@@ -91,7 +89,7 @@ const RoleCard = ({ icon: Icon, title, description, isSelected, onSelect }) => (
     type="button"
     onClick={onSelect}
     className={`
-      relative flex-1 p-5 rounded-2xl border-2 text-left transition-all duration-300 transform
+      relative flex-1 p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left transition-all duration-300 transform
       ${isSelected 
         ? "border-blue-500 bg-blue-50 shadow-lg shadow-blue-500/10 scale-[1.02]" 
         : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
@@ -99,51 +97,67 @@ const RoleCard = ({ icon: Icon, title, description, isSelected, onSelect }) => (
     `}
   >
     <div className={`
-      w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors
+      w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 transition-colors
       ${isSelected ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"}
     `}>
-      <Icon className="w-6 h-6" />
+      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
     </div>
-    <h3 className={`font-semibold mb-1 ${isSelected ? "text-blue-900" : "text-gray-800"}`}>
+    <h3 className={`text-sm sm:text-base font-semibold mb-1 ${isSelected ? "text-blue-900" : "text-gray-800"}`}>
       {title}
     </h3>
-    <p className={`text-sm ${isSelected ? "text-blue-700" : "text-gray-500"}`}>
+    <p className={`text-xs sm:text-sm ${isSelected ? "text-blue-700" : "text-gray-500"}`}>
       {description}
     </p>
     {isSelected && (
-      <div className="absolute top-3 right-3 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-        <FaCheck className="w-3 h-3 text-white" />
+      <div className="absolute top-2 sm:top-3 right-2 sm:right-3 w-5 h-5 sm:w-6 sm:h-6 bg-blue-600 rounded-full flex items-center justify-center">
+        <FaCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
       </div>
     )}
   </button>
 );
 
-/* ------------------ STEP INDICATOR COMPONENT ------------------ */
-const StepIndicator = ({ currentStep, totalSteps }) => (
-  <div className="flex items-center justify-center gap-2 mb-8">
-    {Array.from({ length: totalSteps }, (_, i) => (
-      <React.Fragment key={i}>
-        <div
-          className={`
-            w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm
-            transition-all duration-300
-            ${i + 1 <= currentStep 
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30" 
-              : "bg-gray-100 text-gray-400"
-            }
-          `}
-        >
-          {i + 1 < currentStep ? <FaCheck className="w-4 h-4" /> : i + 1}
-        </div>
-        {i < totalSteps - 1 && (
-          <div className={`w-12 h-1 rounded-full transition-colors ${
-            i + 1 < currentStep ? "bg-blue-600" : "bg-gray-200"
-          }`} />
-        )}
-      </React.Fragment>
-    ))}
-  </div>
-);
+/* ------------------ STEP INDICATOR COMPONENT (UPDATED) ------------------ */
+const StepIndicator = ({ currentStep, totalSteps }) => {
+  // Split steps into two rows: 1-3 and 4-5
+  const firstRowSteps = [1, 2, 3];
+  const secondRowSteps = [4, 5];
+
+  const renderStepRow = (steps) => (
+    <div className="flex items-center justify-center gap-1 sm:gap-2">
+      {steps.map((stepNum, idx) => (
+        <React.Fragment key={stepNum}>
+          <div
+            className={`
+              w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm flex-shrink-0
+              transition-all duration-300
+              ${stepNum <= currentStep 
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30" 
+                : "bg-gray-100 text-gray-400"
+              }
+            `}
+          >
+            {stepNum < currentStep ? <FaCheck className="w-3 h-3 sm:w-4 sm:h-4" /> : stepNum}
+          </div>
+          {idx < steps.length - 1 && (
+            <div className={`w-8 sm:w-12 h-1 rounded-full transition-colors flex-shrink-0 ${
+              stepNum < currentStep ? "bg-blue-600" : "bg-gray-200"
+            }`} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="mb-6 sm:mb-8 space-y-2">
+      {/* First Row: Steps 1-3 */}
+      {renderStepRow(firstRowSteps)}
+      
+      {/* Second Row: Steps 4-5 (Centered) */}
+      {renderStepRow(secondRowSteps)}
+    </div>
+  );
+};
 
 /* ------------------ PASSWORD STRENGTH COMPONENT ------------------ */
 const PasswordStrength = ({ password }) => {
@@ -196,7 +210,7 @@ export default function Signup() {
   const [confirm, setConfirm] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
-  const [otp, setOtp] = useState(""); // ✅ New OTP State
+  const [otp, setOtp] = useState("");
 
   // UI state
   const [showPassword, setShowPassword] = useState(false);
@@ -205,26 +219,13 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
 
-  const resetFields = () => {
-    setRole("resident");
-    setPhone("");
-    setName("");
-    setEmail("");
-    setPassword("");
-    setConfirm("");
-    setAddress("");
-    setCity("");
-    setOtp("");
-    setCurrentStep(1);
-  };
-
   const validateStep = (step) => {
     switch (step) {
       case 1: return role !== "";
       case 2: return name && email && phone;
       case 3: return password && confirm && password === confirm && password.length >= 8;
       case 4: return address && city && agreed;
-      case 5: return otp.length === 4; // ✅ OTP validation
+      case 5: return otp.length === 4;
       default: return false;
     }
   };
@@ -241,7 +242,6 @@ export default function Signup() {
     setError("");
   };
 
-  // ✅ Step 4 Submission (Sends Email OTP)
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
 
@@ -271,7 +271,7 @@ export default function Signup() {
       const res = await signUp(payload);
       if (res.status === 201) {
         toast.success("OTP sent to your email!");
-        setCurrentStep(5); // Move to OTP Step
+        setCurrentStep(5);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Signup failed. Please try again.");
@@ -280,7 +280,6 @@ export default function Signup() {
     }
   };
 
-  // ✅ Step 5 Submission (Verifies OTP & Logs In)
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setError("");
@@ -311,11 +310,11 @@ export default function Signup() {
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4">
-        <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
           
           {/* Left Side - Branding */}
-          <div className="hidden lg:flex flex-col justify-center p-8">
+          <div className="hidden lg:flex flex-col justify-center p-6 xl:p-8">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
@@ -325,13 +324,13 @@ export default function Signup() {
               </div>
 
               <div className="space-y-4">
-                <h1 className="text-4xl xl:text-5xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-3xl xl:text-5xl font-bold text-gray-900 leading-tight">
                   Join our growing
                   <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     Community
                   </span>
                 </h1>
-                <p className="text-lg text-gray-600 max-w-md">
+                <p className="text-base xl:text-lg text-gray-600 max-w-md">
                   Create an account to access trusted service providers or offer your services to thousands of customers.
                 </p>
               </div>
@@ -375,42 +374,40 @@ export default function Signup() {
           </div>
 
           {/* Right Side - Signup Form */}
-          <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
-            <div className="bg-white rounded-3xl shadow-2xl shadow-gray-200/50 p-8 sm:p-10 border border-gray-100">
+          <div className="w-full max-w-md mx-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-gray-200/50 p-6 sm:p-8 lg:p-10 border border-gray-100">
               
-              <div className="text-center mb-6">
-                <div className="lg:hidden inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
-                  <FaShieldAlt className="w-7 h-7 text-white" />
+              <div className="text-center mb-4 sm:mb-6">
+                <div className="lg:hidden inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
+                  <FaShieldAlt className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                   {currentStep === 5 ? "Verify Email" : "Create account"}
                 </h2>
-                <p className="text-gray-500 mt-2">
+                <p className="text-sm sm:text-base text-gray-500 mt-2">
                   {currentStep === 5 ? `Enter the code sent to ${email}` : "Get started with your free account"}
                 </p>
               </div>
 
-              {/* Show step indicator only up to step 4 */}
               {currentStep <= 5 && <StepIndicator currentStep={currentStep} totalSteps={5} />}
 
               {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
-                  <FaTimesCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2 sm:gap-3">
+                  <FaTimesCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-red-800">Error</p>
-                    <p className="text-sm text-red-600">{error}</p>
+                    <p className="text-sm sm:text-base font-medium text-red-800">Error</p>
+                    <p className="text-xs sm:text-sm text-red-600">{error}</p>
                   </div>
                 </div>
               )}
 
-              {/* Form decides which handler to run based on current step */}
-              <form onSubmit={currentStep === 5 ? handleVerifyOTP : handleSignupSubmit} className="space-y-5">
+              <form onSubmit={currentStep === 5 ? handleVerifyOTP : handleSignupSubmit} className="space-y-4 sm:space-y-5">
                 
                 {/* Step 1 */}
                 {currentStep === 1 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Choose your account type</h3>
-                    <div className="flex gap-4">
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800">Choose your account type</h3>
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                       <RoleCard
                         icon={FaHome}
                         title="Resident"
@@ -431,8 +428,8 @@ export default function Signup() {
 
                 {/* Step 2 */}
                 {currentStep === 2 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Personal Information</h3>
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800">Personal Information</h3>
                     <FormInput icon={FaUser} label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Enter your full name" />
                     <FormInput icon={FaEnvelope} label="Email Address" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Enter your email" />
                     <FormInput icon={FaPhone} label="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="03XXXXXXXXX" />
@@ -441,14 +438,14 @@ export default function Signup() {
 
                 {/* Step 3 */}
                 {currentStep === 3 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Create Password</h3>
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800">Create Password</h3>
                     <div>
                       <FormInput
                         icon={FaLock} label="Password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Create a strong password"
                         rightElement={
                           <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                            {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+                            {showPassword ? <FaEyeSlash className="w-4 h-4 sm:w-5 sm:h-5" /> : <FaEye className="w-4 h-4 sm:w-5 sm:h-5" />}
                           </button>
                         }
                       />
@@ -459,13 +456,13 @@ export default function Signup() {
                       error={confirm && password !== confirm ? "Passwords don't match" : ""}
                       rightElement={
                         <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                          {showConfirm ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+                          {showConfirm ? <FaEyeSlash className="w-4 h-4 sm:w-5 sm:h-5" /> : <FaEye className="w-4 h-4 sm:w-5 sm:h-5" />}
                         </button>
                       }
                     />
                     {confirm && password === confirm && (
-                      <p className="text-sm text-green-600 flex items-center gap-1">
-                        <FaCheckCircle className="w-4 h-4" /> Passwords match!
+                      <p className="text-xs sm:text-sm text-green-600 flex items-center gap-1">
+                        <FaCheckCircle className="w-3 h-3 sm:w-4 sm:h-4" /> Passwords match!
                       </p>
                     )}
                   </div>
@@ -473,15 +470,15 @@ export default function Signup() {
 
                 {/* Step 4 */}
                 {currentStep === 4 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Location Details</h3>
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800">Location Details</h3>
                     <FormInput icon={FaMapMarkerAlt} label="Address" value={address} onChange={(e) => setAddress(e.target.value)} required placeholder="House #123, Street 4" />
                     <FormInput icon={FaCity} label="City" value={city} onChange={(e) => setCity(e.target.value)} required placeholder="Enter your city" />
                     
-                    <div className="pt-4">
-                      <label className="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="w-5 h-5 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                        <span className="text-sm text-gray-600">
+                    <div className="pt-2 sm:pt-4">
+                      <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
+                        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                        <span className="text-xs sm:text-sm text-gray-600">
                           I agree to the <a href="#" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
                         </span>
                       </label>
@@ -489,12 +486,12 @@ export default function Signup() {
                   </div>
                 )}
 
-                {/* ✅ Step 5: OTP VERIFICATION */}
+                {/* Step 5 */}
                 {currentStep === 5 && (
-                  <div className="space-y-6 py-4">
+                  <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
                     <div className="flex justify-center mb-2">
-                      <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
-                        <FaEnvelope className="text-3xl text-blue-500" />
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-50 rounded-full flex items-center justify-center">
+                        <FaEnvelope className="text-2xl sm:text-3xl text-blue-500" />
                       </div>
                     </div>
                     <div>
@@ -506,8 +503,8 @@ export default function Signup() {
                         required
                         maxLength={4}
                         value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} // only numbers
-                        className="w-full text-center text-3xl tracking-[1em] font-bold py-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all bg-gray-50 focus:bg-white"
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                        className="w-full text-center text-2xl sm:text-3xl tracking-[0.5em] sm:tracking-[1em] font-bold py-3 sm:py-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all bg-gray-50 focus:bg-white"
                         placeholder="••••"
                       />
                     </div>
@@ -515,15 +512,15 @@ export default function Signup() {
                 )}
 
                 {/* Navigation Buttons */}
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-2 sm:gap-3 pt-2 sm:pt-4">
                   {currentStep > 1 && currentStep < 5 && (
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="flex-1 py-4 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
                     >
-                      <FaArrowLeft className="w-4 h-4" />
-                      Back
+                      <FaArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Back</span>
                     </button>
                   )}
                   
@@ -533,7 +530,7 @@ export default function Signup() {
                       onClick={handleNext}
                       disabled={!validateStep(currentStep)}
                       className={`
-                        flex-1 py-4 rounded-xl font-semibold text-white
+                        flex-1 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base text-white
                         flex items-center justify-center gap-2 transition-all duration-300
                         ${validateStep(currentStep) 
                           ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30" 
@@ -542,17 +539,16 @@ export default function Signup() {
                       `}
                     >
                       Continue
-                      <FaArrowRight className="w-4 h-4" />
+                      <FaArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   )}
 
-                  {/* Submit initial form -> Go to Step 5 */}
                   {currentStep === 4 && (
                     <button
                       type="submit"
                       disabled={loading || !validateStep(4)}
                       className={`
-                        flex-1 py-4 rounded-xl font-semibold text-white
+                        flex-1 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base text-white
                         flex items-center justify-center gap-2 transition-all duration-300
                         ${loading || !validateStep(4)
                           ? "bg-gray-400 cursor-not-allowed" 
@@ -561,20 +557,19 @@ export default function Signup() {
                       `}
                     >
                       {loading ? (
-                        <><FaSpinner className="w-5 h-5 animate-spin" /> Sending...</>
+                        <><FaSpinner className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> <span className="hidden sm:inline">Sending...</span></>
                       ) : (
-                        <><FaEnvelope className="w-5 h-5" /> Send Verify Code</>
+                        <><FaEnvelope className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Send Code</span><span className="sm:hidden">Send</span></>
                       )}
                     </button>
                   )}
 
-                  {/* Submit OTP -> Final Login */}
                   {currentStep === 5 && (
                     <button
                       type="submit"
                       disabled={loading || otp.length !== 4}
                       className={`
-                        w-full py-4 rounded-xl font-semibold text-white
+                        w-full py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base text-white
                         flex items-center justify-center gap-2 transition-all duration-300
                         ${loading || otp.length !== 4
                           ? "bg-gray-400 cursor-not-allowed" 
@@ -583,43 +578,18 @@ export default function Signup() {
                       `}
                     >
                       {loading ? (
-                        <><FaSpinner className="w-5 h-5 animate-spin" /> Verifying...</>
+                        <><FaSpinner className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> Verifying...</>
                       ) : (
-                        <><FaCheckCircle className="w-5 h-5" /> Verify & Create Account</>
+                        <><FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5" /> Verify & Create</>
                       )}
                     </button>
                   )}
                 </div>
               </form>
 
-              {/* Social Signup - Only on Step 1 */}
-              {currentStep === 1 && (
-                <>
-                  <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200" />
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-white px-4 text-sm text-gray-500">or sign up with</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button type="button" className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-gray-200 bg-white text-gray-600 font-medium hover:border-gray-300 hover:bg-gray-50 transition-all">
-                      <FaGoogle className="w-5 h-5 text-red-500" />
-                      <span className="text-sm">Google</span>
-                    </button>
-                    <button type="button" className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-gray-200 bg-white text-gray-600 font-medium hover:border-gray-300 hover:bg-gray-50 transition-all">
-                      <FaFacebook className="w-5 h-5 text-blue-600" />
-                      <span className="text-sm">Facebook</span>
-                    </button>
-                  </div>
-                </>
-              )}
-
               {/* Login Link */}
               {currentStep < 5 && (
-                <p className="mt-8 text-center text-gray-600">
+                <p className="mt-6 sm:mt-8 text-center text-sm sm:text-base text-gray-600">
                   Already have an account?{" "}
                   <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
                     Sign in
