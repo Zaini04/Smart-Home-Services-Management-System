@@ -4,15 +4,31 @@ const normalizeMediaPath = (value) => {
     return value.replace(/\\/g, "/").replace(/^\/+/, "");
 };
 
-const normalizeResponseData = (input) => {
+const isPlainObject = (value) => {
+    if (!value || typeof value !== "object") return false;
+    const proto = Object.getPrototypeOf(value);
+    return proto === Object.prototype || proto === null;
+};
+
+const normalizeResponseData = (input, seen = new WeakSet()) => {
     if (Array.isArray(input)) {
-        return input.map(normalizeResponseData);
+        return input.map((item) => normalizeResponseData(item, seen));
     }
 
     if (input && typeof input === "object") {
-        return Object.fromEntries(
-            Object.entries(input).map(([key, value]) => [key, normalizeResponseData(value)])
-        );
+        if (seen.has(input)) return input;
+        seen.add(input);
+
+        // Normalize Mongoose documents safely.
+        if (typeof input.toObject === "function") {
+            return normalizeResponseData(input.toObject(), seen);
+        }
+
+        if (isPlainObject(input)) {
+            return Object.fromEntries(
+                Object.entries(input).map(([key, value]) => [key, normalizeResponseData(value, seen)])
+            );
+        }
     }
 
     return normalizeMediaPath(input);

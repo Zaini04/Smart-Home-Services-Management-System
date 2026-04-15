@@ -48,7 +48,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(cookieParser())
 app.use(express.json())
-app.use("/uploads", express.static("uploads"));
 
 app.use('/api/user', userRouter)
 app.use('/api/serviceProvider', serviceProviderRouter)
