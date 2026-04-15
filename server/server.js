@@ -18,15 +18,13 @@ import chatRouter from './routes/chatRoutes.js';
 import Booking from './models/bookingModel.js';
 import notificationRouter from './routes/notificationRoutes.js';
 import path from "path";
-import { fileURLToPath } from "url";
 
 dotenv.config()
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const uploadsDir = path.resolve("uploads");
 
 const app = express()
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(uploadsDir));
 await connectDb()
 
 // const allowedOrigins = [
