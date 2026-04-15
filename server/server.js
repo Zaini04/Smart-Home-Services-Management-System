@@ -18,13 +18,26 @@ import chatRouter from './routes/chatRoutes.js';
 import Booking from './models/bookingModel.js';
 import notificationRouter from './routes/notificationRoutes.js';
 import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 
 dotenv.config()
-const uploadsDir = path.resolve("uploads");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadsDirs = [
+  path.resolve("uploads"),
+  path.join(__dirname, "uploads"),
+  path.resolve("server", "uploads"),
+];
+const uniqueUploadsDirs = [...new Set(uploadsDirs)];
 
 const app = express()
 
-app.use("/uploads", express.static(uploadsDir));
+// Serve uploads from all likely runtime locations (helpful on Railway/start-dir differences)
+uniqueUploadsDirs.forEach((dir) => {
+  fs.mkdirSync(dir, { recursive: true });
+  app.use("/uploads", express.static(dir));
+});
 await connectDb()
 
 // const allowedOrigins = [
