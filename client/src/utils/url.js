@@ -13,5 +13,8 @@ export const normalizeMediaPath = (mediaPath = "") => {
 
 export const buildMediaUrl = (mediaPath = "") => {
   if (!mediaPath) return "";
+  if (String(mediaPath).startsWith("http://") || String(mediaPath).startsWith("https://")) {
+    return mediaPath;
+  }
   return `${getApiBaseUrl()}/${normalizeMediaPath(mediaPath)}`;
 };

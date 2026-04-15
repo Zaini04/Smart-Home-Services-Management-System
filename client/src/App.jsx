@@ -22,6 +22,7 @@ import Settings from "./pages/shared/Settings";
 import HelpSupport from "./pages/shared/HelpSupport";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import NotFound from "./pages/NotFound";
 
 // ── Admin pages ──────────────────────────────────────────────────────────────
 import AdminHomePage from "./pages/admin/AdminHomePage";
@@ -226,6 +227,9 @@ function AppContent() {
             <Route path="calendar"                         element={<MyCalendar />} />
           </Route>
         </Route>
+
+        {/* ── Catch-all 404 Route ── */}
+        <Route path="*" element={<NotFound />} />
 
       </Routes>
       {/* ── end single Routes tree ── */}
