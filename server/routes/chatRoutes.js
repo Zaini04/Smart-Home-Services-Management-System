@@ -15,7 +15,10 @@ chatRouter.get("/:bookingId", protect, getChatMessages);
 chatRouter.post("/upload", protect, uploadBookingImages.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ message: "No file uploaded" });
   // Return the path so the frontend can send it via socket
-  res.status(200).json({ success: true, data: { fileUrl: req.file.path } });
+  res.status(200).json({
+    success: true,
+    data: { fileUrl: req.file.path.replace(/\\/g, "/") },
+  });
 });
 export default chatRouter;
 

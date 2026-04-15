@@ -40,10 +40,15 @@ export default function MyJobs() {
   useEffect(() => {
     if (!user) return;
     const token = localStorage.getItem("accessToken");
-    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
+    const socket = io(
+      import.meta.env.VITE_BASE_URL ||
+        import.meta.env.VITE_API_URL ||
+        "http://localhost:5000",
+      {
       auth: { token },
       withCredentials: true,
-    });
+      }
+    );
 
     socket.on("data_updated", () => {
       queryClient.invalidateQueries(["myJobs"]); // Auto refresh
@@ -99,7 +104,7 @@ export default function MyJobs() {
                 <Link key={job._id} to={`/provider/job/${job._id}`} className="block bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all">
                   <div className="flex gap-4">
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                      {job.images?.[0] ? <img src={`${import.meta.env.VITE_API_URL}/${job.images[0]}`} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><FaClipboardList className="w-7 h-7 text-gray-400" /></div>}
+                      {job.images?.[0] ? <img src={`${(import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL)}/${job.images[0]}`} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><FaClipboardList className="w-7 h-7 text-gray-400" /></div>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-1">

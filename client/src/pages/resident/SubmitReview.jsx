@@ -196,7 +196,7 @@ export default function SubmitReview() {
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
                   {booking.selectedProvider.profileImage ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL}/${booking.selectedProvider.profileImage}`}
+                      src={`${(import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL)}/${booking.selectedProvider.profileImage}`}
                       alt=""
                       className="w-full h-full object-cover"
                     />
