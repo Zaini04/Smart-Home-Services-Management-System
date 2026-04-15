@@ -4,92 +4,123 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster, toast } from "react-hot-toast";
 import { io } from "socket.io-client";
 
-// Pages
+// ── Resident / Shared pages ──────────────────────────────────────────────────
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import LandingPage from './pages/LandingPage'
-import ServiceProviders from "./pages/resident/ServiceProviders";
+import LandingPage from "./pages/LandingPage";
 import HowItWorks from "./components/HowItWorks";
 import PostJob from "./pages/resident/PostJob";
 import MyBookings from "./pages/resident/MyBookings";
 import BookingDetails from "./pages/resident/BookingDetails";
 import SubmitReview from "./pages/resident/SubmitReview";
 import ChatContainer from "./pages/chat/ChatContainer";
-import MyCalendar from "./pages/MyCalendar"; 
+import MyCalendar from "./pages/MyCalendar";
 import Notifications from "./pages/Notifications";
-
-
-// Routes
-import ServiceProviderRoutes from "./routes/serviceProviderRoutes";
-import AdminRoutes from "./routes/adminRoutes";
-import { useAuth } from "./context/AuthContext";
 import UserProfile from "./pages/shared/UserProfile";
 import Settings from "./pages/shared/Settings";
 import HelpSupport from "./pages/shared/HelpSupport";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
+// ── Admin pages ──────────────────────────────────────────────────────────────
+import AdminHomePage from "./pages/admin/AdminHomePage";
+import AdminDashboard from "./pages/admin/AdminDashbord";
+import CreateCategory from "./pages/admin/CreateCategory";
+import CreateSubCategory from "./pages/admin/CreateSubCategory";
+import GetPendingWorkers from "./pages/admin/GetPendingWorkers";
+import UpdateKyc from "./pages/admin/UpdateKyc";
+import AllWorkers from "./pages/admin/AllWorkers";
+import PlatformEarnings from "./pages/admin/PlatformEarnings";
+import PlatformTransactions from "./pages/admin/PlatformTransactions";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+
+// ── Service Provider pages ───────────────────────────────────────────────────
+import ServiceProviderDashboard from "./pages/serviceProvider/ServiceProviderDashboard";
+import AvailableJobs from "./pages/serviceProvider/AvailabeJobs";
+import MyOffers from "./pages/serviceProvider/MyOffers";
+import MyJobs from "./pages/serviceProvider/MyJobs";
+import JobDetails from "./pages/serviceProvider/JobDetails";
+import ProviderEarnings from "./pages/serviceProvider/Earnings";
+import EditProfile from "./pages/serviceProvider/EditProfile";
+import ProviderLayout from "./pages/serviceProvider/ProviderLayout";
+import CompleteProfile from "./pages/serviceProvider/CompleteProfile";
+import KYCStatus from "./pages/serviceProvider/KYCStatus";
+import ProviderWallet from "./pages/serviceProvider/ProviderWallet";
+
+
+import { useAuth } from "./context/AuthContext";
+
+// ── React Query client ───────────────────────────────────────────────────────
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 1000 * 20, cacheTime: 1000 * 60 * 30, refetchOnWindowFocus: true },
   },
 });
 
-/* ─────────────────────────────────────────
-   ROUTE PROTECTORS
-───────────────────────────────────────── */
+/* ═══════════════════════════════════════════
+   ROUTE GUARDS
+   Each guard reads user from AuthContext (single source of truth).
+   No guard does a hard window.location — all redirects are React Router
+   <Navigate> so the app never does a full page reload.
+═══════════════════════════════════════════ */
 
-// 1. LANDING PAGE ROUTE: Only Guests and Residents can view
+// 1. Landing page — guests & residents only
 const LandingPageRoute = () => {
   const { user } = useAuth();
-  
-  if (user) {
-    if (user.role === "serviceprovider") return <Navigate to="/provider/dashboard" replace />;
-    if (user.role === "admin") return <Navigate to="/admin/dashboard" replace />;
-  }
-  // If no user (Guest) OR user is "resident", allow them to see the landing page
+  if (user?.role === "serviceprovider") return <Navigate to="/provider/dashboard" replace />;
+  if (user?.role === "admin")           return <Navigate to="/admin/dashboard"    replace />;
   return <Outlet />;
 };
 
-// 2. GUEST ROUTE: Strictly for Login & Signup (No logged-in users allowed)
+// 2. Guest only — redirect logged-in users away from /login & /signup
 const GuestRoute = () => {
   const { user } = useAuth();
-  
-  if (user) {
-    if (user.role === "serviceprovider") return <Navigate to="/provider/dashboard" replace />;
-    if (user.role === "admin") return <Navigate to="/admin/dashboard" replace />;
-    // If a resident tries to access /login or /signup, send them to the landing page
-    return <Navigate to="/" replace />; 
-  }
+  if (user?.role === "serviceprovider") return <Navigate to="/provider/dashboard" replace />;
+  if (user?.role === "admin")           return <Navigate to="/admin/dashboard"    replace />;
+  if (user)                             return <Navigate to="/"                   replace />;
   return <Outlet />;
 };
 
-// 3. RESIDENT ROUTE: Only Residents can access these
+// 3. Resident only
 const ResidentRoute = () => {
   const { user } = useAuth();
-  
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role === "serviceprovider") return <Navigate to="/provider/dashboard" replace />;
-  if (user.role === "admin") return <Navigate to="/admin/dashboard" replace />;
-  
+  if (!user)                            return <Navigate to="/login"              replace />;
+  if (user.role === "serviceprovider")  return <Navigate to="/provider/dashboard" replace />;
+  if (user.role === "admin")            return <Navigate to="/admin/dashboard"    replace />;
   return <Outlet />;
 };
 
-// 4. SHARED ROUTE: Both Residents and Providers can access
+// 4. Any authenticated user (resident OR provider)
 const SharedRoute = () => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   return <Outlet />;
 };
 
-/* ─────────────────────────────────────────
-   MAIN APP
-───────────────────────────────────────── */
+// 5. Admin only
+const AdminRoute = () => {
+  const { user } = useAuth();
+  if (!user)                  return <Navigate to="/login" replace />;
+  if (user.role !== "admin")  return <Navigate to="/"     replace />;
+  return <Outlet />;
+};
+
+// 6. Service provider only
+const ProviderRoute = () => {
+  const { user } = useAuth();
+  if (!user || user.role !== "serviceprovider") return <Navigate to="/" replace />;
+  return <Outlet />;
+};
+
+/* ═══════════════════════════════════════════
+   MAIN APP CONTENT
+═══════════════════════════════════════════ */
 function AppContent() {
   const { user } = useAuth();
 
+  // Global socket — only for toast notifications
   useEffect(() => {
-    const token = localStorage.getItem("accessToken") 
+    const token = localStorage.getItem("accessToken");
     if (!token || !user) return;
 
     const socket = io(import.meta.env.VITE_BASE_URL || "http://localhost:5000", {
@@ -98,8 +129,7 @@ function AppContent() {
     });
 
     socket.on("notification", (data) => {
-      queryClient.invalidateQueries(["notifications"]); 
-
+      queryClient.invalidateQueries(["notifications"]);
       toast.success(
         <div>
           <strong>{data.title}</strong>
@@ -115,50 +145,87 @@ function AppContent() {
   return (
     <>
       <Toaster />
+
+      {/* ── ONE single <Routes> tree — the fix for the routing loop ── */}
       <Routes>
-        
-        {/* LANDING PAGE (Guest & Resident) */}
+
+        {/* Landing page */}
         <Route element={<LandingPageRoute />}>
           <Route path="/" element={<LandingPage />} />
         </Route>
 
-        {/* STRICT GUEST ROUTES (Login / Signup) */}
+        {/* Guest-only (login / signup / password reset) */}
         <Route element={<GuestRoute />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-           <Route path="/forgot-password" element={<ForgotPassword />} />
-  <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/login"                   element={<Login />} />
+          <Route path="/signup"                  element={<Signup />} />
+          <Route path="/forgot-password"         element={<ForgotPassword />} />
+          <Route path="/reset-password/:token"   element={<ResetPassword />} />
         </Route>
 
-        {/* GENERAL PUBLIC ROUTES (Anyone can view) */}
-        <Route path="/how" element={<HowItWorks />} />
-        <Route path="/serviceproviders" element={<ServiceProviders />} />
+        {/* Public — anyone */}
+        <Route path="/how"              element={<HowItWorks />} />
 
-        {/* RESIDENT ONLY ROUTES */}
+        {/* Resident-only */}
         <Route element={<ResidentRoute />}>
-          <Route path="/post-job" element={<PostJob />} />
-          <Route path="/my-bookings" element={<MyBookings />} />
-          <Route path="/booking/:id" element={<BookingDetails />} />
-          <Route path="/review/:bookingId" element={<SubmitReview />} />
-        
+          <Route path="/post-job"              element={<PostJob />} />
+          <Route path="/my-bookings"           element={<MyBookings />} />
+          <Route path="/booking/:id"           element={<BookingDetails />} />
+          <Route path="/review/:bookingId"     element={<SubmitReview />} />
         </Route>
 
-        {/* SHARED ROUTES (Chat & Calendar) */}
+        {/* Shared (resident + provider) */}
         <Route element={<SharedRoute />}>
-          <Route path="/chat" element={<ChatContainer />} />
-          <Route path="/chat/:bookingId" element={<ChatContainer />} />
-          <Route path="/calendar" element={<MyCalendar />} />
-          <Route path="/notifications" element={<Notifications />} />
-            <Route path="/profile" element={<UserProfile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/support" element={<HelpSupport />} />
+          <Route path="/chat"                  element={<ChatContainer />} />
+          <Route path="/chat/:bookingId"       element={<ChatContainer />} />
+          <Route path="/calendar"              element={<MyCalendar />} />
+          <Route path="/notifications"         element={<Notifications />} />
+          <Route path="/profile"               element={<UserProfile />} />
+          <Route path="/settings"              element={<Settings />} />
+          <Route path="/support"               element={<HelpSupport />} />
+        </Route>
+
+        {/* ── ADMIN (was in adminRoutes.jsx) ── */}
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminHomePage />}>
+            <Route index                                   element={<AdminDashboard />} />
+            <Route path="dashboard"                        element={<AdminDashboard />} />
+            <Route path="analytics"                        element={<AdminAnalytics />} />
+            <Route path="all-workers"                      element={<AllWorkers />} />
+            <Route path="create-category"                  element={<CreateCategory />} />
+            <Route path="create-subcategory"               element={<CreateSubCategory />} />
+            <Route path="pending-workers"                  element={<GetPendingWorkers />} />
+            <Route path="update-kyc/:providerId"           element={<UpdateKyc />} />
+            <Route path="platform-earnings"                element={<PlatformEarnings />} />
+            <Route path="platform-transactions"            element={<PlatformTransactions />} />
+          </Route>
+        </Route>
+
+        {/* ── SERVICE PROVIDER (was in serviceProviderRoutes.jsx) ── */}
+        <Route element={<ProviderRoute />}>
+          <Route path="/provider" element={<ProviderLayout />}>
+            <Route index                                   element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard"                        element={<ServiceProviderDashboard />} />
+            <Route path="kyc-status"                       element={<KYCStatus />} />
+            <Route path="complete-profile"                 element={<CompleteProfile />} />
+            <Route path="available-jobs"                   element={<AvailableJobs />} />
+            <Route path="my-offers"                        element={<MyOffers />} />
+            <Route path="my-jobs"                          element={<MyJobs />} />
+            <Route path="job/:bookingId"                   element={<JobDetails />} />
+            <Route path="earnings"                         element={<ProviderEarnings />} />
+            <Route path="wallet"                           element={<ProviderWallet />} />
+            <Route path="profile"                          element={<UserProfile />} />
+            <Route path="settings"                         element={<Settings />} />
+            <Route path="support"                          element={<HelpSupport />} />
+            <Route path="edit-profile"                     element={<EditProfile />} />
+            <Route path="notifications"                    element={<Notifications />} />
+            <Route path="chat"                             element={<ChatContainer />} />
+            <Route path="chat/:bookingId"                  element={<ChatContainer />} />
+            <Route path="calendar"                         element={<MyCalendar />} />
+          </Route>
         </Route>
 
       </Routes>
-      
-      {/* External Layouts handle their own protection */}
-      <ServiceProviderRoutes />
-      <AdminRoutes />
+      {/* ── end single Routes tree ── */}
     </>
   );
 }

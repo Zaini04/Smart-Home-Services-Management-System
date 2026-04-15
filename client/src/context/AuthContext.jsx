@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { logout } from "../api/authorEndPoints";
 
 const AuthContext = createContext();
@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("accessToken", jwt);
   };
 
-  const logoutUser = async () => {
+  const logoutUser = useCallback(async () => {
     try {
       await logout();
     } catch (error) {
@@ -32,7 +32,20 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("user");
       localStorage.removeItem("accessToken");
     }
-  };
+  }, []);
+
+  // Listen for forced logout events dispatched by the API interceptor
+  // when a token refresh fails. This avoids window.location.href hard reloads.
+  useEffect(() => {
+    const handleForcedLogout = () => {
+      setUser(null);
+      setAccessToken(null);
+      // localStorage already cleared by the interceptor before dispatching
+    };
+
+    window.addEventListener("auth:logout", handleForcedLogout);
+    return () => window.removeEventListener("auth:logout", handleForcedLogout);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, accessToken, loginUser, logoutUser }}>

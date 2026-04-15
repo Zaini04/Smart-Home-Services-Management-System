@@ -30,22 +30,16 @@ await connectDb()
 //   process.env.FRONTEND_URL || 'http://localhost:5173'
 // ];
 
-// Add wildcard for local IP in development for Expo Mobile devices
-const allowedOrigins = [
-  process.env.FRONTEND_URL, // your deployed frontend
-];
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // mobile
-
-    if (origin === process.env.FRONTEND_URL) {
-      return callback(null, true);
-    }
-
-    return callback(null, true); // TEMP allow all
+    // Allow non-browser clients and same-origin calls without an Origin header.
+    if (!origin) return callback(null, true);
+    return callback(null, true);
   },
   credentials: true,
-}));
+};
+
+app.use(cors(corsOptions));
 app.use(cookieParser())
 app.use(express.json())
 app.use("/uploads", express.static("uploads"));
@@ -65,7 +59,8 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: true,
+    origin: corsOptions.origin,
+    credentials: true,
     methods: ["GET", "POST"],
   },
 });

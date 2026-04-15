@@ -25,8 +25,12 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Avoid infinite loop
+    // Avoid infinite loop on the refresh endpoint itself
     if (originalRequest.url.includes("/api/user/refreshToken")) {
+      // Refresh endpoint itself failed — clear auth and signal logout
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+      window.dispatchEvent(new Event("auth:logout"));
       return Promise.reject(error);
     }
 
@@ -58,11 +62,20 @@ axiosInstance.interceptors.response.use(
             "Authorization"
           ] = `Bearer ${data.accessToken}`;
           return axiosInstance(originalRequest);
+        } else {
+          // Refresh returned success:false — clear auth
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("user");
+          window.dispatchEvent(new Event("auth:logout"));
         }
       } catch (err) {
         console.error("Refresh Failed", err);
+        // Clear all auth data from localStorage
         localStorage.removeItem("accessToken");
-        window.location.href = "/";
+        localStorage.removeItem("user");
+        // Dispatch a custom event so AuthContext can clear React state
+        // and let React Router redirect to /login — NO hard page reload
+        window.dispatchEvent(new Event("auth:logout"));
       }
     }
 

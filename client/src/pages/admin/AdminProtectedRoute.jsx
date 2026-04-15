@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { FaSpinner, FaShieldAlt } from "react-icons/fa";
 import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AdminProtectedRoute({ children }) {
   const location = useLocation();
@@ -25,8 +26,8 @@ export function AdminProtectedRouteWithLoading({ children }) {
 
   useEffect(() => {
     const checkAuth = () => {
-      const accessToken = localStorage.getItem("accessToken");
-      const user = JSON.parse(localStorage.getItem("user") || "null");
+  
+        const { user, accessToken } = useAuth();
       
       if (accessToken && user?.role === "admin") {
         setIsAuthorized(true);

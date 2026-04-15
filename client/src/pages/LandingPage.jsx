@@ -55,7 +55,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <Slider/>
+        {/* <Slider/> */}
         <Hero />
 
         {/* Features Section - ID for scroll navigation */}
