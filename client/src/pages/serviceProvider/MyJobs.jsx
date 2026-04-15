@@ -8,6 +8,7 @@ import {
   FaTools, FaUser, FaPhone, FaMapMarkerAlt, FaArrowRight,
 } from "react-icons/fa";
 import { getMyJobs } from "../../api/serviceProviderEndPoints";
+import { buildMediaUrl, getApiBaseUrl } from "../../utils/url";
 
 const statusConfig = {
   inspection_pending: { color: "bg-yellow-100 text-yellow-700", label: "Inspection Pending", icon: FaClock },
@@ -25,6 +26,7 @@ export default function MyJobs() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const apiBaseUrl = getApiBaseUrl();
 
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -41,12 +43,11 @@ export default function MyJobs() {
     if (!user) return;
     const token = localStorage.getItem("accessToken");
     const socket = io(
-      import.meta.env.VITE_BASE_URL ||
-        import.meta.env.VITE_API_URL ||
-        "http://localhost:5000",
+      apiBaseUrl,
       {
       auth: { token },
       withCredentials: true,
+      transports: ["websocket", "polling"],
       }
     );
 
@@ -55,7 +56,7 @@ export default function MyJobs() {
     });
 
     return () => socket.disconnect();
-  }, [queryClient, user]);
+  }, [queryClient, user, apiBaseUrl]);
 
   if (!user) { navigate("/login"); return null; }
 
@@ -104,7 +105,7 @@ export default function MyJobs() {
                 <Link key={job._id} to={`/provider/job/${job._id}`} className="block bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all">
                   <div className="flex gap-4">
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                      {job.images?.[0] ? <img src={`${(import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL)}/${job.images[0]}`} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><FaClipboardList className="w-7 h-7 text-gray-400" /></div>}
+                      {job.images?.[0] ? <img src={buildMediaUrl(job.images[0])} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><FaClipboardList className="w-7 h-7 text-gray-400" /></div>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-1">

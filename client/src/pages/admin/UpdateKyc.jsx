@@ -27,6 +27,7 @@ const BASE_URL =
   import.meta.env.VITE_BASE_URL ||
   import.meta.env.VITE_API_URL ||
   "http://localhost:5000";
+const NORMALIZED_BASE_URL = BASE_URL.replace(/\/+$/, "");
 
 // Helper function to format image path
 const formatImagePath = (path) => {
@@ -36,7 +37,7 @@ const formatImagePath = (path) => {
   if (!formattedPath.startsWith('/')) {
     formattedPath = '/' + formattedPath;
   }
-  return `${BASE_URL}${formattedPath}`;
+  return `${NORMALIZED_BASE_URL}${formattedPath}`;
 };
 
 /* ------------------ IMAGE MODAL COMPONENT ------------------ */

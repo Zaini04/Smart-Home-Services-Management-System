@@ -18,6 +18,7 @@ import {
   FaTimesCircle,
 } from "react-icons/fa";
 import { getProviderDashboard } from "../../api/serviceProviderEndPoints";
+import { buildMediaUrl } from "../../utils/url";
 
 /* ── Status config ── */
 const jobStatusConfig = {
@@ -325,7 +326,7 @@ export default function ServiceProviderDashboard() {
                   <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
                     {job.images?.[0] ? (
                       <img
-                        src={`${(import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL)}/${job.images[0]}`}
+                        src={buildMediaUrl(job.images[0])}
                         alt=""
                         className="w-full h-full object-cover"
                       />

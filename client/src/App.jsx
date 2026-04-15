@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster, toast } from "react-hot-toast";
 import { io } from "socket.io-client";
+import { getApiBaseUrl } from "./utils/url";
 
 // ── Resident / Shared pages ──────────────────────────────────────────────────
 import Login from "./pages/Login";
@@ -117,15 +118,17 @@ const ProviderRoute = () => {
 ═══════════════════════════════════════════ */
 function AppContent() {
   const { user } = useAuth();
+  const apiBaseUrl = getApiBaseUrl();
 
   // Global socket — only for toast notifications
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (!token || !user) return;
 
-    const socket = io(import.meta.env.VITE_BASE_URL || "http://localhost:5000", {
+    const socket = io(apiBaseUrl, {
       auth: { token },
       withCredentials: true,
+      transports: ["websocket", "polling"],
     });
 
     socket.on("notification", (data) => {
@@ -140,7 +143,7 @@ function AppContent() {
     });
 
     return () => socket.disconnect();
-  }, [user]);
+  }, [user, apiBaseUrl]);
 
   return (
     <>

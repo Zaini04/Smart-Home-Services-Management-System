@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
+import { getApiBaseUrl } from "../utils/url";
 
 const SocketContext = createContext(null);
 
@@ -9,15 +10,17 @@ export function SocketProvider({ children }) {
   const { user, accessToken } = useAuth();     // token from your auth context
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
+  const apiBaseUrl = getApiBaseUrl();
 
   useEffect(() => {
     if (!user || !accessToken) return;
 
     // Connect to socket server
-    socketRef.current = io(import.meta.env.VITE_BASE_URL, {
+    socketRef.current = io(apiBaseUrl, {
       auth: { token: accessToken },
       reconnection: true,
       reconnectionAttempts: 5,
+      transports: ["websocket", "polling"],
     });
 
     socketRef.current.on("connect", () => {
@@ -33,7 +36,7 @@ export function SocketProvider({ children }) {
     };
 
     
-  }, [user, accessToken]);
+  }, [user, accessToken, apiBaseUrl]);
 
   return (
     <SocketContext.Provider value={{ socket: socketRef.current, isConnected }}>

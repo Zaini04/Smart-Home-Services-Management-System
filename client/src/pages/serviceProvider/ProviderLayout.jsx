@@ -12,6 +12,7 @@ import {
   FaCalendarAlt,
 } from "react-icons/fa";
 import { getProviderDashboard } from "../../api/serviceProviderEndPoints";
+import { buildMediaUrl } from "../../utils/url";
 
 /* ─────────────────────────────────────────
    ALL POSSIBLE NAV ITEMS
@@ -159,7 +160,7 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
                           flex-shrink-0">
             {provider?.profileImage ? (
               <img
-                src={`${import.meta.env.VITE_BASE_URL}/${provider.profileImage}`}
+                src={buildMediaUrl(provider.profileImage)}
                 alt=""
                 className="w-full h-full object-cover"
               />
@@ -449,7 +450,7 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
                             from-blue-100 to-indigo-100 border border-gray-200 flex-shrink-0">
               {provider?.profileImage ? (
                 <img
-                  src={`${import.meta.env.VITE_BASE_URL}/${provider.profileImage}`}
+                  src={buildMediaUrl(provider.profileImage)}
                   alt=""
                   className="w-full h-full object-cover"
                 />
@@ -496,7 +497,7 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
                                   border-2 border-blue-200 flex-shrink-0">
                     {provider?.profileImage ? (
                       <img
-                        src={`${import.meta.env.VITE_BASE_URL}/${provider.profileImage}`}
+                        src={buildMediaUrl(provider.profileImage)}
                         alt=""
                         className="w-full h-full object-cover"
                       />

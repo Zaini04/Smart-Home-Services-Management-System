@@ -1,7 +1,10 @@
 import axios from "axios";
+import { getApiBaseUrl } from "../utils/url";
+
+const API_BASE_URL = getApiBaseUrl();
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_BASE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
@@ -43,7 +46,7 @@ axiosInstance.interceptors.response.use(
       try {
         // Call refresh using plain axios (no interceptors)
         const { data } = await axios.post(
-          `${import.meta.env.VITE_BASE_URL}/api/user/refreshToken`,
+          `${API_BASE_URL}/api/user/refreshToken`,
           {},
           { withCredentials: true }
         );

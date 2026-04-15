@@ -10,6 +10,7 @@ import {
   FaUser, FaPlus, FaStar, FaEye, FaMapMarkerAlt,
 } from "react-icons/fa";
 import { getMyBookings } from "../../api/residentsEndpoints";
+import { buildMediaUrl, getApiBaseUrl } from "../../utils/url";
 
 const statusConfig = {
   posted: { color: "bg-blue-100 text-blue-700", label: "Waiting for Offers", icon: FaClock },
@@ -29,6 +30,7 @@ export default function MyBookings() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const apiBaseUrl = getApiBaseUrl();
 
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -46,9 +48,10 @@ export default function MyBookings() {
   useEffect(() => {
     if (!user) return;
     const token = localStorage.getItem("accessToken");
-    const socket = io(import.meta.env.VITE_BASE_URL || "http://localhost:5000", {
+    const socket = io(apiBaseUrl, {
       auth: { token },
       withCredentials: true,
+      transports: ["websocket", "polling"],
     });
 
     socket.on("data_updated", () => {
@@ -57,7 +60,7 @@ export default function MyBookings() {
     });
 
     return () => socket.disconnect();
-  }, [queryClient, user]);
+  }, [queryClient, user, apiBaseUrl]);
 
   if (!user) {
     navigate("/login");
@@ -126,7 +129,7 @@ export default function MyBookings() {
                     <div className="flex gap-4">
                       <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                         {booking.images?.[0] ? (
-                          <img src={`${import.meta.env.VITE_BASE_URL}/${booking.images[0]}`} alt="" className="w-full h-full object-cover" />
+                          <img src={buildMediaUrl(booking.images[0])} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center"><FaClipboardList className="w-8 h-8 text-gray-400" /></div>
                         )}
@@ -146,7 +149,7 @@ export default function MyBookings() {
                           <div className="flex items-center gap-2 mb-2">
                             <div className="w-6 h-6 rounded-full bg-gray-100 overflow-hidden border">
                               {booking.selectedProvider.profileImage ? (
-                                <img src={`${import.meta.env.VITE_BASE_URL}/${booking.selectedProvider.profileImage}`} alt="" className="w-full h-full object-cover" />
+                                <img src={buildMediaUrl(booking.selectedProvider.profileImage)} alt="" className="w-full h-full object-cover" />
                               ) : <FaUser className="w-full h-full p-1 text-gray-400" />}
                             </div>
                             <span className="text-sm text-gray-600">Worker assigned</span>

@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import { getMyOffers } from "../../api/serviceProviderEndPoints";
 import { calculateCommission } from "../../utils/commissionCalc";
+import { getApiBaseUrl } from "../../utils/url";
 
 const offerStatusConfig = {
   pending: { color: "bg-yellow-100 text-yellow-700", label: "Pending", icon: FaClock },
@@ -20,6 +21,7 @@ export default function MyOffers() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const apiBaseUrl = getApiBaseUrl();
 
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -36,12 +38,11 @@ export default function MyOffers() {
     if (!user) return;
     const token = localStorage.getItem("accessToken");
     const socket = io(
-      import.meta.env.VITE_BASE_URL ||
-        import.meta.env.VITE_API_URL ||
-        "http://localhost:5000",
+      apiBaseUrl,
       {
       auth: { token },
       withCredentials: true,
+      transports: ["websocket", "polling"],
       }
     );
 
@@ -50,7 +51,7 @@ export default function MyOffers() {
     });
 
     return () => socket.disconnect();
-  }, [queryClient, user]);
+  }, [queryClient, user, apiBaseUrl]);
 
   if (!user) { navigate("/login"); return null; }
 

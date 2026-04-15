@@ -38,6 +38,7 @@ import {
   approvePriceRevision,
   approveScheduleUpdate,
 } from "../../api/residentsEndpoints";
+import { buildMediaUrl, getApiBaseUrl } from "../../utils/url";
 
 /* ─────────────────────────────────────────
    STATUS META
@@ -213,7 +214,7 @@ function OfferCard({ offer, onAccept, actionLoading }) {
         <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border-2 border-gray-200">
           {offer.provider?.profileImage ? (
             <img
-              src={`${import.meta.env.VITE_BASE_URL}/${offer.provider.profileImage}`}
+              src={buildMediaUrl(offer.provider.profileImage)}
               alt=""
               className="w-full h-full object-cover"
             />
@@ -926,6 +927,7 @@ export default function BookingDetails() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const apiBaseUrl = getApiBaseUrl();
 
   const [actionLoading, setActionLoading] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -949,22 +951,18 @@ export default function BookingDetails() {
   useEffect(() => {
     if (!user) return;
     const token = localStorage.getItem("accessToken");
-    const socket = io(
-      import.meta.env.VITE_BASE_URL ||
-        import.meta.env.VITE_API_URL ||
-        "http://localhost:5000",
-      {
+    const socket = io(apiBaseUrl, {
       auth: { token },
       withCredentials: true,
-      }
-    );
+      transports: ["websocket", "polling"],
+    });
 
     socket.on("data_updated", () => {
       queryClient.invalidateQueries(["booking", id]);
     });
 
     return () => socket.disconnect();
-  }, [queryClient, id, user]);
+  }, [queryClient, id, user, apiBaseUrl]);
 
   if (!user) {
     navigate("/login");
@@ -1233,7 +1231,7 @@ export default function BookingDetails() {
                     {booking.images.map((img, i) => (
                       <img
                         key={i}
-                        src={`${import.meta.env.VITE_BASE_URL}/${img}`}
+                        src={buildMediaUrl(img)}
                         alt=""
                         className="w-24 h-24 rounded-xl object-cover border-2 border-gray-100"
                       />
@@ -1351,7 +1349,7 @@ export default function BookingDetails() {
                     <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 flex-shrink-0">
                       {booking.selectedProvider.profileImage ? (
                         <img
-                          src={`${import.meta.env.VITE_BASE_URL}/${booking.selectedProvider.profileImage}`}
+                          src={buildMediaUrl(booking.selectedProvider.profileImage)}
                           alt=""
                           className="w-full h-full object-cover"
                         />

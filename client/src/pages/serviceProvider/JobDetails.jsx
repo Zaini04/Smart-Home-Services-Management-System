@@ -21,6 +21,7 @@ import {
   updateSchedule, providerCancelJob, getProviderWallet,
 } from "../../api/serviceProviderEndPoints";
 import { calculateCommission, MIN_WALLET_BALANCE } from "../../utils/commissionCalc";
+import { buildMediaUrl, getApiBaseUrl } from "../../utils/url";
 
 /* ─────────────────────────────────────────
    PROGRESS STEPS & META
@@ -403,6 +404,7 @@ export default function JobDetails() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const apiBaseUrl = getApiBaseUrl();
 
   const [actionLoading, setActionLoading] = useState(false);
   const [alertMsg, setAlertMsg] = useState(null);
@@ -435,12 +437,11 @@ export default function JobDetails() {
     if (!user) return;
     const token = localStorage.getItem("accessToken");
     const socket = io(
-      import.meta.env.VITE_BASE_URL ||
-        import.meta.env.VITE_API_URL ||
-        "http://localhost:5000",
+      apiBaseUrl,
       {
       auth: { token },
       withCredentials: true,
+      transports: ["websocket", "polling"],
       }
     );
 
@@ -450,7 +451,7 @@ export default function JobDetails() {
     });
 
     return () => socket.disconnect();
-  }, [queryClient, bookingId, user]);
+  }, [queryClient, bookingId, user, apiBaseUrl]);
 
   if (!user) { navigate("/login"); return null; }
 
@@ -515,7 +516,7 @@ export default function JobDetails() {
                 <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2"><FaClipboardList className="text-blue-600" /> Job Description</h3>
                 {booking.category && <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium mb-3">{booking.category.name}</span>}
                 <p className="text-gray-700 text-sm leading-relaxed mb-4">{booking.description}</p>
-                {booking.images?.length > 0 && <div className="flex flex-wrap gap-2 mb-4">{booking.images.map((img, i) => <img key={i} src={`${import.meta.env.VITE_BASE_URL}/${img}`} alt="" className="w-24 h-24 rounded-xl object-cover border border-gray-200" />)}</div>}
+                {booking.images?.length > 0 && <div className="flex flex-wrap gap-2 mb-4">{booking.images.map((img, i) => <img key={i} src={buildMediaUrl(img)} alt="" className="w-24 h-24 rounded-xl object-cover border border-gray-200" />)}</div>}
 <div className="flex items-start justify-between gap-2 text-gray-600 bg-gray-50 rounded-xl p-3 border border-gray-100">
   <div className="flex items-start gap-2 flex-1">
     <FaMapMarkerAlt className="text-blue-500 mt-0.5 flex-shrink-0" />

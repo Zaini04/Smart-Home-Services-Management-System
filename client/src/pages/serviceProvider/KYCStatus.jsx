@@ -7,6 +7,7 @@ import {
   FaIdCard, FaTools, FaPhone,
 } from "react-icons/fa";
 import { getProviderDashboard } from "../../api/serviceProviderEndPoints";
+import { buildMediaUrl } from "../../utils/url";
 
 export default function KYCStatus() {
   const { user, logout } = useAuth();
@@ -228,7 +229,7 @@ export default function KYCStatus() {
                     <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
                       {provider.profileImage ? (
                         <img
-                          src={`${(import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL)}/${provider.profileImage}`}
+                          src={buildMediaUrl(provider.profileImage)}
                           alt=""
                           className="w-full h-full object-cover"
                         />

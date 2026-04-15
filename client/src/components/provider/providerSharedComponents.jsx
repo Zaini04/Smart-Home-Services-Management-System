@@ -4,6 +4,7 @@ import {
   FaCamera, FaCloudUploadAlt, FaCheckCircle,
   FaTimesCircle, FaTrash,
 } from "react-icons/fa";
+import { buildMediaUrl } from "../../utils/url";
 
 /* ─────────────────────────────────────────
    FILE UPLOAD CARD
@@ -47,8 +48,7 @@ export const FileUploadCard = ({
     2. Existing image from server (currentImage)
     3. Nothing
   */
-  const preview = filePreview
-    || (currentImage ? `${import.meta.env.VITE_BASE_URL}/${currentImage}` : null);
+  const preview = filePreview || (currentImage ? buildMediaUrl(currentImage) : null);
 
   const handleDrop = (e) => {
     e.preventDefault();

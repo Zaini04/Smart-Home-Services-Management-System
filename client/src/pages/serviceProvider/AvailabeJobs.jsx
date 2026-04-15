@@ -10,6 +10,7 @@ import {
 import { getAvailableBookings, sendOrUpdateOffer } from "../../api/serviceProviderEndPoints";
 import { calculateCommission, MIN_WALLET_BALANCE } from "../../utils/commissionCalc";
 import { io } from "socket.io-client";
+import { buildMediaUrl, getApiBaseUrl } from "../../utils/url";
 
 /* ── Offer Modal ── */
 function OfferModal({ booking, onClose, onSubmit, submitting, walletBalance, canSendOffers }) {
@@ -140,6 +141,7 @@ export default function AvailableJobs() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const apiBaseUrl = getApiBaseUrl();
 
 
 
@@ -151,9 +153,10 @@ export default function AvailableJobs() {
    useEffect(() => {
     const token = localStorage.getItem("accessToken"); 
 
-    const socket = io(import.meta.env.VITE_BASE_URL || "http://localhost:5000", {
+    const socket = io(apiBaseUrl, {
       auth: { token: token },
       withCredentials: true, // 🌟 ADD THIS
+      transports: ["websocket", "polling"],
     });
 
     socket.on("connect_error", (err) => {
@@ -173,7 +176,7 @@ export default function AvailableJobs() {
     return () => {
       socket.disconnect();
     };
-  }, [queryClient]);
+  }, [queryClient, apiBaseUrl]);
   // React Query: Fetch and Cache Data
   const { data: fetchResult, isLoading, isError } = useQuery({
     queryKey: ["availableJobs"],
@@ -304,7 +307,7 @@ export default function AvailableJobs() {
                   <div className="flex gap-4">
                     <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                       {job.images?.[0] ? (
-                        <img src={`${import.meta.env.VITE_BASE_URL}/${job.images[0]}`} alt="" className="w-full h-full object-cover" />
+                        <img src={buildMediaUrl(job.images[0])} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <FaClipboardList className="w-8 h-8 text-gray-400" />

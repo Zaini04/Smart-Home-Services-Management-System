@@ -1,7 +1,7 @@
 const normalizeMediaPath = (value) => {
     if (typeof value !== "string") return value;
     if (!value.includes("uploads")) return value;
-    return value.replace(/\\/g, "/");
+    return value.replace(/\\/g, "/").replace(/^\/+/, "");
 };
 
 const normalizeResponseData = (input) => {

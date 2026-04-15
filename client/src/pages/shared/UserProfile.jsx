@@ -8,6 +8,7 @@ import { toast } from "react-hot-toast";
 import { getUserProfile, updateUserProfile } from "../../api/residentsEndpoints";
 import Navbar from "../../components/Navbar"; // Adjust path if needed
 import Footer from "../../components/Footer"; // Adjust path if needed
+import { buildMediaUrl } from "../../utils/url";
 
 export default function UserProfile() {
   const { user, loginUser, accessToken } = useAuth();
@@ -109,7 +110,7 @@ export default function UserProfile() {
               <div className="relative">
                 <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
                   {previewImage ? (
-                    <img src={`${import.meta.env.VITE_BASE_URL}/${previewImage}`} alt="Profile" className="w-full h-full object-cover" />
+                    <img src={buildMediaUrl(previewImage)} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     <FaUser className="w-full h-full p-6 text-gray-300" />
                   )}

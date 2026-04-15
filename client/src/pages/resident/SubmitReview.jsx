@@ -13,6 +13,7 @@ import {
   FaThumbsDown,
 } from "react-icons/fa";
 import { getBookingDetails, submitReview } from "../../api/residentsEndpoints";
+import { buildMediaUrl } from "../../utils/url";
 
 export default function SubmitReview() {
   const { bookingId } = useParams();
@@ -196,7 +197,7 @@ export default function SubmitReview() {
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
                   {booking.selectedProvider.profileImage ? (
                     <img
-                      src={`${(import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL)}/${booking.selectedProvider.profileImage}`}
+                      src={buildMediaUrl(booking.selectedProvider.profileImage)}
                       alt=""
                       className="w-full h-full object-cover"
                     />

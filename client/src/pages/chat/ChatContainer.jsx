@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import { getMyConversations, getChatMessages, uploadChatFile } from "../../api/chatEndPoints";
+import { buildMediaUrl, getApiBaseUrl } from "../../utils/url";
 import {
   FaArrowLeft, FaComments, FaUser, FaCheckDouble, FaCheck,
   FaPaperPlane, FaPaperclip, FaSpinner, FaTools
@@ -25,6 +26,7 @@ export default function ChatContainer() {
   const navigate = useNavigate();
   const location = useLocation(); 
   const queryClient = useQueryClient();
+  const apiBaseUrl = getApiBaseUrl();
 
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -84,11 +86,12 @@ export default function ChatContainer() {
     const token = localStorage.getItem("accessToken")
     
     // 🌟 FIX 3: Make sure port defaults to 5000 matching your backend!
-    const backendUrl = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+    const backendUrl = apiBaseUrl;
     
     const newSocket = io(backendUrl, {
       auth: { token },
       withCredentials: true,
+      transports: ["websocket", "polling"],
     });
     
     setSocket(newSocket);
@@ -96,7 +99,7 @@ export default function ChatContainer() {
     newSocket.on("data_updated", () => queryClient.invalidateQueries({ queryKey: ["chatInbox"] }));
     
     return () => newSocket.disconnect();
-  }, [user, queryClient]);
+  }, [user, queryClient, apiBaseUrl]);
 
   // 4. Handle Active Chat Room Events
   useEffect(() => {
@@ -219,7 +222,7 @@ export default function ChatContainer() {
               >
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-100 flex-shrink-0 relative">
                   {conv.otherPerson.image ? (
-                     <img src={`${import.meta.env.VITE_BASE_URL}/${conv.otherPerson.image}`} className="w-full h-full object-cover" alt="avatar"/>
+                     <img src={buildMediaUrl(conv.otherPerson.image)} className="w-full h-full object-cover" alt="avatar"/>
                   ) : <div className="w-full h-full flex items-center justify-center bg-blue-100"><FaUser className="text-blue-500" /></div>}
                   {conv.status === "work_in_progress" && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border border-white" />}
                 </div>
@@ -256,7 +259,7 @@ export default function ChatContainer() {
                   <FaArrowLeft />
                 </button>
                 <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center flex-shrink-0 border border-gray-200">
-                   {activeConv?.otherPerson?.image ? <img src={`${import.meta.env.VITE_BASE_URL}/${activeConv.otherPerson.image}`} className="w-full h-full object-cover" alt="avatar"/> : <FaUser className="text-blue-500" />}
+                   {activeConv?.otherPerson?.image ? <img src={buildMediaUrl(activeConv.otherPerson.image)} className="w-full h-full object-cover" alt="avatar"/> : <FaUser className="text-blue-500" />}
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 text-sm leading-tight">{activeConv?.otherPerson?.name || "Loading..."}</h3>
@@ -285,20 +288,20 @@ export default function ChatContainer() {
                     <div key={msg._id} className={`flex ${mine ? "justify-end" : "justify-start"} items-end gap-2`}>
                       {!mine && (
                         <div className={`w-6 h-6 rounded-full overflow-hidden flex-shrink-0 ${showAvatar ? "bg-gray-300" : "invisible"}`}>
-                           {activeConv?.otherPerson?.image ? <img src={`${import.meta.env.VITE_BASE_URL}/${activeConv.otherPerson.image}`} className="w-full h-full object-cover" alt="avatar"/> : <FaUser className="w-3 h-3 m-1.5 text-white" />}
+                           {activeConv?.otherPerson?.image ? <img src={buildMediaUrl(activeConv.otherPerson.image)} className="w-full h-full object-cover" alt="avatar"/> : <FaUser className="w-3 h-3 m-1.5 text-white" />}
                         </div>
                       )}
                       
                       <div className={`max-w-[75%] px-4 py-2 text-[15px] shadow-sm relative ${mine ? "bg-[#d9fdd3] text-gray-800 rounded-2xl rounded-br-none" : "bg-white text-gray-800 rounded-2xl rounded-bl-none border border-gray-100"}`}>
                         
                         {msg.messageType === "image" && msg.fileUrl && (
-                          <a href={`${import.meta.env.VITE_BASE_URL}/${msg.fileUrl}`} target="_blank" rel="noreferrer">
-                            <img src={`${import.meta.env.VITE_BASE_URL}/${msg.fileUrl}`} className="w-full max-w-xs rounded-lg mb-2 border cursor-pointer hover:opacity-90" alt="attachment" />
+                          <a href={buildMediaUrl(msg.fileUrl)} target="_blank" rel="noreferrer">
+                            <img src={buildMediaUrl(msg.fileUrl)} className="w-full max-w-xs rounded-lg mb-2 border cursor-pointer hover:opacity-90" alt="attachment" />
                           </a>
                         )}
                         {msg.messageType === "video" && msg.fileUrl && (
                           <video controls className="w-full max-w-xs rounded-lg mb-2 border bg-black">
-                            <source src={`${import.meta.env.VITE_BASE_URL}/${msg.fileUrl}`} type="video/mp4" />
+                            <source src={buildMediaUrl(msg.fileUrl)} type="video/mp4" />
                           </video>
                         )}
 
