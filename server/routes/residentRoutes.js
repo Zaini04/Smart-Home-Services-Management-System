@@ -51,5 +51,5 @@ residentRouter.post("/bookings/:bookingId/review", protect, submitReview);
 
 residentRouter.post("/bookings/:bookingId/approve-revision/:revisionId", protect, approvePriceRevision);
 residentRouter.post("/bookings/:bookingId/approve-schedule", protect, approveScheduleUpdate);
-
+// residentRouter.post("/bookings/:bookingId/respond-reschedule", protect, respondToReschedule);
 export default residentRouter;

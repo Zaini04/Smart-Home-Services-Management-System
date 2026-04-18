@@ -12,7 +12,10 @@ import {
   FaCalendarAlt,
 } from "react-icons/fa";
 import { getProviderDashboard } from "../../api/serviceProviderEndPoints";
-import { buildMediaUrl } from "../../utils/url";
+import { buildMediaUrl, getApiBaseUrl } from "../../utils/url";
+import { io } from "socket.io-client";
+import NotificationDrawer from "../../components/NotificationDrawer";
+import CalendarDrawer from "../../components/CalendarDrawer";
 
 /* ─────────────────────────────────────────
    ALL POSSIBLE NAV ITEMS
@@ -22,11 +25,10 @@ const approvedNavItems = [
   { to: "/provider/available-jobs", icon: FaSearch,    label: "Available Jobs", badge: "New" },
   { to: "/provider/my-offers",      icon: FaBell,      label: "My Offers" },
   { to: "/provider/my-jobs",        icon: FaBriefcase, label: "My Jobs" },
-  { to: "/provider/calendar",       icon: FaCalendarAlt, label: "Calendar" },
-  { to: "/provider/notifications",  icon: FaBell,      label: "Notifications" },
-  { to: "/provider/chat",       icon: FaComments,  label: "Messages" },  // ← ADD THIS
+  { action: "calendar",             icon: FaCalendarAlt, label: "Calendar" },
+  { action: "notifications",        icon: FaBell,      label: "Notifications" },
+  { to: "/provider/chat",           icon: FaComments,  label: "Messages" },  // ← ADD THIS
   { to: "/provider/wallet",         icon: FaWallet,    label: "Wallet" },      // ← ADD
-  { to: "/provider/earnings",       icon: FaMoneyBillWave,    label: "Earnings" },
   { to: "/provider/profile",        icon: FaUser,      label: "My Profile" },
   { to: "/provider/edit-profile",   icon: FaEdit,      label: "Edit Profile" },
   { to: "/provider/settings",       icon: FaTools,    label: "Settings" },
@@ -111,11 +113,16 @@ function KycGuard({ profileCompleted, kycStatus }) {
    SIDEBAR CONTENT
    Compact — more space for nav links
 ───────────────────────────────────────── */
-function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
+function SidebarContent({ provider, profileCompleted, kycStatus, onClose, hasNewNotifications, hasNewJobs, onOpenDrawer }) {
   const navigate   = useNavigate();
   const {user, logoutUser } = useAuth();
 
-  const navItems = getNavItems(profileCompleted, kycStatus);
+  const baseNavItems = getNavItems(profileCompleted, kycStatus);
+  const navItems = baseNavItems.map(item => {
+    if (item.label === "Notifications" && hasNewNotifications) return { ...item, dot: true };
+    if ((item.label === "My Jobs" || item.label === "Available Jobs") && hasNewJobs) return { ...item, dot: true };
+    return item;
+  });
   
   const handleLogout = () => {
     logoutUser();
@@ -123,18 +130,17 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-gray-900 text-white">
 
       {/* ── Brand Header — compact ── */}
-      <div className="flex-shrink-0 px-4 pt-5 pb-4 border-b border-gray-100">
+      <div className="flex-shrink-0 px-4 pt-5 pb-4 border-b border-gray-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600
-                            rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+            <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
               <FaTools className="w-3.5 h-3.5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-gray-800 text-sm leading-none">
+              <p className="font-bold text-white text-sm leading-none">
                 WorkerPanel
               </p>
               <p className="text-xs text-gray-400 mt-0.5">Service Provider</p>
@@ -143,16 +149,16 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
           {onClose && (
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl hover:bg-gray-100 transition-colors flex-shrink-0"
+              className="p-1.5 rounded-xl hover:bg-gray-800 transition-colors flex-shrink-0"
             >
-              <FaTimes className="w-4 h-4 text-gray-500" />
+              <FaTimes className="w-4 h-4 text-gray-400" />
             </button>
           )}
         </div>
       </div>
 
       {/* ── Compact Profile Row ── */}
-      <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-gray-800">
         <div className="flex items-center gap-3">
           {/* Small avatar */}
           <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br
@@ -172,19 +178,19 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-gray-800 text-sm truncate leading-none">
+            <p className="font-semibold text-white text-sm truncate leading-none">
               {provider?.name || "Provider"}
             </p>
             {/* KYC Status pill */}
             <span className={`inline-flex items-center gap-1 text-xs font-medium
                              px-2 py-0.5 rounded-full mt-1 ${
               kycStatus === "approved"
-                ? "bg-green-100 text-green-700"
+                ? "bg-green-900/50 text-green-400"
                 : kycStatus === "rejected"
-                ? "bg-red-100 text-red-700"
+                ? "bg-red-900/50 text-red-400"
                 : !profileCompleted
-                ? "bg-gray-100 text-gray-600"
-                : "bg-yellow-100 text-yellow-700"
+                ? "bg-gray-800 text-gray-300"
+                : "bg-yellow-900/50 text-yellow-400"
             }`}>
               {kycStatus === "approved" ? "✓ Approved"
                 : kycStatus === "rejected" ? "✗ Rejected"
@@ -198,10 +204,10 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
         {kycStatus !== "approved" && (
           <div className={`mt-3 rounded-xl px-3 py-2 text-xs leading-relaxed ${
             !profileCompleted
-              ? "bg-blue-50 text-blue-800 border border-blue-100"
+              ? "bg-blue-900/30 text-blue-300 border border-blue-800"
               : kycStatus === "rejected"
-              ? "bg-red-50 text-red-700 border border-red-100"
-              : "bg-yellow-50 text-yellow-800 border border-yellow-100"
+              ? "bg-red-900/30 text-red-300 border border-red-800"
+              : "bg-yellow-900/30 text-yellow-300 border border-yellow-800"
           }`}>
             {!profileCompleted
               ? "Complete your profile to unlock all features."
@@ -213,38 +219,60 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
       </div>
 
       {/* ── Navigation — takes all remaining space, scrolls independently ── */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3 min-h-0">
+      <nav className="sidebar-nav flex-1 overflow-y-auto px-3 py-3 min-h-0">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider
                       px-3 mb-2">
           {kycStatus === "approved" ? "Navigation" : "Account Setup"}
         </p>
 
         <div className="space-y-0.5">
-          {navItems.map((item) => {
+          {navItems.map((item, idx) => {
             const Icon = item.icon;
+
+            // Drawer action button
+            if (item.action) {
+              return (
+                <button
+                  key={`action-${idx}`}
+                  onClick={() => {
+                    onOpenDrawer(item.action);
+                    if (onClose) onClose();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group text-gray-300 hover:bg-gray-800 hover:text-white"
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0 text-gray-500 group-hover:text-white" />
+                  <span className="font-medium text-sm flex-1 truncate text-left">{item.label}</span>
+                  {item.dot && (
+                    <span className="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0" />
+                  )}
+                </button>
+              );
+            }
+
+            // Normal NavLink
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.end}
                 onClick={onClose}
-                className={({ isActive }) =>
+            className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                    duration-200 group ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
+                      ? "bg-yellow-500 text-gray-900 shadow-md font-bold"
                       : item.highlight
-                      ? "bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
+                      ? "bg-gray-800 text-yellow-500 border border-gray-700 hover:bg-gray-700"
+                      : "text-gray-300 hover:bg-gray-800 hover:text-white"
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     <Icon className={`w-4 h-4 flex-shrink-0 ${
-                      isActive ? "text-white"
-                        : item.highlight ? "text-blue-600"
-                        : "text-gray-400 group-hover:text-blue-500"
+                      isActive ? "text-gray-900"
+                        : item.highlight ? "text-yellow-500"
+                        : "text-gray-500 group-hover:text-white"
                     }`} />
                     <span className="font-medium text-sm flex-1 truncate">
                       {item.label}
@@ -253,11 +281,14 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
                       <span className={`text-xs px-1.5 py-0.5 rounded-full
                                        font-semibold flex-shrink-0 ${
                         isActive
-                          ? "bg-white/25 text-white"
-                          : "bg-blue-100 text-blue-600"
+                          ? "bg-gray-900/20 text-gray-900"
+                          : "bg-gray-800 text-gray-300"
                       }`}>
                         {item.badge}
                       </span>
+                    )}
+                    {item.dot && (
+                      <span className="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0" />
                     )}
                     {item.highlight && !isActive && (
                       <FaChevronRight className="w-3 h-3 text-blue-400 flex-shrink-0 animate-pulse" />
@@ -328,13 +359,18 @@ function SidebarContent({ provider, profileCompleted, kycStatus, onClose }) {
    PROVIDER NAVBAR
    Right side: Name | Rating | Wallet | Dropdown arrow
 ───────────────────────────────────────── */
-function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatus }) {
+function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatus, hasNewNotifications, hasNewJobs, onOpenDrawer }) {
   const location   = useLocation();
   const navigate   = useNavigate();
   const { user,logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const navItems = getNavItems(profileCompleted, kycStatus);
+  const baseNavItems = getNavItems(profileCompleted, kycStatus);
+  const navItems = baseNavItems.map(item => {
+    if (item.label === "Notifications" && hasNewNotifications) return { ...item, dot: true };
+    if ((item.label === "My Jobs" || item.label === "Available Jobs") && hasNewJobs) return { ...item, dot: true };
+    return item;
+  });
 
   /* Current page label */
   const allItems = [
@@ -408,33 +444,34 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
           </div>
         )}
 
-        {/* Wallet pill — only when approved */}
         {kycStatus === "approved" && (
-          <>
-          <div className="flex items-center gap-1.5 bg-green-50 border
-                          border-green-200 rounded-xl px-3 py-1.5">
-            <FaBell onClick={() => navigate('/provider/notifications')} className="w-3.5 h-3.5 text-green-600" />
+          <div className="flex items-center gap-1 sm:gap-2 mr-2">
             
-          </div>
-
-            <FaCalendarAlt onClick={() => navigate('/provider/calendar')} className="w-3.5 h-3.5 text-green-600" />
+            {/* Messages Icon (Mobile) */}
             <Link
-                    to="/chat"
-                    className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors sm:hidden"
-                  >
-                    <FaComments className="w-5 h-5" />
-                    {/* {unreadMessages > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                        {unreadMessages > 9 ? "9" : unreadMessages}
-                      </span>
-                    )} */}
-                  </Link>
+              to="/provider/chat"
+              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors sm:hidden flex"
+            >
+              <FaComments className="w-5 h-5" />
+            </Link>
 
+            {/* Notifications */}
+            <button 
+              onClick={() => onOpenDrawer('notifications')} 
+              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex"
+            >
+              <FaBell className="w-5 h-5" />
+              {hasNewNotifications && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />}
+            </button>
 
-
-          </>
-
-          
+            {/* Calendar */}
+            <button 
+              onClick={() => onOpenDrawer('calendar')} 
+              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors hidden sm:flex"
+            >
+              <FaCalendarAlt className="w-5 h-5" />
+            </button>
+          </div>
         )}
 
 
@@ -490,8 +527,7 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
                             shadow-xl border border-gray-100 overflow-hidden z-50">
 
               {/* Dropdown header */}
-              <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50
-                              border-b border-gray-100">
+              <div className="p-4 bg-blue-50 border-b border-gray-100">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl overflow-hidden bg-white
                                   border-2 border-blue-200 flex-shrink-0">
@@ -550,12 +586,30 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
 
               {/* Nav links — only what's allowed */}
               <div className="py-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
+                {navItems.map((item, idx) => {
                   return (
+                    <li key={idx} className="list-none">
+                    {/* Custom handling for Drawers in Mobile View */}
+                    {item.action ? (
+                      <button
+                        onClick={() => {
+                          onOpenDrawer(item.action);
+                          setDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-gray-700 hover:bg-gray-50 text-sm`}
+                      >
+                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                        <span className="flex-1 text-left">{item.label}</span>
+                        {item.badge && (
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    ) : (
                     <NavLink
-                      key={item.to}
                       to={item.to}
+                      end={item.end}
                       onClick={() => setDropdownOpen(false)}
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
@@ -567,7 +621,7 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
                         }`
                       }
                     >
-                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
                       <span className="flex-1">{item.label}</span>
                       {item.badge && (
                         <span className="text-xs bg-blue-100 text-blue-600 px-2
@@ -575,9 +629,13 @@ function ProviderNavbar({ onHamburgerClick, provider, profileCompleted, kycStatu
                           {item.badge}
                         </span>
                       )}
+                      {item.dot && (
+                        <span className="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0" />
+                      )}
                     </NavLink>
-                  );
-                })}
+                    )}
+                  </li>
+                );})}
               </div>
 
               {/* Logout */}
@@ -613,10 +671,45 @@ export default function ProviderLayout() {
   const [profileCompleted, setProfileCompleted]     = useState(null);
   const [layoutLoading, setLayoutLoading]           = useState(true);
 
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+  const [hasNewJobs, setHasNewJobs] = useState(false);
+  
+  // Drawer states
+  const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
+  const [calendarDrawerOpen, setCalendarDrawerOpen] = useState(false);
+
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
     fetchProvider();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    const socket = io(getApiBaseUrl(), {
+      auth: { token },
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+    });
+
+    socket.on("notification", () => setHasNewNotifications(true));
+    socket.on("data_updated", () => setHasNewJobs(true));
+
+    return () => socket.disconnect();
+  }, [user]);
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith("/provider/notifications") || notificationDrawerOpen) setHasNewNotifications(false);
+    if (path.startsWith("/provider/my-jobs") || path.startsWith("/provider/available-jobs") || path.startsWith("/provider/job")) setHasNewJobs(false);
+  }, [location.pathname, notificationDrawerOpen]);
+
+  const handleOpenDrawer = (action) => {
+    if (action === "notifications") setNotificationDrawerOpen(true);
+    if (action === "calendar") setCalendarDrawerOpen(true);
+  };
 
   const fetchProvider = async () => {
     try {
@@ -688,27 +781,30 @@ export default function ProviderLayout() {
           provider={provider}
           profileCompleted={profileCompleted}
           kycStatus={kycStatus}
+          hasNewNotifications={hasNewNotifications}
+          hasNewJobs={hasNewJobs}
+          onOpenDrawer={handleOpenDrawer}
         />
       </aside>
 
       {/* ── Mobile Drawer ── */}
-      {mobileSidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setMobileSidebarOpen(false)}
+      <div className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ${mobileSidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
+        <div
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+        <aside className={`absolute left-0 top-0 bottom-0 w-72 flex flex-col h-full overflow-hidden shadow-2xl bg-gray-900 transform transition-transform duration-300 ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          <SidebarContent
+            provider={provider}
+            profileCompleted={profileCompleted}
+            kycStatus={kycStatus}
+            onClose={() => setMobileSidebarOpen(false)}
+            hasNewNotifications={hasNewNotifications}
+            hasNewJobs={hasNewJobs}
+            onOpenDrawer={handleOpenDrawer}
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-72 flex flex-col
-                            h-full overflow-hidden shadow-2xl">
-            <SidebarContent
-              provider={provider}
-              profileCompleted={profileCompleted}
-              kycStatus={kycStatus}
-              onClose={() => setMobileSidebarOpen(false)}
-            />
-          </aside>
-        </div>
-      )}
+        </aside>
+      </div>
 
       {/* ── Right: Navbar + scrollable content ── */}
       <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden">
@@ -717,6 +813,9 @@ export default function ProviderLayout() {
           provider={provider}
           profileCompleted={profileCompleted}
           kycStatus={kycStatus}
+          hasNewNotifications={hasNewNotifications}
+          hasNewJobs={hasNewJobs}
+          onOpenDrawer={handleOpenDrawer}
         />
 
         {/* ONLY this area scrolls */}
@@ -726,6 +825,17 @@ export default function ProviderLayout() {
           </div>
         </main>
       </div>
+
+      {/* Modals/Drawers mounted globally over Layout */}
+      <NotificationDrawer 
+        isOpen={notificationDrawerOpen} 
+        onClose={() => setNotificationDrawerOpen(false)} 
+      />
+      
+      <CalendarDrawer 
+        isOpen={calendarDrawerOpen} 
+        onClose={() => setCalendarDrawerOpen(false)} 
+      />
     </div>
   );
 }

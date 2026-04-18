@@ -83,3 +83,10 @@ export const approveScheduleUpdate = (bookingId) => {
     `/api/residents/bookings/${bookingId}/approve-schedule`
   );
 };
+
+export const respondToReschedule = (bookingId, data) => {
+  return axiosInstance.post(
+    `/api/residents/bookings/${bookingId}/respond-reschedule`,
+    data
+  );
+};

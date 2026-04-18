@@ -8,6 +8,7 @@ import userRouter from './routes/authRoutes.js'
 import serviceProviderRouter from './routes/serviceProviderRoutes.js'
 import residentRouter from './routes/residentRoutes.js'
 import adminRouter from './routes/adminRoutes.js'
+import publicRouter from './routes/publicRoutes.js'
 import cookieParser from 'cookie-parser'
 import http from "http";
 import { Server } from "socket.io";
@@ -66,6 +67,7 @@ app.use('/api/residents', residentRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/notifications', notificationRouter);
+app.use('/api/public', publicRouter);
 
 app.get("/", (req, res) => {
   res.send("API is running 🚀");

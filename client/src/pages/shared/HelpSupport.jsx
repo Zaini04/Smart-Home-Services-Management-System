@@ -3,6 +3,9 @@ import { useAuth } from "../../context/AuthContext";
 import { FaQuestionCircle, FaEnvelope, FaHeadset, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import { submitSupportTicket } from "../../api/publicEndPoints";
 
 const faqs = [
   { question: "How does the pricing and inspection work?", answer: "When you book a provider, they will send an estimate. If needed, they will request an inspection fee. Once approved, they inspect and give a final labor cost." },
@@ -14,14 +17,41 @@ const faqs = [
 export default function HelpSupport() {
   const { user } = useAuth();
   const [openFaq, setOpenFaq] = useState(null);
-
+  const [form, setForm] = useState({ subject: "", message: "" });
+  
   const isResident = user?.role === "resident";
+
+  const mutation = useMutation({
+    mutationFn: submitSupportTicket,
+    onSuccess: (res) => {
+      toast.success(res.data?.message || "Message Sent Successfully!");
+      setForm({ subject: "", message: "" });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to send message!");
+    }
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please login to send messages");
+      return;
+    }
+    mutation.mutate({
+      name: user.full_name || "Unknown",
+      email: user.email,
+      subject: form.subject,
+      message: form.message,
+      source: "help_support",
+    });
+  };
 
   return (
     <>
-      {isResident && <Navbar />}
       
-      <div className={`min-h-screen bg-gray-50 ${isResident ? "py-10" : "py-4"}`}>
+      
+      <div className={`min-h-screen bg-transparent ${isResident ? "py-10" : "py-4"}`}>
         <div className="max-w-4xl mx-auto space-y-6 px-4">
           
           {/* Header */}
@@ -68,17 +98,35 @@ export default function HelpSupport() {
               <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
                 <FaEnvelope className="text-blue-600" /> Contact Support
               </h3>
-              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert("Message Sent!"); }}>
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                  <input type="text" required placeholder="Briefly describe your issue" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 outline-none bg-gray-50 focus:bg-white transition-all text-sm" />
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="Briefly describe your issue" 
+                    value={form.subject}
+                    onChange={(e) => setForm(prev => ({ ...prev, subject: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 outline-none bg-gray-50 focus:bg-white transition-all text-sm" 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                  <textarea rows={4} required placeholder="Write your message here..." className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 outline-none bg-gray-50 focus:bg-white transition-all resize-none text-sm" />
+                  <textarea 
+                    rows={4} 
+                    required 
+                    placeholder="Write your message here..." 
+                    value={form.message}
+                    onChange={(e) => setForm(prev => ({ ...prev, message: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 outline-none bg-gray-50 focus:bg-white transition-all resize-none text-sm" 
+                  />
                 </div>
-                <button type="submit" className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-black transition-all text-sm">
-                  Send Message
+                <button 
+                  type="submit" 
+                  disabled={mutation.isLoading}
+                  className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-black transition-all text-sm disabled:opacity-70"
+                >
+                  {mutation.isLoading ? "Sending..." : "Send Message"}
                 </button>
               </form>
             </div>
@@ -87,7 +135,7 @@ export default function HelpSupport() {
         </div>
       </div>
 
-      {isResident && <Footer />}
+      
     </>
   );
 }

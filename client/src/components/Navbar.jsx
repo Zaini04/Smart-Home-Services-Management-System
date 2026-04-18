@@ -5,6 +5,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/images/logo (3).png";
 import { useAuth } from "../context/AuthContext";
 import { getUnreadCount } from "../api/chatEndPoints";
+import { io } from "socket.io-client";
+import { getApiBaseUrl } from "../utils/url";
 import {
   FaBars,
   FaTimes,
@@ -26,6 +28,8 @@ import {
   FaArrowRight,
   FaStar,
   FaHeadset,
+  FaInfoCircle,
+  FaEnvelope,
 } from "react-icons/fa";
 
 /* ------------------ LOGIN PROMPT MODAL ------------------ */
@@ -66,7 +70,7 @@ const LoginPromptModal = ({ isOpen, onClose }) => {
                 onClose();
                 navigate("/login");
               }}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
             >
               Login
               <FaArrowRight className="w-4 h-4" />
@@ -111,7 +115,7 @@ const UserDropdown = ({ user, onLogout, onClose, unreadMessages }) => {
   // Resident-only menu items
   const menuItems = [
     { icon: FaUserCircle, label: "My Profile", link: "/profile" },
-    { icon: FaClipboardList, label: "My Bookings", link: "/my-bookings" },
+    { icon: FaClipboardList, label: "My Bookings", link: "/my-bookings", dotBadge: user?.hasNewBookings },
     { 
       icon: FaComments, 
       label: "Messages", 
@@ -121,7 +125,7 @@ const UserDropdown = ({ user, onLogout, onClose, unreadMessages }) => {
     { icon: FaCog, label: "Settings", link: "/settings" },
     { icon: FaHeadset, label: "Help & Support", link: "/support" },
     { icon: FaCalendarAlt, label: "My Calendar", link: "/calendar" },
-    { icon: FaBell, label: "Notifications", link: "/notifications" },
+    { icon: FaBell, label: "Notifications", link: "/notifications", dotBadge: user?.hasNewNotifications },
   ];
 
   return (
@@ -152,7 +156,7 @@ const UserDropdown = ({ user, onLogout, onClose, unreadMessages }) => {
         <Link
           to="/post-job"
           onClick={onClose}
-          className="flex items-center justify-center gap-2 w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:shadow-md transition-all text-sm"
+          className="flex items-center justify-center gap-2 w-full py-2.5 bg-yellow-500 text-gray-900 rounded-xl font-bold hover:bg-yellow-400 transition-colors text-sm shadow-sm"
         >
           <FaPlus className="w-3.5 h-3.5" />
           Book a Service
@@ -174,6 +178,9 @@ const UserDropdown = ({ user, onLogout, onClose, unreadMessages }) => {
               <span className="w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                 {item.badge > 9 ? "9+" : item.badge}
               </span>
+            )}
+            {item.dotBadge && (
+              <span className="w-2.5 h-2.5 bg-red-500 rounded-full inline-block" />
             )}
           </Link>
         ))}
@@ -209,11 +216,11 @@ const MobileMenu = ({
 
   // Resident menu items for mobile
   const residentMenuItems = [
-    { icon: FaClipboardList, label: "My Bookings", link: "/my-bookings" },
+    { icon: FaClipboardList, label: "My Bookings", link: "/my-bookings", dotBadge: user?.hasNewBookings },
     { icon: FaComments, label: "Messages", link: "/chat", badge: unreadMessages },
     { icon: FaUserCircle, label: "My Profile", link: "/profile" },
     { icon: FaCog, label: "Settings", link: "/settings" },
-    { icon: FaBell, label: "Notifications", link: "/notifications" },
+    { icon: FaBell, label: "Notifications", link: "/notifications", dotBadge: user?.hasNewNotifications },
     { icon: FaCalendarAlt, label: "My Calendar", link: "/calendar" },
   ];
 
@@ -226,37 +233,37 @@ const MobileMenu = ({
       />
 
       {/* Menu Panel */}
-      <div className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 lg:hidden animate-slideIn overflow-y-auto">
+      <div className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-gray-900 shadow-2xl z-50 lg:hidden animate-slideIn overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white">
-          <span className="font-bold text-lg text-gray-800">Menu</span>
+        <div className="flex items-center justify-between p-4 border-b border-gray-800 sticky top-0 bg-gray-900">
+          <span className="font-bold text-lg text-white">Menu</span>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-800 rounded-full transition-colors"
           >
-            <FaTimes className="w-5 h-5 text-gray-600" />
+            <FaTimes className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
         {/* User Info (if logged in) */}
         {user && (
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+          <div className="p-4 bg-gray-800/60 border-b border-gray-700">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl">
                 {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-gray-800 capitalize">
+                <p className="font-semibold text-white capitalize">
                   {user?.full_name || "User"}
                 </p>
-                <p className="text-sm text-gray-500">{user?.email}</p>
+                <p className="text-sm text-gray-400">{user?.email}</p>
               </div>
             </div>
             {/* Book a Service Button */}
             <Link
               to="/post-job"
               onClick={onClose}
-              className="flex items-center justify-center gap-2 w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium text-sm"
+              className="flex items-center justify-center gap-2 w-full py-2.5 bg-yellow-500 text-gray-900 rounded-xl font-bold text-sm hover:bg-yellow-400 transition-colors shadow-sm"
             >
               <FaPlus className="w-3.5 h-3.5" />
               Book a Service
@@ -266,7 +273,7 @@ const MobileMenu = ({
 
         {/* Navigation Links */}
         <nav className="p-4 space-y-1">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-2">
             Navigation
           </p>
           {navLinks.map((link, index) => (
@@ -280,16 +287,16 @@ const MobileMenu = ({
                   onClose();
                 }
               }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-xl transition-colors text-left"
             >
               {link.scrollTo ? (
                 <>
-                  <link.icon className="w-5 h-5 text-gray-400" />
+                  <link.icon className="w-5 h-5 text-gray-500" />
                   <span className="font-medium">{link.label}</span>
                 </>
               ) : (
                 <Link to={link.path} className="flex items-center gap-3 w-full">
-                  <link.icon className="w-5 h-5 text-gray-400" />
+                  <link.icon className="w-5 h-5 text-gray-500" />
                   <span className="font-medium">{link.label}</span>
                 </Link>
               )}
@@ -300,7 +307,7 @@ const MobileMenu = ({
         {/* Resident Menu Items (if logged in) */}
         {user && (
           <div className="px-4 pb-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-2">
               My Account
             </p>
             <div className="space-y-1">
@@ -309,14 +316,17 @@ const MobileMenu = ({
                   key={index}
                   to={item.link}
                   onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-xl transition-colors"
                 >
-                  <item.icon className="w-5 h-5 text-gray-400" />
+                  <item.icon className="w-5 h-5 text-gray-500" />
                   <span className="font-medium flex-1">{item.label}</span>
                   {item.badge > 0 && (
                     <span className="w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                       {item.badge > 9 ? "9+" : item.badge}
                     </span>
+                  )}
+                  {item.dotBadge && (
+                     <span className="w-2 h-2 bg-red-500 rounded-full inline-block" />
                   )}
                 </Link>
               ))}
@@ -325,42 +335,31 @@ const MobileMenu = ({
         )}
 
         {/* Bottom Actions */}
-        <div className="sticky bottom-0 p-4 border-t border-gray-100 bg-white">
+        <div className="sticky bottom-0 p-4 border-t border-gray-800 bg-gray-900">
           {user ? (
             <button
               onClick={() => {
                 onLogout();
                 onClose();
               }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 text-red-400 rounded-xl font-medium hover:bg-red-500/20 transition-colors border border-red-500/20"
             >
               <FaSignOutAlt className="w-4 h-4" />
               <span>Logout</span>
             </button>
           ) : (
             <div className="space-y-2">
-              {/* Book Service (requires login) */}
-              <button
-                onClick={() => {
-                  onClose();
-                  onBookService();
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium"
-              >
-                <FaPlus className="w-4 h-4" />
-                Book a Service
-              </button>
               <Link
                 to="/login"
                 onClick={onClose}
-                className="block w-full text-center px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                className="block w-full text-center px-4 py-3 bg-yellow-500 text-gray-900 rounded-xl font-bold hover:bg-yellow-400 transition-colors shadow-lg shadow-yellow-500/20"
               >
                 Login
               </Link>
               <Link
                 to="/signup"
                 onClick={onClose}
-                className="block w-full text-center px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                className="block w-full text-center px-4 py-3 bg-gray-800 text-gray-200 rounded-xl font-medium hover:bg-gray-700 transition-colors border border-gray-700"
               >
                 Sign Up
               </Link>
@@ -385,7 +384,11 @@ export default function Navbar() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+  const [hasNewBookings, setHasNewBookings] = useState(false);
+
   // Check if user is a resident (not provider or admin)
+
   const isResident = user && user.role === "resident";
   const isLoggedIn = !!user;
 
@@ -398,7 +401,32 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Notifications live listeners
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    const socket = io(getApiBaseUrl(), {
+      auth: { token },
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+    });
+
+    socket.on("notification", () => setHasNewNotifications(true));
+    socket.on("data_updated", () => setHasNewBookings(true));
+
+    return () => socket.disconnect();
+  }, [isLoggedIn]);
+
+  // Clear live dots when visiting the relevant pages
+  useEffect(() => {
+    if (location.pathname.startsWith("/notifications")) setHasNewNotifications(false);
+    if (location.pathname.startsWith("/my-bookings") || location.pathname.startsWith("/booking")) setHasNewBookings(false);
+  }, [location.pathname]);
+
   // Close mobile menu on route change
+
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
@@ -466,9 +494,11 @@ export default function Navbar() {
 
   // Navigation links based on login status
   const navLinks = [
-    { label: "Home", path: "/", icon: FaHome },
-    { label: "How it Works", scrollTo: "how", icon: FaQuestionCircle },
-    { label: "Features", scrollTo: "features", icon: FaStar },
+    { label: "Home",       path: "/",        icon: FaHome },
+    { label: "Features",   scrollTo: "features", icon: FaStar },
+    { label: "How it Works", scrollTo: "how",   icon: FaQuestionCircle },
+    { label: "About Us",   scrollTo: "about", icon: FaInfoCircle },
+    { label: "Contact",    scrollTo: "contact", icon: FaEnvelope },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -479,8 +509,8 @@ export default function Navbar() {
         className={`
           fixed top-0 left-0 right-0 z-50 transition-all duration-300
           ${isScrolled 
-            ? "bg-white/95 backdrop-blur-md shadow-lg" 
-            : "bg-white shadow-sm"
+            ? "bg-slate-900/95 backdrop-blur-md shadow-lg border-b border-white/10 text-white" 
+            : "bg-transparent text-gray-800"
           }
         `}
       >
@@ -492,7 +522,7 @@ export default function Navbar() {
               <img 
                 src={logo} 
                 alt="Logo" 
-                className="h-8 sm:h-10 w-auto object-contain" 
+                className={`h-8 sm:h-10 w-auto object-contain transition-all ${isScrolled ? 'brightness-0 invert' : ''}`} 
               />
             </Link>
 
@@ -504,7 +534,9 @@ export default function Navbar() {
                   <button
                     key={index}
                     onClick={() => scrollToSection(link.scrollTo)}
-                    className="relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    className={`relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                      isScrolled ? "text-gray-300 hover:text-white hover:bg-white/10" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    }`}
                   >
                     {link.label}
                   </button>
@@ -515,9 +547,9 @@ export default function Navbar() {
                     to={link.path}
                     className={`
                       relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2
-                      ${isActive(link.path)
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      ${isActive(link.path) || (link.scrollTo && location.hash === `#${link.scrollTo}`)
+                        ? (isScrolled ? "text-yellow-400 bg-white/10" : "text-blue-600 bg-blue-50")
+                        : (isScrolled ? "text-gray-300 hover:text-white hover:bg-white/10" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50")
                       }
                     `}
                   >
@@ -541,7 +573,7 @@ export default function Navbar() {
               {/* Book a Service Button - Always visible */}
               <button
                 onClick={handleBookService}
-                className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-green-500/25 transition-all text-sm"
+                className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-yellow-500 text-gray-900 font-bold rounded-xl hover:bg-yellow-400 transition-colors text-sm shadow-lg shadow-yellow-500/20"
               >
                 <FaPlus className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">Book a Service</span>
@@ -566,7 +598,7 @@ export default function Navbar() {
                   {/* Notifications */}
                   <button onClick={()=>navigate('/notifications')} className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors  flex">
                     <FaBell className="w-5 h-5" />
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    {hasNewNotifications && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />}
                   </button>
                   <button onClick={() => navigate('/calendar')} className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors  flex">
                     <FaCalendarAlt className="w-5 h-5" />
@@ -578,17 +610,19 @@ export default function Navbar() {
                       onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                       className={`
                         flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200
-                        ${isUserDropdownOpen ? "bg-gray-100" : "hover:bg-gray-50"}
+                        ${isScrolled 
+                          ? (isUserDropdownOpen ? "bg-white/10" : "hover:bg-white/10") 
+                          : (isUserDropdownOpen ? "bg-gray-100" : "hover:bg-gray-50")}
                       `}
                     >
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                         {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
                       </div>
                       <div className="text-left hidden xl:block">
-                        <p className="text-sm font-semibold text-gray-800 capitalize truncate max-w-[120px]">
+                        <p className={`text-sm font-semibold capitalize truncate max-w-[120px] ${isScrolled ? "text-gray-100" : "text-gray-800"}`}>
                           {user?.full_name || "User"}
                         </p>
-                        <p className="text-xs text-gray-500">Resident</p>
+                        <p className={`text-xs ${isScrolled ? "text-gray-400" : "text-gray-500"}`}>Resident</p>
                       </div>
                       <FaChevronDown 
                         className={`w-3 h-3 text-gray-400 transition-transform ${
@@ -599,7 +633,7 @@ export default function Navbar() {
 
                     {isUserDropdownOpen && (
                       <UserDropdown
-                        user={user}
+                        user={{ ...user, hasNewBookings, hasNewNotifications }}
                         onLogout={handleLogout}
                         onClose={() => setIsUserDropdownOpen(false)}
                         unreadMessages={unreadMessages}
@@ -612,13 +646,15 @@ export default function Navbar() {
                 <div className="hidden lg:flex items-center gap-3">
                   <Link
                     to="/login"
-                    className="px-5 py-2.5 text-gray-700 font-medium hover:text-gray-900 transition-colors"
+                    className={`px-5 py-2.5 font-medium transition-colors ${
+                      isScrolled ? "text-gray-300 hover:text-white" : "text-gray-700 hover:text-gray-900"
+                    }`}
                   >
                     Login
                   </Link>
                   <Link
                     to="/signup"
-                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30"
+                    className="px-5 py-2.5 bg-yellow-500 text-gray-900 font-bold rounded-xl hover:bg-yellow-400 transition-colors shadow-lg shadow-yellow-500/20"
                   >
                     Get Started
                   </Link>
@@ -644,7 +680,7 @@ export default function Navbar() {
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
-        user={user}
+        user={user ? { ...user, hasNewBookings, hasNewNotifications } : null}
         onLogout={handleLogout}
         navLinks={navLinks}
         onScrollTo={scrollToSection}

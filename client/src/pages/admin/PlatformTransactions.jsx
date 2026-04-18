@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   FaArrowLeft, FaSpinner, FaExchangeAlt, FaFilter,
   FaCheckCircle, FaExclamationTriangle, FaArrowDown,
@@ -16,29 +17,28 @@ const typeConfig = {
 
 export default function PlatformTransactions() {
   const navigate = useNavigate();
-  const [transactions, setTransactions] = useState([]);
-  const [pagination, setPagination] = useState({});
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  useEffect(() => { fetchTransactions(); }, [page, filter, startDate, endDate]);
-
-  const fetchTransactions = async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["platformTransactions", page, filter, startDate, endDate],
+    queryFn: async () => {
       const params = { page, limit: 20 };
       if (filter) params.type = filter;
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       const res = await getPlatformTransactions(params);
-      setTransactions(res.data.data.transactions || []);
-      setPagination(res.data.data.pagination || {});
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
-  };
+      return {
+        transactions: res.data?.data?.transactions || [],
+        pagination: res.data?.data?.pagination || {}
+      };
+    }
+  });
+
+  const transactions = data?.transactions || [];
+  const pagination = data?.pagination || {};
 
   const filters = [
     { key: "", label: "All" },

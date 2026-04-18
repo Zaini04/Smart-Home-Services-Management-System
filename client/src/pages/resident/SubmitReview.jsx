@@ -103,11 +103,11 @@ export default function SubmitReview() {
   if (loading) {
     return (
       <>
-        <Navbar />
+        
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <FaSpinner className="w-10 h-10 text-blue-500 animate-spin" />
         </div>
-        <Footer />
+        
       </>
     );
   }
@@ -115,7 +115,7 @@ export default function SubmitReview() {
   if (success) {
     return (
       <>
-        <Navbar />
+        
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
           <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -131,7 +131,7 @@ export default function SubmitReview() {
             </div>
           </div>
         </div>
-        <Footer />
+        
       </>
     );
   }
@@ -139,7 +139,7 @@ export default function SubmitReview() {
   if (error && !booking) {
     return (
       <>
-        <Navbar />
+        
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-gray-700 mb-4">{error}</h2>
@@ -151,7 +151,7 @@ export default function SubmitReview() {
             </button>
           </div>
         </div>
-        <Footer />
+        
       </>
     );
   }
@@ -165,7 +165,7 @@ export default function SubmitReview() {
 
   return (
     <>
-      <Navbar />
+      
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-8 px-4">
         <div className="max-w-2xl mx-auto">
@@ -456,7 +456,7 @@ export default function SubmitReview() {
         </div>
       </div>
 
-      <Footer />
+      
     </>
   );
 }

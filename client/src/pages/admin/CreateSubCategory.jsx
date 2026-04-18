@@ -1,5 +1,6 @@
 // pages/admin/SubCategories.jsx
 import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createSubCategory,
   getCategories,
@@ -313,14 +314,9 @@ const CategoryWithSubcategories = ({
 /* ------------------ MAIN COMPONENT ------------------ */
 
 export default function CreateSubCategories() {
-  const [categories, setCategories] = useState([]); 
-  const [categoriesWithSkills, setCategoriesWithSkills] = useState([]); 
+  const queryClient = useQueryClient();
 
-  const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [fetchingData, setFetchingData] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); 
   const [openCategories, setOpenCategories] = useState({});
@@ -332,34 +328,63 @@ export default function CreateSubCategories() {
   const [categoryId, setCategoryId] = useState("");
   const [name, setName] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // Queries
+  const { data: categories = [] } = useQuery({
+    queryKey: ["adminCategoriesForDropdown"],
+    queryFn: async () => {
+      const res = await getCategories();
+      return res.data?.data || [];
+    }
+  });
 
-  const fetchData = async () => {
-    setFetchingData(true);
-    try {
-      // 1. Get Categories (for dropdown)
-      const catRes = await getCategories();
-      const categoriesData = catRes.data.data || [];
-      setCategories(categoriesData);
-
-      // 2. Get Categories with Skills (for list)
-      const skillsRes = await getCategoriesWithSkills();
-      const skillsData = skillsRes.data.data || [];
-      setCategoriesWithSkills(skillsData);
-
+  const { data: categoriesWithSkills = [], isLoading: fetchingData, isFetching } = useQuery({
+    queryKey: ["adminSubCategories"],
+    queryFn: async () => {
+      const res = await getCategoriesWithSkills();
+      const skillsData = res.data?.data || [];
       // Auto-open first category if exists
       if (skillsData.length > 0 && Object.keys(openCategories).length === 0) {
         setOpenCategories({ [skillsData[0]._id]: true });
       }
-    } catch (err) {
-      console.error(err);
-      setToast({ message: "Failed to fetch data", type: "error" });
-    } finally {
-      setFetchingData(false);
+      return skillsData;
     }
-  };
+  });
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (data) => createSubCategory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["adminSubCategories"]);
+      setToast({ message: "Subcategory created!", type: "success" });
+      resetForm();
+      setOpenCategories((prev) => ({ ...prev, [categoryId]: true }));
+    },
+    onError: (err) => {
+      setToast({ message: err.response?.data?.message || "Error creating", type: "error" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateSubCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["adminSubCategories"]);
+      setToast({ message: "Subcategory updated!", type: "success" });
+      setEditData(null);
+    },
+    onError: () => setToast({ message: "Update failed", type: "error" })
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteSubCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["adminSubCategories"]);
+      setToast({ message: "Subcategory deleted!", type: "success" });
+      setDeleteData(null);
+    },
+    onError: () => setToast({ message: "Delete failed", type: "error" })
+  });
+
+  const actionLoading = updateMutation.isPending || deleteMutation.isPending;
 
   const resetForm = () => {
     setName("");
@@ -367,52 +392,15 @@ export default function CreateSubCategories() {
     setShowForm(false);
   };
 
-  const handleCreate = async (e) => {
+  const handleCreate = (e) => {
     e.preventDefault();
     if (!categoryId || !name.trim()) return;
-
-    setLoading(true);
-    try {
-      await createSubCategory({ categoryId, name: name.trim() });
-      setToast({ message: "Subcategory created!", type: "success" });
-      resetForm();
-      fetchData();
-      setOpenCategories((prev) => ({ ...prev, [categoryId]: true }));
-    } catch (err) {
-      setToast({ message: err.response?.data?.message || "Error creating", type: "error" });
-    } finally {
-      setLoading(false);
-    }
+    createMutation.mutate({ categoryId, name: name.trim() });
   };
 
-  const handleUpdate = async (id, data) => {
-    setActionLoading(true);
-    try {
-      await updateSubCategory(id, data);
-      setToast({ message: "Subcategory updated!", type: "success" });
-      setEditData(null);
-      fetchData();
-    } catch (err) {
-      setToast({ message: "Update failed", type: "error" });
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const handleUpdate = (id, data) => updateMutation.mutate({ id, data });
+  const handleDelete = () => deleteData && deleteMutation.mutate(deleteData.subCategory._id);
 
-  const handleDelete = async () => {
-    if (!deleteData) return;
-    setActionLoading(true);
-    try {
-      await deleteSubCategory(deleteData.subCategory._id);
-      setToast({ message: "Subcategory deleted!", type: "success" });
-      setDeleteData(null);
-      fetchData();
-    } catch (err) {
-      setToast({ message: "Delete failed", type: "error" });
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   // --- FILTERING LOGIC ---
   const filteredCategories = categoriesWithSkills.map((cat) => {
@@ -464,8 +452,8 @@ export default function CreateSubCategories() {
           <p className="text-gray-500 mt-1">Manage skill lists for service providers</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={fetchData} className="p-3 border rounded-xl hover:bg-gray-50 text-gray-600">
-            <FaRedo className={fetchingData ? "animate-spin" : ""} />
+          <button onClick={() => { queryClient.invalidateQueries(["adminSubCategories"]); queryClient.invalidateQueries(["adminCategoriesForDropdown"]); }} className="p-3 border rounded-xl hover:bg-gray-50 text-gray-600">
+            <FaRedo className={isFetching ? "animate-spin" : ""} />
           </button>
           <button
             onClick={() => { resetForm(); setShowForm(!showForm); }}
@@ -539,8 +527,8 @@ export default function CreateSubCategories() {
             </div>
             <div className="sm:col-span-2 flex justify-end gap-3">
               <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2 border rounded-xl font-medium">Cancel</button>
-              <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50">
-                {loading ? "Creating..." : "Create"}
+              <button type="submit" disabled={createMutation.isPending} className="px-6 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50">
+                {createMutation.isPending ? "Creating..." : "Create"}
               </button>
             </div>
           </form>

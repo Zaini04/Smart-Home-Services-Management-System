@@ -37,7 +37,7 @@ export default function Settings() {
 
   return (
     <>
-      {isResident && <Navbar />}
+      
       
       <div className={`min-h-screen bg-gray-50 ${isResident ? "py-10" : "py-4"}`}>
         <div className="max-w-4xl mx-auto space-y-6 px-4">
@@ -115,7 +115,7 @@ export default function Settings() {
         </div>
       </div>
       
-      {isResident && <Footer />}
+      
     </>
   );
 }

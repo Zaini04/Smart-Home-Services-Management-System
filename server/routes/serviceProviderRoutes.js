@@ -22,6 +22,7 @@ import {
   sendFinalPrice,
   sendOrUpdateOffer,
   startWork,
+  updatePendingSchedule,
   updatePriceDuringWork,
   updateSchedule,
   verifyStartOTP,
@@ -75,5 +76,12 @@ serviceProviderRouter.post("/respond-counter-fee/:bookingId", protect, respondTo
 serviceProviderRouter.post("/update-price/:bookingId", protect, updatePriceDuringWork);
 serviceProviderRouter.post("/update-schedule/:bookingId", protect, updateSchedule);
 serviceProviderRouter.post("/cancel-job/:bookingId", protect, providerCancelJob);
+serviceProviderRouter.put(
+  "/booking/:bookingId/update-pending-schedule",
+  protect,
+  updatePendingSchedule
+);
+// serviceProviderRouter.post("/booking/:bookingId/request-reschedule", protect, requestReschedule);
+
 
 export default serviceProviderRouter;

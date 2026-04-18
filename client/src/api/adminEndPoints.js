@@ -107,3 +107,34 @@ export const viewProviderWallet = (providerId) => {
     `/api/admin/platform/provider-wallet/${providerId}`
   );
 };
+
+// ── SETTINGS (PROFILE & SLIDER) ──
+export const updateAdminProfile = (formData) => {
+  return axiosInstance.put("/api/admin/settings/profile", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+
+export const getAdminSlides = () => {
+  return axiosInstance.get("/api/admin/settings/slides");
+};
+export const addAdminSlide = (formData) => {
+  // Use config to ensure multipart/form-data
+  return axiosInstance.post("/api/admin/settings/slides", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+export const deleteAdminSlide = (id) => {
+  return axiosInstance.delete(`/api/admin/settings/slides/${id}`);
+};
+
+// ── SUPPORT TICKETS ──
+export const getSupportTickets = (params) => {
+  return axiosInstance.get("/api/admin/support", { params });
+};
+export const replySupportTicket = (id, adminReply) => {
+  return axiosInstance.post(`/api/admin/support/${id}/reply`, { adminReply });
+};
+export const deleteSupportTicket = (id) => {
+  return axiosInstance.delete(`/api/admin/support/${id}`);
+};

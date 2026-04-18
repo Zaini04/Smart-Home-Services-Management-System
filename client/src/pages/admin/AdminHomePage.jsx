@@ -97,54 +97,54 @@ const Sidebar = ({ isOpen, onClose }) => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed lg:sticky top-0 left-0 h-screen w-72 bg-white border-r border-gray-200
-          z-50 transform transition-transform duration-300 lg:transform-none overflow-hidden
+          fixed lg:sticky top-0 left-0 h-screen w-64 xl:w-72 bg-gray-900 border-r border-gray-800
+          z-50 transform transition-transform duration-300 lg:transform-none
           ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
           flex flex-col
         `}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <FaShieldAlt className="w-5 h-5 text-white" />
+        <div className="flex-shrink-0 px-4 pt-5 pb-4 border-b border-gray-800 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+              <FaShieldAlt className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="font-bold text-gray-900">Admin Panel</h1>
-              <p className="text-xs text-gray-500">Service Hub</p>
+              <h1 className="font-bold text-white text-sm leading-none">AdminPanel</h1>
+              <p className="text-xs text-gray-400 mt-0.5">HomeFix</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="lg:hidden p-1.5 hover:bg-gray-800 rounded-xl transition-colors"
           >
-            <FaTimes className="w-5 h-5 text-gray-500" />
+            <FaTimes className="w-4 h-4 text-gray-400" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+        <nav className="sidebar-nav flex-1 overflow-y-auto px-3 py-3 min-h-0 space-y-3">
           {menuGroups.map((group, index) => (
             <div key={index}>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
                 {group.title}
               </p>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {group.items.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
                     onClick={onClose}
                     className={({ isActive }) => `
-                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                      flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 group
                       ${isActive
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-yellow-500 text-gray-900 shadow-sm font-bold"
+                        : "text-gray-300 hover:bg-gray-800 hover:text-white"
                       }
                     `}
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
+                    <item.icon className={`w-4 h-4 flex-shrink-0 transition-colors ${window.location.pathname === item.path ? 'text-gray-900' : 'text-gray-500 group-hover:text-white'}`} />
+                    <span className="font-medium text-sm flex-1 truncate">{item.label}</span>
                   </NavLink>
                 ))}
               </div>
@@ -153,27 +153,27 @@ const Sidebar = ({ isOpen, onClose }) => {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-gray-100">
+        <div className="flex-shrink-0 px-4 py-4 border-t border-gray-800">
           {/* User Info */}
-          <div className="flex items-center gap-3 mb-4 p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gray-800 border border-gray-700 flex flex-shrink-0 items-center justify-center text-white font-bold text-sm">
               {user?.full_name?.charAt(0)?.toUpperCase() || "A"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 truncate capitalize">
+              <p className="font-semibold text-white text-sm truncate capitalize leading-none mb-1">
                 {user?.full_name || "Admin"}
               </p>
-              <p className="text-xs text-gray-500 truncate">{user?.email || "admin@example.com"}</p>
+              <p className="text-[10px] text-gray-400 truncate uppercase tracking-wider">{user?.email || "admin@example.com"}</p>
             </div>
           </div>
 
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-medium"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-red-500 hover:bg-red-900/40 hover:text-red-400 rounded-xl transition-colors font-medium group"
           >
-            <FaSignOutAlt className="w-4 h-4" />
-            Logout
+            <FaSignOutAlt className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            <span className="text-sm">Logout</span>
           </button>
         </div>
       </aside>
@@ -184,8 +184,13 @@ const Sidebar = ({ isOpen, onClose }) => {
 /* ------------------ HEADER COMPONENT ------------------ */
 
 const Header = ({ onMenuClick }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [time, setTime] = useState(new Date());
   const location = useLocation();
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Get page title from path
   const getPageTitle = () => {
@@ -230,16 +235,12 @@ const Header = ({ onMenuClick }) => {
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
-          {/* Search */}
-          <div className="hidden md:block relative">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search..."
-              className="pl-11 pr-4 py-2.5 w-64 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
+          {/* Live Clock / Time */}
+          <div className="hidden md:flex items-center gap-2 bg-gray-50 border border-gray-200 px-4 py-2.5 rounded-xl">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span className="text-sm font-bold text-gray-700 tracking-wide">
+              {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
           </div>
 
           {/* Notifications */}
@@ -262,7 +263,7 @@ export default function AdminHomePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -282,7 +283,7 @@ export default function AdminHomePage() {
         {/* Footer */}
         <footer className="border-t border-gray-200 bg-white/50 py-4 px-6">
           <p className="text-center text-sm text-gray-500">
-            © {new Date().getFullYear()} Service Hub Admin. All rights reserved.
+            © {new Date().getFullYear()} HomeFix Admin. All rights reserved.
           </p>
         </footer>
       </div>

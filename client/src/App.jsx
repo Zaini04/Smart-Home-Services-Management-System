@@ -23,6 +23,9 @@ import HelpSupport from "./pages/shared/HelpSupport";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import ScrollToTop from "./components/ScrollToTop";
+import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs";
 
 // ── Admin pages ──────────────────────────────────────────────────────────────
 import AdminHomePage from "./pages/admin/AdminHomePage";
@@ -35,6 +38,8 @@ import AllWorkers from "./pages/admin/AllWorkers";
 import PlatformEarnings from "./pages/admin/PlatformEarnings";
 import PlatformTransactions from "./pages/admin/PlatformTransactions";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminSettings from "./pages/admin/Settings";
+import HelpSupportAdmin from "./pages/admin/HelpSupportAdmin";
 
 // ── Service Provider pages ───────────────────────────────────────────────────
 import ServiceProviderDashboard from "./pages/serviceProvider/ServiceProviderDashboard";
@@ -42,9 +47,9 @@ import AvailableJobs from "./pages/serviceProvider/AvailabeJobs";
 import MyOffers from "./pages/serviceProvider/MyOffers";
 import MyJobs from "./pages/serviceProvider/MyJobs";
 import JobDetails from "./pages/serviceProvider/JobDetails";
-import ProviderEarnings from "./pages/serviceProvider/Earnings";
 import EditProfile from "./pages/serviceProvider/EditProfile";
 import ProviderLayout from "./pages/serviceProvider/ProviderLayout";
+import ResidentLayout from "./pages/resident/ResidentLayout";
 import CompleteProfile from "./pages/serviceProvider/CompleteProfile";
 import KYCStatus from "./pages/serviceProvider/KYCStatus";
 import ProviderWallet from "./pages/serviceProvider/ProviderWallet";
@@ -168,24 +173,26 @@ function AppContent() {
 
         {/* Public — anyone */}
         <Route path="/how"              element={<HowItWorks />} />
+        <Route path="/about"            element={<AboutUs />} />
+        <Route path="/contact"          element={<ContactUs />} />
 
-        {/* Resident-only */}
+        {/* Resident-only Layout */}
         <Route element={<ResidentRoute />}>
-          <Route path="/post-job"              element={<PostJob />} />
-          <Route path="/my-bookings"           element={<MyBookings />} />
-          <Route path="/booking/:id"           element={<BookingDetails />} />
-          <Route path="/review/:bookingId"     element={<SubmitReview />} />
-        </Route>
-
-        {/* Shared (resident + provider) */}
-        <Route element={<SharedRoute />}>
-          <Route path="/chat"                  element={<ChatContainer />} />
-          <Route path="/chat/:bookingId"       element={<ChatContainer />} />
-          <Route path="/calendar"              element={<MyCalendar />} />
-          <Route path="/notifications"         element={<Notifications />} />
-          <Route path="/profile"               element={<UserProfile />} />
-          <Route path="/settings"              element={<Settings />} />
-          <Route path="/support"               element={<HelpSupport />} />
+          <Route element={<ResidentLayout />}>
+            <Route path="/post-job"              element={<PostJob />} />
+            <Route path="/my-bookings"           element={<MyBookings />} />
+            <Route path="/booking/:id"           element={<BookingDetails />} />
+            <Route path="/review/:bookingId"     element={<SubmitReview />} />
+            
+            {/* Previously shared roots, now scoped cleanly into Resident Layout */}
+            <Route path="/chat"                  element={<ChatContainer />} />
+            <Route path="/chat/:bookingId"       element={<ChatContainer />} />
+            <Route path="/calendar"              element={<MyCalendar />} />
+            <Route path="/notifications"         element={<Notifications />} />
+            <Route path="/profile"               element={<UserProfile />} />
+            <Route path="/settings"              element={<Settings />} />
+            <Route path="/support"               element={<HelpSupport />} />
+          </Route>
         </Route>
 
         {/* ── ADMIN (was in adminRoutes.jsx) ── */}
@@ -201,6 +208,8 @@ function AppContent() {
             <Route path="update-kyc/:providerId"           element={<UpdateKyc />} />
             <Route path="platform-earnings"                element={<PlatformEarnings />} />
             <Route path="platform-transactions"            element={<PlatformTransactions />} />
+            <Route path="settings"                         element={<AdminSettings />} />
+            <Route path="help"                             element={<HelpSupportAdmin />} />
           </Route>
         </Route>
 
@@ -215,7 +224,6 @@ function AppContent() {
             <Route path="my-offers"                        element={<MyOffers />} />
             <Route path="my-jobs"                          element={<MyJobs />} />
             <Route path="job/:bookingId"                   element={<JobDetails />} />
-            <Route path="earnings"                         element={<ProviderEarnings />} />
             <Route path="wallet"                           element={<ProviderWallet />} />
             <Route path="profile"                          element={<UserProfile />} />
             <Route path="settings"                         element={<Settings />} />
@@ -241,6 +249,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ScrollToTop />
         <AppContent />
       </BrowserRouter>
     </QueryClientProvider>

@@ -44,7 +44,7 @@ export const getAvailableBookings = async (req, res) => {
     const bookings = await Booking.find({
       status: { $in: ["posted", "offers_received"] },
     })
-      .populate("resident", "name")
+      .populate("resident", "full_name")
       .populate("category", "name")
       .sort({ createdAt: -1 });
 
@@ -140,13 +140,17 @@ export const sendOrUpdateOffer = async (req, res) => {
    REQUEST INSPECTION  —  provider proposes fee + message
    Only from provider_selected status
    ================================================================ */
+/* ================================================================
+   REQUEST INSPECTION
+   ================================================================ */
 export const requestInspection = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { fee, message: msg, scheduledDate, scheduledTime } = req.body; 
+    const { fee, message: msg, scheduledDate, scheduledTime } = req.body;
 
     const provider = await ServiceProvider.findOne({ userId: req.user._id });
     const booking = await Booking.findById(bookingId);
+    
     if (!booking) return errorResponse(res, "Booking not found", 404);
 
     if (booking.selectedProvider?.toString() !== provider._id.toString())
@@ -155,11 +159,62 @@ export const requestInspection = async (req, res) => {
     if (booking.status !== "provider_selected")
       return errorResponse(res, "Cannot request inspection at this stage", 400);
 
+    if (!scheduledDate || !scheduledTime) {
+      return errorResponse(res, "Inspection date and time are required", 400);
+    }
+
+    // ✅ ADDED: Combine date and time into full datetime
+    const inspectionDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+    
+    // ✅ ADDED: Assume inspection takes 1 hour
+    const inspectionDuration = {
+      value: 1,
+      unit: "hours"
+    };
+
+    // ✅ ADDED: Check for conflicts with other jobs/inspections
+    const conflict = await checkScheduleConflict(
+      provider._id,
+      inspectionDateTime,
+      inspectionDuration,
+      booking._id
+    );
+
+    if (conflict.hasConflict) {
+      if (conflict.conflictWith.isPast) {
+        return errorResponse(res, "Cannot schedule in the past", 400);
+      }
+
+      // ✅ ADDED: Detailed error for inspection conflicts
+      const startTime = new Date(conflict.conflictWith.start).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      
+      const endTime = new Date(conflict.conflictWith.end).toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      const activityType = conflict.conflictWith.isInspection 
+        ? "inspection" 
+        : "job";
+
+      return errorResponse(
+        res,
+        `You have another ${activityType} with ${conflict.conflictWith.residentName} for ${conflict.conflictWith.category} (${startTime} - ${endTime}). Please choose another time for inspection.`,
+        400
+      );
+    }
+
+    // ✅ No conflict - create inspection request
     booking.inspection.requested = true;
     booking.inspection.fee = Number(fee) || 0;
     booking.inspection.message = msg || "";
-    booking.inspection.scheduledDate = scheduledDate ? new Date(scheduledDate) : null; 
-    booking.inspection.scheduledTime = scheduledTime || ""; 
+    booking.inspection.scheduledDate = inspectionDateTime;
+    booking.inspection.scheduledTime = scheduledTime;
     booking.inspection.requestedAt = new Date();
     booking.inspection.status = "requested";
 
@@ -167,7 +222,12 @@ export const requestInspection = async (req, res) => {
     await booking.save();
     
     req.app.get("io")?.emit("data_updated");
-    await sendNotification(req, booking.resident, "🔍 Inspection Requested", "The worker needs to inspect the issue before giving a final price.");
+    await sendNotification(
+      req, 
+      booking.resident, 
+      "🔍 Inspection Requested", 
+      "The worker needs to inspect the issue before giving a final price."
+    );
     
     return successResponse(
       res,
@@ -176,6 +236,7 @@ export const requestInspection = async (req, res) => {
       200
     );
   } catch (err) {
+    console.error("Request inspection error:", err);
     return errorResponse(res, "Failed to request inspection", 500, err.message);
   }
 };
@@ -244,7 +305,7 @@ export const completeInspection = async (req, res) => {
       laborCost,
       scheduledStartDate,
       estimatedDurationValue,
-      estimatedDurationUnit,     // "hours" | "days"
+      estimatedDurationUnit,
     } = req.body;
 
     if (!scheduledStartDate) {
@@ -294,18 +355,40 @@ export const completeInspection = async (req, res) => {
       value: Number(estimatedDurationValue) || 1,
       unit: estimatedDurationUnit || "hours",
     };
+
     const conflict = await checkScheduleConflict(
-      provider._id, scheduledStartDate, duration, booking._id
+      provider._id, 
+      scheduledStartDate, 
+      duration, 
+      booking._id
     );
+
     if (conflict.hasConflict) {
+      if (conflict.conflictWith.isPast) {
+        return errorResponse(res, "Cannot schedule in the past", 400);
+      }
+
+      // ✅ Detailed error message
+      const startTime = new Date(conflict.conflictWith.start).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      
+      const endTime = new Date(conflict.conflictWith.end).toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
       return errorResponse(
         res,
-        `Schedule conflict with booking ${conflict.conflictWith.bookingId}. ` +
-        `Required gap: ${conflict.conflictWith.requiredGap}.`,
+        `Time slot already booked with ${conflict.conflictWith.residentName} for ${conflict.conflictWith.category} service (${startTime} - ${endTime}). Please choose another time.`,
         400
       );
     }
 
+    /* ── No conflict - save ── */
     booking.schedule.estimatedDuration = duration;
     booking.schedule.scheduledStartDate = new Date(scheduledStartDate);
     booking.schedule.scheduledEndDate = calculateEndDate(scheduledStartDate, duration);
@@ -328,7 +411,12 @@ export const completeInspection = async (req, res) => {
     await booking.save();
 
     req.app.get("io")?.emit("data_updated"); 
-    await sendNotification(req, booking.resident, "💰 Final Price Received", `The worker has sent the final schedule and labor cost (Rs. ${laborCost}). Please approve.`);
+    await sendNotification(
+      req, 
+      booking.resident, 
+      "💰 Final Price Received", 
+      `The worker has sent the final schedule and labor cost (Rs. ${laborCost}). Please approve.`
+    );
 
     return successResponse(res, "Inspection done. Price sent to resident.", {
       booking,
@@ -341,6 +429,7 @@ export const completeInspection = async (req, res) => {
       },
     }, 200);
   } catch (err) {
+    console.error("Complete inspection error:", err);
     return errorResponse(res, "Failed to complete inspection", 500, err.message);
   }
 };
@@ -359,7 +448,8 @@ export const sendFinalPrice = async (req, res) => {
       estimatedDurationUnit,
     } = req.body;
 
-    if (!scheduledStartDate) {
+    // ... existing validation ...
+      if (!scheduledStartDate) {
       return errorResponse(
         res,
         "Scheduled start date is required. Please specify when you'll start the work.",
@@ -402,28 +492,50 @@ export const sendFinalPrice = async (req, res) => {
       );
     }
 
-    /* ── schedule conflict ── */
+    /* ── schedule conflict check ── */
     const duration = {
       value: Number(estimatedDurationValue) || 1,
       unit: estimatedDurationUnit || "hours",
     };
+
     const conflict = await checkScheduleConflict(
-      provider._id, scheduledStartDate, duration, booking._id
+      provider._id, 
+      scheduledStartDate, 
+      duration, 
+      booking._id
     );
+
     if (conflict.hasConflict) {
+      if (conflict.conflictWith.isPast) {
+        return errorResponse(res, "Cannot schedule in the past", 400);
+      }
+
+      // ✅ Detailed error message for initial schedule
+      const startTime = new Date(conflict.conflictWith.start).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      
+      const endTime = new Date(conflict.conflictWith.end).toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
       return errorResponse(
         res,
-        `Schedule conflict with ${conflict.conflictWith.bookingId}. Gap required: ${conflict.conflictWith.requiredGap}.`,
+        `Time slot already booked with ${conflict.conflictWith.residentName} for ${conflict.conflictWith.category} service (${startTime} - ${endTime}). Please choose another time.`,
         400
       );
     }
 
+    /* ── No conflict - save schedule ── */
     booking.schedule.estimatedDuration = duration;
     booking.schedule.scheduledStartDate = new Date(scheduledStartDate);
     booking.schedule.scheduledEndDate = calculateEndDate(scheduledStartDate, duration);
     booking.schedule.sentAt = new Date();
 
-    /* ── update booking ── */
     booking.finalPrice.laborCost = labor;
     booking.finalPrice.totalAmount = labor;
     booking.finalPrice.sentAt = new Date();
@@ -436,7 +548,12 @@ export const sendFinalPrice = async (req, res) => {
     await booking.save();
 
     req.app.get("io")?.emit("data_updated"); 
-    await sendNotification(req, booking.resident, "💰 Final Price Received", `The worker has sent the final schedule and labor cost (Rs. ${laborCost}). Please approve.`);
+    await sendNotification(
+      req, 
+      booking.resident, 
+      "💰 Final Price Received", 
+      `The worker has sent the final schedule and labor cost (Rs. ${laborCost}). Please approve.`
+    );
     
     return successResponse(res, "Price sent to resident", {
       booking,
@@ -449,6 +566,7 @@ export const sendFinalPrice = async (req, res) => {
       },
     }, 200);
   } catch (err) {
+    console.error("Send final price error:", err);
     return errorResponse(res, "Failed to send price", 500, err.message);
   }
 };
@@ -525,47 +643,102 @@ export const updatePriceDuringWork = async (req, res) => {
 export const updateSchedule = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { estimatedDurationValue, estimatedDurationUnit, scheduledStartDate } = req.body;
+    const { estimatedDurationValue, estimatedDurationUnit } = req.body;
 
     const provider = await ServiceProvider.findOne({ userId: req.user._id });
     const booking = await Booking.findById(bookingId);
+    
     if (!booking) return errorResponse(res, "Booking not found", 404);
-
+    
     if (booking.selectedProvider?.toString() !== provider._id.toString())
       return errorResponse(res, "Not assigned", 403);
 
-    if (!["price_approved", "work_in_progress"].includes(booking.status))
-      return errorResponse(res, "Cannot update schedule at this stage", 400);
-
-    const duration = {
-      value: Number(estimatedDurationValue) || booking.schedule.estimatedDuration.value,
-      unit: estimatedDurationUnit || booking.schedule.estimatedDuration.unit,
-    };
-    const start = scheduledStartDate
-      ? new Date(scheduledStartDate)
-      : booking.schedule.scheduledStartDate;
-
-    if (start) {
-      const conflict = await checkScheduleConflict(
-        provider._id, start, duration, booking._id
+    // ✅ Only during work
+    if (booking.status !== "work_in_progress") {
+      return errorResponse(
+        res, 
+        "Can only extend schedule during active work", 
+        400
       );
-      if (conflict.hasConflict)
-        return errorResponse(res, `Conflict with ${conflict.conflictWith.bookingId}`, 400);
     }
 
-    booking.schedule.estimatedDuration = duration;
-    booking.schedule.scheduledStartDate = start;
-    booking.schedule.scheduledEndDate = start ? calculateEndDate(start, duration) : null;
-    booking.schedule.approvedByResident = false;   // needs re-approval
+    if (!estimatedDurationValue || !estimatedDurationUnit) {
+      return errorResponse(res, "Duration is required", 400);
+    }
+
+    const newDuration = {
+      value: Number(estimatedDurationValue),
+      unit: estimatedDurationUnit,
+    };
+
+    // Keep same start time
+    const start = booking.schedule.scheduledStartDate;
+    
+    if (!start) {
+      return errorResponse(res, "No scheduled start time found", 400);
+    }
+
+    /* ── conflict check ── */
+    const conflict = await checkScheduleConflict(
+      provider._id,
+      start,
+      newDuration,
+      booking._id
+    );
+
+    if (conflict.hasConflict) {
+      if (conflict.conflictWith.isPast) {
+        return errorResponse(res, "Cannot schedule in the past", 400);
+      }
+
+      // ✅ Return conflict data for modal
+      return errorResponse(
+        res,
+        "Schedule conflict detected",
+        400,
+        null,
+        {
+          conflict: {
+            bookingId: conflict.conflictWith.bookingId,
+            _id: conflict.conflictWith._id,
+            residentName: conflict.conflictWith.residentName,
+            residentPhone: conflict.conflictWith.residentPhone,
+            residentId: conflict.conflictWith.residentId,
+            category: conflict.conflictWith.category,
+            start: conflict.conflictWith.start,
+            end: conflict.conflictWith.end,
+            message: conflict.conflictWith.message,
+            isExtending: true, // Flag for frontend
+          },
+        }
+      );
+    }
+
+    /* ── No conflict - update ── */
+    booking.schedule.estimatedDuration = newDuration;
+    booking.schedule.scheduledEndDate = calculateEndDate(start, newDuration);
+    booking.schedule.approvedByResident = false;
     booking.schedule.sentAt = new Date();
 
     await booking.save();
 
-    req.app.get("io")?.emit("data_updated"); 
-    await sendNotification(req, booking.resident, "📝 Schedule Update!", "A worker has sent a schedule update for your job. Please review and approve.");
+    req.app.get("io")?.emit("data_updated");
+    await sendNotification(
+      req,
+      booking.resident,
+      "📝 Schedule Extended",
+      "Provider needs more time. Please review the updated schedule."
+    );
+
+    return successResponse(
+      res, 
+      "Schedule extended successfully", 
+      booking.schedule, 
+      200
+    );
     
-    return successResponse(res, "Schedule update sent for approval", booking.schedule, 200);
   } catch (err) {
+    console.error("Update schedule error:", err);
     return errorResponse(res, "Failed to update schedule", 500, err.message);
   }
 };
@@ -774,7 +947,7 @@ export const getMyJobs = async (req, res) => {
     if (status && status !== "all") q.status = status;
 
     const bookings = await Booking.find(q)
-      .populate("resident", "name phone address")
+      .populate("resident", "full_name phone address")
       .populate("category", "name")
       .sort({ createdAt: -1 });
 
@@ -796,7 +969,7 @@ export const getMyOffers = async (req, res) => {
       .populate({
         path: "booking",
         select: "description address status images createdAt",
-        populate: { path: "resident", select: "name" },
+        populate: { path: "resident", select: "full_name" },
       })
       .sort({ createdAt: -1 });
 
@@ -816,7 +989,7 @@ export const getJobDetails = async (req, res) => {
     if (!provider) return errorResponse(res, "Provider not found", 404);
 
     const booking = await Booking.findById(bookingId)
-      .populate("resident", "name phone email address")
+      .populate("resident", "full_name phone email address")
       .populate("category", "name")
       .populate("selectedOffer");
 
@@ -866,6 +1039,15 @@ export const getDashboard = async (req, res) => {
     });
     const todayEarnings = todayDone.reduce((s, j) => s + (j.providerEarning || 0), 0);
 
+    const recentJobs = await Booking.find({
+      selectedProvider: provider._id,
+      status: { $nin: ["completed", "cancelled"] },
+    })
+      .populate("resident", "full_name phone address profileImage")
+      .populate("category", "name")
+      .sort({ updatedAt: -1 })
+      .limit(5);
+
     return successResponse(res, "Dashboard", {
       provider: {
         name: provider.userId.name,
@@ -891,8 +1073,169 @@ export const getDashboard = async (req, res) => {
         isNewProvider: (provider.completedJobs || 0) < 5,
         freeJobsLeft: Math.max(0, 5 - (provider.completedJobs || 0)),
       },
+      recentJobs,
     }, 200);
   } catch (err) {
     return errorResponse(res, "Failed to fetch dashboard", 500, err.message);
   }
+
 };
+
+
+export const updatePendingSchedule = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { scheduledStartDate, estimatedDurationValue, estimatedDurationUnit } = req.body;
+
+    const provider = await ServiceProvider.findOne({ userId: req.user._id });
+    const booking = await Booking.findById(bookingId);
+    
+    if (!booking) return errorResponse(res, "Booking not found", 404);
+    
+    if (booking.selectedProvider?.toString() !== provider._id.toString())
+      return errorResponse(res, "Not assigned", 403);
+
+    // ✅ Only before work starts
+    if (booking.status !== "price_approved") {
+      return errorResponse(
+        res, 
+        "Can only update schedule before work starts", 
+        400
+      );
+    }
+
+    if (!scheduledStartDate || !estimatedDurationValue || !estimatedDurationUnit) {
+      return errorResponse(res, "Start date and duration are required", 400);
+    }
+
+    const newStart = new Date(scheduledStartDate);
+    const newDuration = {
+      value: Number(estimatedDurationValue),
+      unit: estimatedDurationUnit,
+    };
+
+    /* ── conflict check ── */
+    const conflict = await checkScheduleConflict(
+      provider._id,
+      newStart,
+      newDuration,
+      booking._id
+    );
+
+    if (conflict.hasConflict) {
+      if (conflict.conflictWith.isPast) {
+        return errorResponse(res, "Cannot schedule in the past", 400);
+      }
+
+      // ✅ Detailed error message
+      const startTime = new Date(conflict.conflictWith.start).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      
+      const endTime = new Date(conflict.conflictWith.end).toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return errorResponse(
+        res,
+        `Time slot already booked with ${conflict.conflictWith.residentName} for ${conflict.conflictWith.category} service (${startTime} - ${endTime}). Please choose another time.`,
+        400
+      );
+    }
+
+    /* ── No conflict - update ── */
+    booking.schedule.scheduledStartDate = newStart;
+    booking.schedule.estimatedDuration = newDuration;
+    booking.schedule.scheduledEndDate = calculateEndDate(newStart, newDuration);
+    booking.schedule.approvedByResident = false;
+    booking.schedule.sentAt = new Date();
+
+    await booking.save();
+
+    req.app.get("io")?.emit("data_updated");
+    await sendNotification(
+      req,
+      booking.resident,
+      "📅 Schedule Updated",
+      `Provider changed the schedule to ${newStart.toLocaleString()}. Please review.`
+    );
+
+    return successResponse(
+      res, 
+      "Schedule updated successfully", 
+      booking.schedule, 
+      200
+    );
+    
+  } catch (err) {
+    console.error("Update pending schedule error:", err);
+    return errorResponse(res, "Failed to update schedule", 500, err.message);
+  }
+};
+
+// export const requestReschedule = async (req, res) => {
+
+
+//   try {
+//     const { bookingId } = req.params;
+//     const {
+//       proposedStartDate,
+//       estimatedDurationValue,
+//       estimatedDurationUnit,
+//     } = req.body;
+
+//     const provider = await ServiceProvider.findOne({ userId: req.user._id });
+//     const booking = await Booking.findById(bookingId);
+
+//     if (!booking) return errorResponse(res, "Booking not found", 404);
+
+//     const duration = {
+//       value: Number(estimatedDurationValue),
+//       unit: estimatedDurationUnit,
+//     };
+
+//     const proposedEndDate = calculateEndDate(proposedStartDate, duration);
+
+//     const conflict = await checkScheduleConflict(
+//       provider._id,
+//       proposedStartDate,
+//       duration,
+//       booking._id
+//     );
+
+//     if (!conflict.hasConflict) {
+//       return errorResponse(res, "No conflict found", 400);
+//     }
+
+//     const conflictingBooking = await Booking.findOne({
+//       bookingId: conflict.conflictWith.bookingId,
+//     });
+
+//     conflictingBooking.rescheduleRequest = {
+//       requested: true,
+//       proposedStartDate,
+//       proposedEndDate,
+//       reason: "Previous job extended",
+//       status: "pending",
+//       requestedAt: new Date(),
+//       expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000), // 12h
+//     };
+
+//     await conflictingBooking.save();
+
+//     await sendNotification(
+//       req,
+//       conflictingBooking.resident,
+//       "📅 Reschedule Request",
+//       "Provider wants to reschedule your booking"
+//     );
+
+//     return successResponse(res, "Reschedule request sent", {}, 200);
+//   } catch (err) {
+//     return errorResponse(res, "Failed", 500, err.message);
+//   }
+// };

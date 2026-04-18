@@ -44,11 +44,12 @@ export const successResponse = (res,message,data={},statusCode = 200)=>{
     return res.status(statusCode).json(response)
 }
 
-export const errorResponse = (res,message,statusCode = 500,errors=null)=>{
+export const errorResponse = (res,message,statusCode = 500,errors=null,extra = null)=>{
     const response = {
         success:false,
         message,
-        errors
+        errors,
+        ...extra
     }
 
     return res.status(statusCode).json(response)

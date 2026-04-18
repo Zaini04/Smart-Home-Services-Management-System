@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { getPendingWorkers } from "../../api/adminEndPoints";
 import {
@@ -18,6 +18,7 @@ import {
   FaRedo,
   FaUser,
 } from "react-icons/fa";
+import { useState } from "react";
 
 // Base URL for images
 const BASE_URL =
@@ -214,33 +215,22 @@ const WorkerCard = ({ worker, onReview }) => {
 
 export default function GetPendingWorkers() {
   const navigate = useNavigate();
-  const [workers, setWorkers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchPendingWorkers();
-  }, []);
-
-  const fetchPendingWorkers = async () => {
-    setLoading(true);
-    setError("");
-    
-    try {
-      const res = await getPendingWorkers();
-      setWorkers(res.data.data || []);
-    } catch (err) {
-      console.error("Failed to fetch pending workers:", err);
-      if (err.response?.status === 404) {
-        setWorkers([]);
-      } else {
+  const { data: workers = [], isLoading: loading, isFetching, refetch } = useQuery({
+    queryKey: ["pendingWorkers"],
+    queryFn: async () => {
+      try {
+        const res = await getPendingWorkers();
+        return res.data?.data || [];
+      } catch (err) {
+        if (err.response?.status === 404) return [];
         setError(err.response?.data?.message || "Failed to fetch pending workers");
+        throw err;
       }
-    } finally {
-      setLoading(false);
     }
-  };
+  });
 
   const handleReview = (worker) => {
     navigate(`/admin/update-kyc/${worker._id}`);
@@ -264,12 +254,12 @@ export default function GetPendingWorkers() {
         <div className="flex items-center gap-3">
           {/* Refresh Button */}
           <button
-            onClick={fetchPendingWorkers}
-            disabled={loading}
+            onClick={() => refetch()}
+            disabled={isFetching}
             className="p-3 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
             title="Refresh"
           >
-            <FaRedo className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <FaRedo className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
           </button>
           
           <span className="px-4 py-2 bg-amber-100 text-amber-700 font-semibold rounded-xl flex items-center gap-2">

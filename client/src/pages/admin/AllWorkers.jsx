@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { getAllWorkers } from "../../api/adminEndPoints"; // Ensure this matches your export name
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getAllWorkers } from "../../api/adminEndPoints";
 import {
   FaSearch,
   FaSpinner,
@@ -164,36 +165,23 @@ const ProviderCard = ({ worker }) => {
 /* ------------------ MAIN COMPONENT ------------------ */
 
 export default function AllWorkers() {
-  const [workers, setWorkers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  
-  // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // all, approved, pending, rejected
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchWorkers();
-  }, []);
-
-  const fetchWorkers = async () => {
-    setLoading(true);
-    try {
-      const res = await getAllWorkers();
-      setWorkers(res.data.data || []);
-      setError("");
-    } catch (err) {
-      console.error("Fetch error:", err);
-      // If 404 (no workers), just set empty array
-      if (err.response?.status === 404) {
-        setWorkers([]);
-      } else {
+  const { data: workers = [], isLoading: loading, isFetching, refetch } = useQuery({
+    queryKey: ["allWorkers"],
+    queryFn: async () => {
+      try {
+        const res = await getAllWorkers();
+        return res.data?.data || [];
+      } catch (err) {
+        if (err.response?.status === 404) return [];
         setError("Failed to load providers.");
+        throw err;
       }
-    } finally {
-      setLoading(false);
     }
-  };
+  });
 
   // Filter Logic
   const filteredWorkers = workers.filter((worker) => {
@@ -224,11 +212,12 @@ export default function AllWorkers() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={fetchWorkers}
-            className="p-3 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="p-3 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
             title="Refresh"
           >
-            <FaRedo className={loading ? "animate-spin" : ""} />
+            <FaRedo className={isFetching ? "animate-spin" : ""} />
           </button>
           <div className="px-4 py-2 bg-blue-50 text-blue-700 font-semibold rounded-xl text-sm border border-blue-100">
              {total} Total / {approved} Active

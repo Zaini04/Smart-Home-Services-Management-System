@@ -129,7 +129,7 @@ export default function Login() {
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
                   <FaShieldAlt className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-gray-800">ServiceHub</span>
+                <span className="font-bold text-gray-800">HomeFix</span>
               </div>
 
               {/* Heading */}
@@ -137,7 +137,7 @@ export default function Login() {
                 <h1 className="text-3xl xl:text-5xl font-bold text-gray-900 leading-tight">
                   Welcome back to
                   <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    ServiceHub
+                    HomeFix
                   </span>
                 </h1>
                 <p className="text-base xl:text-lg text-gray-600 max-w-md">

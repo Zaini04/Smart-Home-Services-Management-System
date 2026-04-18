@@ -103,6 +103,20 @@ export const providerCancelJob = (bookingId, data) => {
   );
 };
 
+export const requestReschedule = (bookingId, data) => {
+  return axiosInstance.post(
+    `/api/serviceProvider/booking/${bookingId}/request-reschedule`,
+    data
+  );
+}
+
+// ✅ Add this new function
+export const updatePendingSchedule = async (bookingId, data) => {
+    return axiosInstance.post(
+`/api/serviceProvider/booking/${bookingId}/update-pending-schedule`, 
+data);
+};
+
 // ── WALLET ENDPOINTS ──
 export const getProviderWallet = () => {
   return axiosInstance.get("/api/serviceProvider/wallet");

@@ -320,7 +320,7 @@ export default function Signup() {
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
                   <FaShieldAlt className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-gray-800">ServiceHub</span>
+                <span className="font-bold text-gray-800">HomeFix</span>
               </div>
 
               <div className="space-y-4">
@@ -357,7 +357,7 @@ export default function Signup() {
                     ))}
                   </div>
                   <p className="text-gray-700 italic mb-4">
-                    "ServiceHub connected me with amazing clients. My business has grown 3x since joining!"
+                    "HomeFix connected me with amazing clients. My business has grown 3x since joining!"
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-medium">

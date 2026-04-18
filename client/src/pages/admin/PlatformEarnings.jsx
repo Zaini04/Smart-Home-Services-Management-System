@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   FaWallet, FaMoneyBillWave, FaChartLine, FaArrowUp,
@@ -12,53 +13,52 @@ import {
 } from "../../api/adminEndPoints";
 
 export default function PlatformEarnings() {
-  const [data, setData] = useState(null);
-  const [wallet, setWallet] = useState(null);
-  const [topProviders, setTopProviders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Withdraw modal
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawMethod, setWithdrawMethod] = useState("jazzcash");
   const [withdrawAccount, setWithdrawAccount] = useState("");
-  const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [alert, setAlert] = useState(null);
 
-  useEffect(() => { fetchAll(); }, []);
-
-  const fetchAll = async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["platformEarningsDashboard"],
+    queryFn: async () => {
       const [dashRes, walletRes, topRes] = await Promise.all([
         getPlatformDashboard(),
         getPlatformWallet(),
         getTopProviders({ limit: 5 }),
       ]);
-      setData(dashRes.data.data);
-      setWallet(walletRes.data.data);
-      setTopProviders(topRes.data.data || []);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
-  };
+      return {
+        dash: dashRes.data.data,
+        wallet: walletRes.data.data,
+        topProviders: topRes.data.data || []
+      };
+    }
+  });
 
-  const handleWithdraw = async () => {
-    if (!withdrawAmount || Number(withdrawAmount) <= 0) return;
-    try {
-      setWithdrawLoading(true);
-      await adminWithdraw({
-        amount: Number(withdrawAmount),
-        method: withdrawMethod,
-        accountNumber: withdrawAccount,
-      });
+  const withdrawMutation = useMutation({
+    mutationFn: (data) => adminWithdraw(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(["platformEarningsDashboard"]);
       setShowWithdraw(false);
-      setAlert({ type: "success", text: `Rs. ${Number(withdrawAmount).toLocaleString()} withdrawn!` });
+      setAlert({ type: "success", text: `Rs. ${Number(variables.amount).toLocaleString()} withdrawn!` });
       setTimeout(() => setAlert(null), 4000);
-      fetchAll();
-    } catch (err) {
+    },
+    onError: (err) => {
       setAlert({ type: "error", text: err.response?.data?.message || "Withdrawal failed" });
       setTimeout(() => setAlert(null), 4000);
-    } finally { setWithdrawLoading(false); }
+    }
+  });
+
+  const handleWithdraw = () => {
+    if (!withdrawAmount || Number(withdrawAmount) <= 0) return;
+    withdrawMutation.mutate({
+      amount: Number(withdrawAmount),
+      method: withdrawMethod,
+      accountNumber: withdrawAccount,
+    });
   };
 
   if (loading) {
@@ -69,12 +69,14 @@ export default function PlatformEarnings() {
     );
   }
 
-  const earnings = data?.earnings || {};
-  const income = data?.incomeBreakdown || {};
-  const bookings = data?.bookings || {};
-  const providers = data?.providers || {};
-  const w = data?.wallet || wallet || {};
-  console.log("pDashboard Data:", data); // Debug log
+  const dashData = data?.dash || {};
+  const walletData = data?.wallet || {};
+  const topProvidersList = data?.topProviders || [];
+
+  const earnings = dashData?.earnings || {};
+  const income = dashData?.incomeBreakdown || {};
+  const bookings = dashData?.bookings || {};
+  const w = dashData?.wallet || walletData || {};
 
   return (
     <div className="space-y-8">
@@ -194,10 +196,10 @@ export default function PlatformEarnings() {
           </h3>
         </div>
         <div className="divide-y divide-gray-50">
-          {topProviders.length === 0 ? (
+          {topProvidersList.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No data yet</p>
           ) : (
-            topProviders.map((tp, i) => (
+            topProvidersList.map((tp, i) => (
               <div key={i} className="flex items-center gap-4 p-4 hover:bg-gray-50">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                   {i + 1}
@@ -258,10 +260,10 @@ export default function PlatformEarnings() {
               <button onClick={() => setShowWithdraw(false)}
                 className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
               >Cancel</button>
-              <button onClick={handleWithdraw} disabled={withdrawLoading}
+              <button onClick={handleWithdraw} disabled={withdrawMutation.isPending}
                 className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                {withdrawLoading ? <FaSpinner className="animate-spin" /> : "Withdraw"}
+                {withdrawMutation.isPending ? <FaSpinner className="animate-spin" /> : "Withdraw"}
               </button>
             </div>
           </div>

@@ -34,6 +34,8 @@ import {
   viewProviderWallet,
 } from "../controllers/admin/platformController.js";
 import { getComprehensiveAnalytics } from "../controllers/admin/analyticsController.js";
+import { getSlides, addSlide, deleteSlide, updateAdminProfile } from "../controllers/admin/settingsController.js";
+import { getTickets, replyTicket, deleteTicket } from "../controllers/admin/supportController.js";
 
 const adminRouter = express.Router();
 
@@ -130,5 +132,17 @@ adminRouter.get(
   adminOnly,
   viewProviderWallet
 );
+
+// ── Settings (Profile & Slider) ──
+adminRouter.put("/settings/profile", protect, adminOnly, uploadServiceImage.single("profileImage"), updateAdminProfile);
+
+adminRouter.get("/settings/slides", protect, adminOnly, getSlides);
+adminRouter.post("/settings/slides", protect, adminOnly, uploadServiceImage.single("image"), addSlide);
+adminRouter.delete("/settings/slides/:id", protect, adminOnly, deleteSlide);
+
+// ── Support Tickets ──
+adminRouter.get("/support", protect, adminOnly, getTickets);
+adminRouter.post("/support/:id/reply", protect, adminOnly, replyTicket);
+adminRouter.delete("/support/:id", protect, adminOnly, deleteTicket);
 
 export default adminRouter;

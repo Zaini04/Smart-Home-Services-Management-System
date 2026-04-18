@@ -37,6 +37,7 @@ import {
   cancelBooking,
   approvePriceRevision,
   approveScheduleUpdate,
+  respondToReschedule,
 } from "../../api/residentsEndpoints";
 import { buildMediaUrl, getApiBaseUrl } from "../../utils/url";
 
@@ -919,6 +920,47 @@ function PriceRevisionHistory({ revisions }) {
   );
 }
 
+function RescheduleRequestPanel({ booking, onRespond, actionLoading }) {
+  const req = booking.rescheduleRequest;
+
+  if (!req || req.status !== "pending") return null;
+
+  return (
+    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-5">
+      <h3 className="font-semibold text-yellow-800 mb-2">
+        🔄 Reschedule Request
+      </h3>
+
+      <p className="text-sm text-gray-700 mb-3">
+        Worker wants to change schedule
+      </p>
+
+      <div className="bg-white p-3 rounded border mb-3">
+        <p>
+          <strong>New Time:</strong>{" "}
+          {new Date(req.proposedStartDate).toLocaleString()}
+        </p>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={() => onRespond("reject")}
+          className="flex-1 py-2 border border-red-300 text-red-600 rounded"
+        >
+          Reject
+        </button>
+
+        <button
+          onClick={() => onRespond("approve")}
+          className="flex-1 py-2 bg-green-500 text-white rounded"
+        >
+          Approve
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ─────────────────────────────────────────
    MAIN COMPONENT
 ───────────────────────────────────────── */
@@ -977,7 +1019,32 @@ export default function BookingDetails() {
     queryClient.invalidateQueries(["booking", id]);
   };
 
+
+
   /* ── Handlers ── */
+
+const handleRespondReschedule = async (action) => {
+  try {
+    setActionLoading(true);
+
+    await respondToReschedule(id, { action });
+
+    showAlert(
+      "success",
+      action === "approve"
+        ? "Schedule updated"
+        : "Request rejected"
+    );
+
+    refreshData();
+  } catch (err) {
+    showAlert("error", "Failed");
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+
   const handleAcceptOffer = async (offerId) => {
     try {
       setActionLoading(true);
@@ -1117,20 +1184,20 @@ export default function BookingDetails() {
   if (loading)
     return (
       <>
-        <Navbar />
+        
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <FaSpinner className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
             <p className="text-gray-500">Loading booking details...</p>
           </div>
         </div>
-        <Footer />
+        
       </>
     );
   if (!booking)
     return (
       <>
-        <Navbar />
+        
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <FaClipboardList className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -1145,7 +1212,7 @@ export default function BookingDetails() {
             </button>
           </div>
         </div>
-        <Footer />
+        
       </>
     );
 
@@ -1164,7 +1231,7 @@ export default function BookingDetails() {
 
   return (
     <>
-      <Navbar />
+      
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-8 px-4">
         <div className="max-w-4xl mx-auto">
           {alertMsg && (
@@ -1323,6 +1390,11 @@ export default function BookingDetails() {
                       actionLoading={actionLoading}
                     />
                   )}
+                  <RescheduleRequestPanel
+  booking={booking}
+  onRespond={handleRespondReschedule}
+  actionLoading={actionLoading}
+/>
                   <ConfirmPaymentPanel
                     booking={booking}
                     onConfirm={handleConfirmPayment}
@@ -1545,7 +1617,7 @@ export default function BookingDetails() {
         </div>
       )}
 
-      <Footer />
+      
     </>
   );
 }

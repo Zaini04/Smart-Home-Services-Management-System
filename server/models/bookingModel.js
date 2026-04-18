@@ -169,6 +169,26 @@ const bookingSchema = new mongoose.Schema(
 
     /* ── REVIEW ── */
     isReviewed: { type: Boolean, default: false },
+
+    rescheduleRequest: {
+  requested: { type: Boolean, default: false },
+
+  proposedStartDate: { type: Date, default: null },
+  proposedEndDate: { type: Date, default: null },
+
+  reason: { type: String, default: "" },
+
+  status: {
+    type: String,
+    enum: ["none", "pending", "approved", "rejected"],
+    default: "none",
+  },
+
+  requestedAt: Date,
+  respondedAt: Date,
+
+  expiresAt: Date, // ⏳ important
+},
   },
   { timestamps: true }
 );

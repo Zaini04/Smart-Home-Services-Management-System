@@ -385,15 +385,22 @@ export const rejectFinalPrice = async (req, res) => {
       });
       booking.commission.locked = false;
     }
-
-    booking.status = "cancelled";
-    booking.cancelledBy = "resident";
-    booking.cancellationReason = reason || "Price not acceptable";
-    booking.cancellationPenalty = {
-      amount: penalty.amount,
-      paidBy: penalty.paidBy,
-      reason: penalty.reason,
+    // Revert back so provider can re-evaluate and send another final price / request inspection again
+    booking.status = "provider_selected";
+    
+    // Clear out price state so it can be re-proposed cleanly
+    booking.finalPrice = {
+      laborCost: 0,
+      materialsCost: 0,
+      totalAmount: 0,
+      sentAt: null,
+      approvedByResident: false,
+      approvedAt: null
     };
+    
+    // Clear the proposed schedule to remove the conflict lock
+    booking.schedule = {};
+
 
     await booking.save();
     req.app.get("io")?.emit("data_updated");
@@ -711,3 +718,40 @@ export const submitReview = async (req, res) => {
     return errorResponse(res, "Failed to submit review", 500, err.message);
   }
 };
+
+
+// export const respondToReschedule = async (req, res) => {
+//   try {
+//     const { bookingId } = req.params;
+//     const { action } = req.body;
+
+//     const booking = await Booking.findById(bookingId);
+
+//     if (!booking) return errorResponse(res, "Booking not found", 404);
+
+//     if (!booking.rescheduleRequest?.requested)
+//       return errorResponse(res, "No request found", 400);
+
+//     if (action === "approve") {
+//       booking.schedule.scheduledStartDate =
+//         booking.rescheduleRequest.proposedStartDate;
+
+//       booking.schedule.scheduledEndDate =
+//         booking.rescheduleRequest.proposedEndDate;
+
+//       booking.rescheduleRequest.status = "approved";
+//     }
+
+//     if (action === "reject") {
+//       booking.rescheduleRequest.status = "rejected";
+//     }
+
+//     booking.rescheduleRequest.respondedAt = new Date();
+
+//     await booking.save();
+
+//     return successResponse(res, "Response saved", booking, 200);
+//   } catch (err) {
+//     return errorResponse(res, "Failed", 500, err.message);
+//   }
+// };

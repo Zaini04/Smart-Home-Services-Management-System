@@ -4,7 +4,8 @@ export const getApiBaseUrl = () => {
     import.meta.env.VITE_API_URL ||
     "http://localhost:5000";
 
-  return String(raw).replace(/\/+$/, "");
+  // Carefully strip surrounding quotes and trailing slashes
+  return String(raw).replace(/^['"]+/, "").replace(/['"]+$/, "").replace(/\/+$/, "");
 };
 
 export const normalizeMediaPath = (mediaPath = "") => {

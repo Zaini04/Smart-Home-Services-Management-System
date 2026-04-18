@@ -1,232 +1,113 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  FaPlay,
-  FaStar,
-  FaCheckCircle,
-  FaArrowRight,
-  FaShieldAlt,
-  FaUsers,
-  FaClock,
-  FaMapMarkerAlt,
-  FaSearch,
-} from "react-icons/fa";
-import hero from "../assets/images/hero.jpeg";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaArrowRight } from "react-icons/fa";
 
-/* ------------------ STAT CARD COMPONENT ------------------ */
-
-const StatCard = ({ icon: Icon, value, label, color }) => (
-  <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm px-4 py-3 rounded-xl">
-    <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center`}>
-      <Icon className="w-5 h-5 text-white" />
-    </div>
-    <div>
-      <p className="text-xl font-bold text-white">{value}</p>
-      <p className="text-xs text-blue-100">{label}</p>
-    </div>
-  </div>
-);
-
-/* ------------------ FLOATING CARD COMPONENT ------------------ */
-
-const FloatingCard = ({ children, className, delay = 0 }) => (
-  <div
-    className={`absolute bg-white rounded-2xl shadow-2xl p-4 animate-float ${className}`}
-    style={{ animationDelay: `${delay}s` }}
-  >
-    {children}
-  </div>
-);
-
-/* ------------------ MAIN HERO COMPONENT ------------------ */
+/* Images for simple, smooth crossfade slider */
+import hero1 from "../assets/images/hero.jpeg";
+// Assuming you standard fallback images, if you don't have multiple just use hero1
+const images = [hero1];
 
 export default function Hero() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCity, setSelectedCity] = useState("Lahore");
-
-  const trustedCompanies = [
-    "10,000+ Customers",
-    "500+ Verified Providers",
-    "Operating Exclusively in Multan",
-  ];
-
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 min-h-[90vh] flex items-center">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
-      </div>
+    <section className="relative bg-white pt-24 lg:pt-32 pb-20 overflow-hidden">
+      
+      {/* Subtle background element */}
+      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] rounded-full bg-blue-50/50 blur-3xl opacity-60 pointer-events-none" />
 
-      {/* Gradient Orbs */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob" />
-      <div className="absolute top-40 right-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
-      <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
-
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[75vh]">
           
-          {/* Left Content */}
-          <div className="text-center lg:text-left">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <span className="text-sm text-white/90 font-medium">
-                Trusted by 10,000+ homeowners
-              </span>
+          {/* Left Text */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-center lg:text-left"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 font-medium text-sm mb-6 border border-blue-100">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              Multan's Premium Home Services
             </div>
 
-            {/* Main Heading */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-tight mb-6">
-              One Place for All
-              <span className="block mt-2 bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
-                Home Services
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-gray-900 leading-[1.1] tracking-tight mb-6">
+              Your Home,<br />
+              <span className="text-blue-600 relative inline-block mt-2">
+                Perfectly Fixed.
+                {/* Minimal underline accent */}
+                <span className="absolute bottom-1 left-0 w-full h-3 bg-yellow-400/30 -z-10 rounded-sm" />
               </span>
             </h1>
 
-            {/* Subheading */}
-            <p className="text-lg sm:text-xl text-blue-100/80 max-w-xl mx-auto lg:mx-0 mb-8">
-              Find verified professionals for any home service. Transparent pricing, 
-              secure payments, and satisfaction guaranteed.
+            <p className="text-lg sm:text-xl text-gray-500 leading-relaxed max-w-lg mx-auto lg:mx-0 mb-8">
+              Post your home problem, get competitive bids from verified local providers, and get the job done right. Experience the modern way to maintain your home.
             </p>
 
-            {/* No Search Bar since we only post problems. We just show simple text here instead of the search bar block. */}
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
               <Link
-                to="/signup"
-                className="group px-8 py-4 bg-white text-gray-900 font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-lg flex items-center justify-center gap-2"
+                to="/post-job"
+                className="group flex items-center justify-center gap-2 px-8 py-4 bg-yellow-500 text-gray-900 font-bold rounded-xl hover:bg-yellow-400 transition-all shadow-lg shadow-yellow-500/20"
               >
-                Post a Problem
+                Book a Service
                 <FaArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <button className="px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                  <FaPlay className="w-3 h-3 text-white ml-0.5" />
-                </div>
-                Watch Demo
-              </button>
+              <Link
+                to="/signup"
+                className="flex items-center justify-center px-8 py-4 bg-gray-50 text-gray-700 font-medium rounded-xl hover:bg-gray-100 border border-gray-200 transition-colors"
+              >
+                Join as Provider
+              </Link>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm">
-              {[
-                { icon: FaShieldAlt, text: "Verified Providers" },
-                { icon: FaClock, text: "24/7 Support" },
-                { icon: FaCheckCircle, text: "Money Back Guarantee" },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-blue-100/80">
-                  <item.icon className="w-4 h-4 text-green-400" />
-                  <span>{item.text}</span>
-                </div>
-              ))}
+            {/* Trusted text */}
+            <div className="mt-10 pt-8 border-t border-gray-100 flex items-center justify-center lg:justify-start gap-4">
+               <div className="flex -space-x-3">
+                 {[1, 2, 3].map((i) => (
+                   <div key={i} className={`w-10 h-10 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center overflow-hidden z-${40-i*10}`}>
+                     <img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="User" />
+                   </div>
+                 ))}
+               </div>
+               <div className="text-sm text-gray-500 text-left">
+                 <span className="font-bold text-gray-900 block">10,000+</span>
+                 Happy homeowners
+               </div>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Right Content - Hero Image */}
-          <div className="relative hidden lg:block">
-            {/* Main Image */}
-            <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl blur-2xl opacity-30" />
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-                <img
-                  src={hero}
-                  alt="Home Services"
-                  className="w-full h-[500px] object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          {/* Right Image Display — Simple & Sleek */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="relative lg:ml-auto w-full max-w-lg lg:max-w-xl mx-auto"
+          >
+            {/* Soft backdrop shadow */}
+            <div className="absolute -inset-4 bg-blue-100 rounded-[2.5rem] rotate-3 opacity-50" />
+            
+            <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white bg-white">
+              <img
+                src={hero1}
+                alt="Professional service provider at work"
+                className="w-full h-[400px] sm:h-[500px] object-cover transition-transform duration-1000 hover:scale-105"
+              />
+              {/* Sleek overlay gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+              
+              {/* Minimal floating badge */}
+              <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-lg">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl flex-shrink-0">
+                  ⭐⭐⭐⭐⭐
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">Top Rated Providers</p>
+                  <p className="text-xs text-gray-500">Verified and trusted by locals</p>
+                </div>
               </div>
             </div>
-
-            {/* Floating Cards */}
-            <FloatingCard className="top-10 -left-10 z-20" delay={0}>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                  <FaCheckCircle className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800">Service Completed</p>
-                  <p className="text-sm text-gray-500">AC Repair - ★★★★★</p>
-                </div>
-              </div>
-            </FloatingCard>
-
-            <FloatingCard className="top-1/2 -right-8 z-20" delay={0.5}>
-              <div className="flex items-center gap-3">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 border-2 border-white flex items-center justify-center text-white text-xs font-medium"
-                    >
-                      {["AK", "SM", "RK"][i - 1]}
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800">500+</p>
-                  <p className="text-xs text-gray-500">Active Providers</p>
-                </div>
-              </div>
-            </FloatingCard>
-
-            <FloatingCard className="bottom-20 -left-6 z-20" delay={1}>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
-                  <FaStar className="w-6 h-6 text-yellow-500" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800">4.9 Rating</p>
-                  <p className="text-sm text-gray-500">10K+ Reviews</p>
-                </div>
-              </div>
-            </FloatingCard>
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          {[
-            { icon: FaUsers, value: "10K+", label: "Happy Customers", color: "bg-blue-500" },
-            { icon: FaShieldAlt, value: "500+", label: "Verified Providers", color: "bg-green-500" },
-            { icon: FaStar, value: "4.9", label: "Average Rating", color: "bg-yellow-500" },
-            { icon: FaClock, value: "24/7", label: "Support Available", color: "bg-purple-500" },
-          ].map((stat, index) => (
-            <StatCard key={index} {...stat} />
-          ))}
+          </motion.div>
         </div>
       </div>
-
-      {/* CSS for animations */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(20px, -30px) scale(1.1); }
-          50% { transform: translate(-20px, 20px) scale(0.9); }
-          75% { transform: translate(30px, 30px) scale(1.05); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        .animate-blob {
-          animation: blob 10s ease-in-out infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
     </section>
   );
 }

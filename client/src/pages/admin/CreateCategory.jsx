@@ -1,5 +1,6 @@
 // pages/admin/Categories.jsx
 import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createCategory,
   getCategories,
@@ -421,13 +422,9 @@ const CategorySkeleton = () => (
 /* ------------------ MAIN COMPONENT ------------------ */
 
 export default function CreateCategory() {
-  // Data state
-  const [categories, setCategories] = useState([]);
+  const queryClient = useQueryClient();
 
   // UI state
-  const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [fetchingCategories, setFetchingCategories] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -435,36 +432,60 @@ export default function CreateCategory() {
   const [editCategory, setEditCategory] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  // Toast state
-  const [toast, setToast] = useState(null);
-
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  // Fetch categories on mount
-  useEffect(() => {
-    fetchCategoriesData();
-  }, []);
+  // Toast state
+  const [toast, setToast] = useState(null);
 
-  // Fetch categories from API
-  const fetchCategoriesData = async () => {
-    setFetchingCategories(true);
-
-    try {
+  // Queries
+  const { data: categories = [], isLoading: fetchingCategories, isFetching } = useQuery({
+    queryKey: ["adminCategories"],
+    queryFn: async () => {
       const res = await getCategories();
-      console.log("Categories fetched:", res.data);
-      setCategories(res.data.data || []);
-    } catch (err) {
-      console.error("Failed to fetch categories:", err);
-      if (err.response?.status !== 404) {
-        setToast({ message: "Failed to fetch categories", type: "error" });
-      }
-      setCategories([]);
-    } finally {
-      setFetchingCategories(false);
+      return res.data?.data || [];
     }
-  };
+  });
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (data) => createCategory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["adminCategories"]);
+      setToast({ message: "Category created successfully!", type: "success" });
+      resetForm();
+    },
+    onError: (err) => {
+      setToast({ message: err.response?.data?.message || "Failed to create category", type: "error" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["adminCategories"]);
+      setToast({ message: "Category updated successfully!", type: "success" });
+      setEditCategory(null);
+    },
+    onError: (err) => {
+      setToast({ message: err.response?.data?.message || "Failed to update category", type: "error" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["adminCategories"]);
+      setToast({ message: "Category deleted successfully!", type: "success" });
+      setDeleteConfirm(null);
+    },
+    onError: (err) => {
+      setToast({ message: err.response?.data?.message || "Failed to delete category", type: "error" });
+    }
+  });
+
+  const actionLoading = updateMutation.isPending || deleteMutation.isPending;
 
   // Reset form
   const resetForm = () => {
@@ -474,74 +495,17 @@ export default function CreateCategory() {
   };
 
   // Handle create form submit
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!name.trim()) {
       setToast({ message: "Category name is required", type: "error" });
       return;
     }
-
-    setLoading(true);
-
-    try {
-      await createCategory({
-        name: name.trim(),
-        description: description.trim(),
-      });
-
-      setToast({ message: "Category created successfully!", type: "success" });
-      resetForm();
-      fetchCategoriesData();
-    } catch (err) {
-      setToast({
-        message: err.response?.data?.message || "Failed to create category",
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
+    createMutation.mutate({ name: name.trim(), description: description.trim() });
   };
 
-  // Handle edit save
-  const handleEditSave = async (categoryId, data) => {
-    setActionLoading(true);
-
-    try {
-      await updateCategory(categoryId, data);
-      setToast({ message: "Category updated successfully!", type: "success" });
-      setEditCategory(null);
-      fetchCategoriesData();
-    } catch (err) {
-      setToast({
-        message: err.response?.data?.message || "Failed to update category",
-        type: "error",
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Handle delete confirm
-  const handleDeleteConfirm = async () => {
-    if (!deleteConfirm) return;
-
-    setActionLoading(true);
-
-    try {
-      await deleteCategory(deleteConfirm._id);
-      setToast({ message: "Category deleted successfully!", type: "success" });
-      setDeleteConfirm(null);
-      fetchCategoriesData();
-    } catch (err) {
-      setToast({
-        message: err.response?.data?.message || "Failed to delete category",
-        type: "error",
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const handleEditSave = (categoryId, data) => updateMutation.mutate({ id: categoryId, data });
+  const handleDeleteConfirm = () => deleteConfirm && deleteMutation.mutate(deleteConfirm._id);
 
   // Filter categories based on search
   const filteredCategories = categories.filter(
@@ -569,13 +533,13 @@ export default function CreateCategory() {
         <div className="flex items-center gap-3">
           {/* Refresh Button */}
           <button
-            onClick={fetchCategoriesData}
-            disabled={fetchingCategories}
+            onClick={() => queryClient.invalidateQueries(["adminCategories"])}
+            disabled={isFetching}
             className="p-3 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
             title="Refresh"
           >
             <FaRedo
-              className={`w-4 h-4 ${fetchingCategories ? "animate-spin" : ""}`}
+              className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
             />
           </button>
 
@@ -702,17 +666,17 @@ export default function CreateCategory() {
               </button>
               <button
                 type="submit"
-                disabled={loading || !name.trim()}
+                disabled={createMutation.isPending || !name.trim()}
                 className={`
                   px-8 py-3 rounded-xl font-semibold text-white flex items-center gap-2 transition-all
                   ${
-                    loading || !name.trim()
+                    createMutation.isPending || !name.trim()
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25"
                   }
                 `}
               >
-                {loading ? (
+                {createMutation.isPending ? (
                   <>
                     <FaSpinner className="w-5 h-5 animate-spin" />
                     Creating...
