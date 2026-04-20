@@ -101,8 +101,14 @@ io.use((socket, next) => {
 });
 
 /* ── Socket Events ── */
+const onlineUsers = new Map(); // userId -> socketId
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.userId);
+
+  // Track online status
+  onlineUsers.set(socket.userId.toString(), socket.id);
+  io.emit("user_status_changed", { userId: socket.userId, status: "online" });
 
   socket.join(socket.userId.toString());
 
@@ -207,6 +213,15 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.userId);
+    onlineUsers.delete(socket.userId.toString());
+    io.emit("user_status_changed", { userId: socket.userId, status: "offline" });
+  });
+
+  socket.on("check_online_status", ({ userId }, callback) => {
+    const isOnline = onlineUsers.has(userId.toString());
+    if (typeof callback === "function") {
+      callback({ isOnline });
+    }
   });
 });
 

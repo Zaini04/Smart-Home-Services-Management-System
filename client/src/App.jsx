@@ -24,8 +24,6 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
-import AboutUs from "./pages/AboutUs";
-import ContactUs from "./pages/ContactUs";
 
 // ── Admin pages ──────────────────────────────────────────────────────────────
 import AdminHomePage from "./pages/admin/AdminHomePage";
@@ -173,8 +171,6 @@ function AppContent() {
 
         {/* Public — anyone */}
         <Route path="/how"              element={<HowItWorks />} />
-        <Route path="/about"            element={<AboutUs />} />
-        <Route path="/contact"          element={<ContactUs />} />
 
         {/* Resident-only Layout */}
         <Route element={<ResidentRoute />}>

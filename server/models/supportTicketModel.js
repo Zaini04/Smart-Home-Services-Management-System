@@ -25,7 +25,7 @@ const supportTicketSchema = new mongoose.Schema(
     },
     senderRole: {
       type: String,
-      enum: ["resident", "serviceprovider", "guest"],
+      enum: ["admin", "resident", "serviceprovider", "guest"],
       default: "guest",
     },
     senderId: {

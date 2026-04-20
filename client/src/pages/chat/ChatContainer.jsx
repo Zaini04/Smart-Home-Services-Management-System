@@ -34,6 +34,7 @@ export default function ChatContainer() {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
+  const [isOtherOnline, setIsOtherOnline] = useState(false);
 
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -59,6 +60,8 @@ export default function ChatContainer() {
     },
     enabled: !!user,
   });
+
+  const activeConv = conversations.find(c => c.bookingId === bookingId);
 
   // 2. Fetch Messages Safely
   // 🌟 FIX 1: Removed the '= []' to stop the infinite loop bug!
@@ -123,13 +126,49 @@ export default function ChatContainer() {
     socket.on("user_typing", ({ isTyping }) => setOtherTyping(isTyping));
     socket.on("messages_read", () => setMessages(prev => prev.map(m => ({ ...m, isRead: true }))));
 
+    // Listen for online status changes
+    const handleStatusChange = ({ userId, status }) => {
+      const otherId = activeConv?.otherPerson?.role === "provider" 
+        ? activeConv?.selectedProvider?.userId?._id || activeConv?.selectedProvider?.userId 
+        : activeConv?.resident?._id || activeConv?.resident;
+      
+      // Since activeConv might be stale here, we use a simpler approach or the other person logic
+      // Actually, let's just check if the ID matches the one we're currently chatting with
+      if (activeConv?.otherPerson?._id === userId || activeConv?.otherPerson?.id === userId) {
+         setIsOtherOnline(status === "online");
+      } else {
+        // Fallback: refresh inbox to get latest statuses if we had them there, 
+        // but for now we just handle the active one
+        queryClient.invalidateQueries({ queryKey: ["chatInbox"] });
+      }
+    };
+
+    socket.on("user_status_changed", handleStatusChange);
+
+    // Initial check for online status
+    const otherUserId = activeConv?.otherPerson?.id || activeConv?.otherPerson?._id;
+    if (otherUserId) {
+      socket.emit("check_online_status", { userId: otherUserId }, (res) => {
+        setIsOtherOnline(res.isOnline);
+      });
+    }
+
     return () => {
       socket.emit("leave_chat", { bookingId });
       socket.off("receive_message", handleReceive);
       socket.off("user_typing");
       socket.off("messages_read");
+      socket.off("user_status_changed", handleStatusChange);
     };
-  }, [socket, bookingId, user, queryClient]);
+  }, [socket, bookingId, user, queryClient, activeConv]);
+
+  // Mark as read when bookingId changes (chat opened)
+  useEffect(() => {
+    if (socket && bookingId) {
+      socket.emit("mark_read", { bookingId });
+      queryClient.invalidateQueries({ queryKey: ["chatInbox"] });
+    }
+  }, [socket, bookingId, queryClient]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
@@ -193,7 +232,6 @@ export default function ChatContainer() {
     return msg.senderId?.toString() === myId?.toString();
   };
 
-  const activeConv = conversations.find(c => c.bookingId === bookingId);
   const showSidebar = !bookingId; 
   const showChatArea = !!bookingId;
   const isChatClosed = ['completed', 'cancelled'].includes(activeConv?.status);
@@ -218,30 +256,50 @@ export default function ChatContainer() {
           ) : (
             conversations.map((conv) => (
               <div key={conv.bookingId} onClick={() => handleUserClick(conv.bookingId)}
-                className={`p-3 rounded-xl cursor-pointer flex items-center gap-3 transition-all ${bookingId === conv.bookingId ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50 border border-transparent"}`}
+                className={`p-3 rounded-xl cursor-pointer flex items-center gap-3 transition-all border ${
+                  bookingId === conv.bookingId 
+                    ? "bg-blue-50 border-blue-200" 
+                    : "hover:bg-gray-50 border-transparent"
+                } ${['completed', 'cancelled'].includes(conv.status) ? "opacity-60 grayscale-[0.3]" : ""}`}
               >
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-100 flex-shrink-0 relative">
                   {conv.otherPerson.image ? (
                      <img src={buildMediaUrl(conv.otherPerson.image)} className="w-full h-full object-cover" alt="avatar"/>
                   ) : <div className="w-full h-full flex items-center justify-center bg-blue-100"><FaUser className="text-blue-500" /></div>}
-                  {conv.status === "work_in_progress" && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border border-white" />}
+                  {conv.unreadCount > 0 && <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-[10px] rounded-full flex items-center justify-center font-bold border-2 border-white">{conv.unreadCount}</div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center mb-0.5">
-                    <h4 className={`font-semibold text-sm truncate ${conv.unreadCount > 0 ? "text-gray-900" : "text-gray-800"}`}>{conv.otherPerson.name}</h4>
-                    <span className={`text-xs ${conv.unreadCount > 0 ? "text-blue-600 font-bold" : "text-gray-400"}`}>{formatTime(conv.lastMessage?.time || conv.updatedAt)}</span>
+                    <h4 className={`font-bold text-sm truncate ${conv.unreadCount > 0 ? "text-blue-700" : "text-gray-900"}`}>
+                      {conv.otherPerson.name}
+                    </h4>
+                    <span className="text-[10px] text-gray-400 font-medium">{formatTime(conv.lastMessage?.time || conv.updatedAt)}</span>
                   </div>
-                  <div className="flex justify-between items-center gap-2">
-                    <p className={`text-xs truncate ${conv.unreadCount > 0 ? "text-gray-800 font-medium" : "text-gray-500"}`}>
-                      {conv.lastMessage ? (
-                        <>
-                          {conv.lastMessage.isFromMe && "You: "}
-                          {conv.lastMessage.messageType === 'image' ? "📷 Image" : conv.lastMessage.messageType === 'video' ? "🎥 Video" : conv.lastMessage.text}
-                        </>
-                      ) : "No messages"}
-                    </p>
-                    {conv.unreadCount > 0 && <span className="w-5 h-5 bg-blue-600 text-white text-[10px] rounded-full flex items-center justify-center font-bold">{conv.unreadCount}</span>}
+                  
+                  {/* Job ID & Category Badges */}
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded uppercase">
+                      #{conv.bookingDisplayId}
+                    </span>
+                    <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded capitalize ${
+                      conv.status === 'completed' ? 'bg-green-100 text-green-700' : 
+                      conv.status === 'work_in_progress' ? 'bg-blue-100 text-blue-700' : 
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {conv.status.replace(/_/g, ' ')}
+                    </span>
                   </div>
+
+                  <p className={`text-xs truncate ${conv.unreadCount > 0 ? "text-gray-900 font-semibold" : "text-gray-500"}`}>
+                    {conv.lastMessage ? (
+                      <>
+                        {conv.lastMessage.isFromMe && <span className="text-gray-400">You: </span>}
+                        {conv.lastMessage.messageType === 'image' ? "📷 Image" : conv.lastMessage.messageType === 'video' ? "🎥 Video" : conv.lastMessage.text}
+                      </>
+                    ) : (
+                      <span className="italic opacity-60">No messages yet</span>
+                    )}
+                  </p>
                 </div>
               </div>
             ))
@@ -262,8 +320,13 @@ export default function ChatContainer() {
                    {activeConv?.otherPerson?.image ? <img src={buildMediaUrl(activeConv.otherPerson.image)} className="w-full h-full object-cover" alt="avatar"/> : <FaUser className="text-blue-500" />}
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800 text-sm leading-tight">{activeConv?.otherPerson?.name || "Loading..."}</h3>
-                  <p className="text-xs text-green-600 font-medium flex items-center gap-1">{otherTyping ? "typing..." : "Online"}</p>
+                  <h3 className="font-bold text-gray-800 text-sm leading-tight flex items-center gap-2">
+                    {activeConv?.otherPerson?.name || "Loading..."}
+                    <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-mono">#{activeConv?.bookingDisplayId}</span>
+                  </h3>
+                  <p className={`text-xs font-semibold flex items-center gap-1 ${isOtherOnline || otherTyping ? "text-green-600" : "text-gray-400"}`}>
+                    {otherTyping ? "typing..." : isOtherOnline ? "Online" : "Offline"}
+                  </p>
                 </div>
               </div>
 
