@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { FaQuestionCircle, FaEnvelope, FaHeadset, FaChevronDown, FaChevronUp } from "react-icons/fa";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import Navbar from "../../components/shared/Navbar";
+import Footer from "../../components/shared/Footer";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { submitSupportTicket } from "../../api/publicEndPoints";

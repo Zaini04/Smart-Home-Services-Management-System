@@ -3,18 +3,18 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import Navbar from "../components/Navbar";
-import Slider from "../components/Slider";
-import Features from "../components/Features";
-import Footer from "../components/Footer";
-import HowItWorks from "../components/HowItWorks";
+import Navbar from "../components/shared/Navbar";
+import Slider from "../components/shared/Slider";
+import Features from "../components/shared/Features";
+import Footer from "../components/shared/Footer";
+import HowItWorks from "../components/shared/HowItWorks";
 import {
   FaArrowUp, FaHeart, FaShieldAlt, FaStar,
   FaMapMarkerAlt, FaPhone, FaEnvelope, FaArrowRight,
   FaCheckCircle, FaUsers, FaPaperPlane, FaTimes, FaSpinner,
 } from "react-icons/fa";
-import AboutUsSection from "../components/AboutUsSection";
-import ContactUsSection from "../components/ContactUsSection";
+import AboutUsSection from "../components/shared/AboutUsSection";
+import ContactUsSection from "../components/shared/ContactUsSection";
 
 
 /* ── Scroll To Top ── */

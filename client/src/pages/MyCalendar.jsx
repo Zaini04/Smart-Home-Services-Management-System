@@ -8,8 +8,8 @@ import { FaSpinner, FaCalendarAlt, FaSearch, FaWrench } from "react-icons/fa";
 import { getMyJobs } from "../api/serviceProviderEndPoints";
 import { getMyBookings } from "../api/residentsEndpoints";
 import { useAuth } from "../context/AuthContext";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import Navbar from "../components/shared/Navbar";
+import Footer from "../components/shared/Footer";
 
 const localizer = momentLocalizer(moment);
 

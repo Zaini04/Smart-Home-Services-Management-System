@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getMyNotifications, markNotificationsAsRead } from "../api/notificationEndPoints"; // Adjust import path
-import Navbar from "../components/Navbar";
+import Navbar from "../components/shared/Navbar";
 import { FaBell, FaCheckDouble, FaSpinner, FaCircle } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 

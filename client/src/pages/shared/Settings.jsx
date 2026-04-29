@@ -3,8 +3,8 @@ import { useAuth } from "../../context/AuthContext";
 import { FaLock, FaCheckCircle, FaSpinner, FaBell, FaShieldAlt } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { changePassword } from "../../api/residentsEndpoints";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import Navbar from "../../components/shared/Navbar";
+import Footer from "../../components/shared/Footer";
 
 export default function Settings() {
   const { user } = useAuth();

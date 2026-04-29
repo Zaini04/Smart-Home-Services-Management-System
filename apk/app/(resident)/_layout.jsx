@@ -1,0 +1,82 @@
+import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../../src/theme/colors';
+
+export default function ResidentLayout() {
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textLight,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: Colors.borderLight,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="home" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="post-job"
+        options={{
+          title: 'Post Job',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="add-circle" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="my-bookings"
+        options={{
+          title: 'Bookings',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="calendar" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat-inbox"
+        options={{
+          title: 'Chat',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="chatbubbles" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person" size={22} color={color} />
+          ),
+        }}
+      />
+      {/* Hidden screens accessible via navigation */}
+      <Tabs.Screen name="calendar" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
+      <Tabs.Screen name="booking/[id]" options={{ href: null, headerShown: true, title: 'Booking Details' }} />
+      <Tabs.Screen name="review/[bookingId]" options={{ href: null, headerShown: true, title: 'Write Review' }} />
+      <Tabs.Screen name="edit-profile" options={{ href: null }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
+      <Tabs.Screen name="support" options={{ href: null }} />
+    </Tabs>
+  );
+}
+

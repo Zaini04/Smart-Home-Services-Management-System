@@ -1,19 +1,13 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  FaArrowLeft, FaSpinner, FaExchangeAlt, FaFilter,
-  FaCheckCircle, FaExclamationTriangle, FaArrowDown,
-  FaMoneyBillWave, FaUndo,
+  FaArrowLeft, FaSpinner, FaExchangeAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getPlatformTransactions } from "../../api/adminEndPoints";
 
-const typeConfig = {
-  commission_received: { color: "text-green-600", bg: "bg-green-50", label: "Commission", icon: FaCheckCircle },
-  penalty_received:    { color: "text-red-600",   bg: "bg-red-50",   label: "Penalty",    icon: FaExclamationTriangle },
-  admin_withdrawal:    { color: "text-blue-600",  bg: "bg-blue-50",  label: "Withdrawal", icon: FaArrowDown },
-  refund:              { color: "text-amber-600", bg: "bg-amber-50", label: "Refund",     icon: FaUndo },
-};
+// Components
+import TransactionItem from "../../components/admin/transactions/TransactionItem";
 
 export default function PlatformTransactions() {
   const navigate = useNavigate();
@@ -41,111 +35,116 @@ export default function PlatformTransactions() {
   const pagination = data?.pagination || {};
 
   const filters = [
-    { key: "", label: "All" },
+    { key: "", label: "All Records" },
     { key: "commission_received", label: "Commissions" },
     { key: "penalty_received", label: "Penalties" },
     { key: "admin_withdrawal", label: "Withdrawals" },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate("/admin/platform-earnings")}
-          className="p-2.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-50"
+    <div className="space-y-6 sm:space-y-8 pb-20 max-w-5xl mx-auto animate-fadeIn px-2 sm:px-0">
+      <div className="flex items-center gap-4 sm:gap-6">
+        <button 
+          onClick={() => navigate("/admin/platform-earnings")}
+          className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 shadow-sm"
         >
-          <FaArrowLeft className="w-4 h-4 text-gray-600" />
+          <FaArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Platform Transactions</h2>
-          <p className="text-gray-500 text-sm">All platform income and withdrawals</p>
+          <h1 className="text-xl sm:text-3xl font-black text-gray-900 tracking-tight leading-tight">Platform Ledger</h1>
+          <p className="text-[10px] sm:text-sm font-medium text-gray-500 mt-0.5 sm:mt-1">Detailed history of all financial activities.</p>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-wrap gap-3 items-end">
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+      {/* Filters Bar */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl border border-gray-100 flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch lg:items-center justify-between">
+        <div className="flex p-1 bg-gray-100 rounded-xl sm:rounded-2xl overflow-x-auto no-scrollbar">
           {filters.map((f) => (
-            <button key={f.key} onClick={() => { setFilter(f.key); setPage(1); }}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                filter === f.key ? "bg-white shadow text-blue-600" : "text-gray-500"
+            <button 
+              key={f.key} 
+              onClick={() => { setFilter(f.key); setPage(1); }}
+              className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 whitespace-nowrap flex-1 lg:flex-none ${
+                filter === f.key 
+                  ? "bg-white text-blue-600 shadow-md scale-100" 
+                  : "text-gray-400 hover:text-gray-600"
               }`}
-            >{f.label}</button>
+            >
+              {f.label}
+            </button>
           ))}
         </div>
-        <div className="flex gap-2 items-center">
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-          <span className="text-gray-400">to</span>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+        
+        <div className="flex gap-2 sm:gap-4 items-center">
+          <div className="relative group flex-1 sm:flex-none">
+            <input 
+              type="date" 
+              value={startDate} 
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-50 border-2 border-gray-100 rounded-lg sm:rounded-xl text-[10px] sm:text-sm font-bold focus:bg-white focus:border-blue-500 transition-all outline-none" 
+            />
+          </div>
+          <span className="text-gray-300 font-black text-xs sm:text-base">→</span>
+          <div className="relative group flex-1 sm:flex-none">
+            <input 
+              type="date" 
+              value={endDate} 
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-50 border-2 border-gray-100 rounded-lg sm:rounded-xl text-[10px] sm:text-sm font-bold focus:bg-white focus:border-blue-500 transition-all outline-none" 
+            />
+          </div>
         </div>
       </div>
 
       {/* Transactions List */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+      <div className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="flex justify-center py-16">
-            <FaSpinner className="w-8 h-8 text-blue-500 animate-spin" />
+          <div className="flex flex-col items-center justify-center py-20">
+            <FaSpinner className="w-10 h-10 text-blue-500 animate-spin mb-4" />
+            <p className="text-gray-400 font-medium uppercase tracking-widest text-xs">Syncing Ledger...</p>
           </div>
         ) : transactions.length === 0 ? (
-          <div className="text-center py-16">
-            <FaExchangeAlt className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No transactions found</p>
+          <div className="text-center py-20">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaExchangeAlt className="text-gray-300 text-2xl" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">No Transactions Found</h3>
+            <p className="text-gray-500 mt-1 max-w-xs mx-auto">Try adjusting your filters or date range to see more records.</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
-            {transactions.map((tx) => {
-              const cfg = typeConfig[tx.type] || typeConfig.commission_received;
-              const Icon = cfg.icon;
-              return (
-                <div key={tx._id} className="flex items-center gap-4 p-5 hover:bg-gray-50 transition-colors">
-                  <div className={`w-11 h-11 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className={`w-5 h-5 ${cfg.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-800 text-sm">{cfg.label}</p>
-                    <p className="text-xs text-gray-500 truncate">{tx.description}</p>
-                    <div className="flex gap-3 mt-1">
-                      {tx.booking?.bookingId && (
-                        <span className="text-xs text-blue-500">#{tx.booking.bookingId}</span>
-                      )}
-                      {tx.provider?.userId?.full_name && (
-                        <span className="text-xs text-gray-400">
-                          Provider: {tx.provider.userId.full_name}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className={`font-bold ${
-                      tx.type === "admin_withdrawal" ? "text-red-600" : "text-green-600"
-                    }`}>
-                      {tx.type === "admin_withdrawal" ? "-" : "+"}Rs. {tx.amount?.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(tx.createdAt).toLocaleDateString("en-US", {
-                        month: "short", day: "numeric", year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+            {transactions.map((tx) => (
+              <TransactionItem key={tx._id} tx={tx} />
+            ))}
           </div>
         )}
 
         {pagination.pages > 1 && (
-          <div className="p-4 border-t border-gray-100 flex items-center justify-between">
-            <button disabled={page <= 1} onClick={() => setPage(page - 1)}
-              className="px-4 py-2 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-            >Previous</button>
-            <span className="text-sm text-gray-500">Page {page} of {pagination.pages}</span>
-            <button disabled={page >= pagination.pages} onClick={() => setPage(page + 1)}
-              className="px-4 py-2 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-            >Next</button>
+          <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
+            <button 
+              disabled={page <= 1} 
+              onClick={() => { setPage(page - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className="px-6 py-2.5 text-xs font-black uppercase tracking-widest text-gray-500 bg-white border-2 border-gray-100 rounded-xl hover:bg-gray-100 disabled:opacity-50 transition-all"
+            >
+              Previous
+            </button>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              Page {page} of {pagination.pages}
+            </span>
+            <button 
+              disabled={page >= pagination.pages} 
+              onClick={() => { setPage(page + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className="px-6 py-2.5 text-xs font-black uppercase tracking-widest text-blue-600 bg-white border-2 border-blue-50 rounded-xl hover:bg-blue-50 disabled:opacity-50 transition-all"
+            >
+              Next Page
+            </button>
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   );
 }

@@ -5,162 +5,14 @@ import {
   FaSearch,
   FaSpinner,
   FaFilter,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaClock,
-  FaMapMarkerAlt,
-  FaPhone,
-  FaBriefcase,
-  FaStar,
   FaRedo,
   FaExclamationCircle,
   FaTimes,
   FaUser,
-  FaBan
 } from "react-icons/fa";
 
-// Base URL for images
-const BASE_URL =
-  import.meta.env.VITE_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:5000";
-const NORMALIZED_BASE_URL = BASE_URL.replace(/\/+$/, "");
-
-// Helper to format image path
-const formatImagePath = (path) => {
-  if (!path) return null;
-  let formattedPath = path.replace(/\\/g, '/');
-  if (!formattedPath.startsWith('/')) {
-    formattedPath = '/' + formattedPath;
-  }
-  return `${NORMALIZED_BASE_URL}${formattedPath}`;
-};
-
-/* ------------------ PROVIDER CARD COMPONENT ------------------ */
-
-const ProviderCard = ({ worker }) => {
-  const user = worker.userId;
-  
-  // Status Colors Logic
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-700 border-green-200';
-      case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
-      case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
-      default: return 'bg-gray-100 text-gray-600 border-gray-200';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'approved': return <FaCheckCircle className="w-3.5 h-3.5" />;
-      case 'rejected': return <FaTimesCircle className="w-3.5 h-3.5" />;
-      case 'pending': return <FaClock className="w-3.5 h-3.5" />;
-      default: return <FaExclamationCircle className="w-3.5 h-3.5" />;
-    }
-  };
-
-  const profileImageUrl = formatImagePath(worker.profileImage || user?.profileImage);
-
-  return (
-    <div className="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-lg transition-all duration-300 group relative overflow-hidden">
-      
-      {/* Top Status Badge */}
-      <div className="flex justify-between items-start mb-4">
-        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1.5 border ${getStatusStyle(worker.kycStatus)}`}>
-          {getStatusIcon(worker.kycStatus)}
-          {worker.kycStatus}
-        </span>
-
-        {/* Online/Offline Badge */}
-        <span className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-lg ${
-          worker.status === 'online' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-500'
-        }`}>
-          <span className={`w-2 h-2 rounded-full ${worker.status === 'online' ? 'bg-blue-500' : 'bg-gray-400'}`}></span>
-          {worker.status === 'online' ? 'Online' : 'Offline'}
-        </span>
-      </div>
-
-      <div className="flex items-start gap-4">
-        {/* Avatar */}
-        <div className="relative flex-shrink-0">
-          {profileImageUrl ? (
-            <img
-              src={profileImageUrl}
-              alt={user?.full_name}
-              className="w-16 h-16 rounded-2xl object-cover shadow-sm bg-gray-50"
-              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-            />
-          ) : null}
-          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 items-center justify-center text-white font-bold text-xl shadow-md ${profileImageUrl ? 'hidden' : 'flex'}`}>
-            {user?.full_name?.charAt(0)?.toUpperCase() || <FaUser />}
-          </div>
-        </div>
-
-        {/* Info */}
-        <div className="min-w-0 flex-1">
-          <h3 className="font-bold text-gray-900 text-lg truncate leading-tight mb-1">
-            {user?.full_name || "Unknown User"}
-          </h3>
-          <p className="text-sm text-gray-500 truncate mb-2">{user?.email}</p>
-          
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-            <span className="flex items-center gap-1">
-              <FaPhone className="text-gray-400" /> {user?.phone || "N/A"}
-            </span>
-            <span className="flex items-center gap-1">
-              <FaMapMarkerAlt className="text-gray-400" /> {user?.city || "N/A"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-gray-50">
-        <div className="text-center">
-          <p className="text-xs text-gray-400 mb-0.5">Rating</p>
-          <p className="font-bold text-gray-900 flex items-center justify-center gap-1">
-            <FaStar className="text-yellow-400 w-3 h-3" /> {worker.rating || 0}
-          </p>
-        </div>
-        <div className="text-center border-l border-gray-100">
-          <p className="text-xs text-gray-400 mb-0.5">Exp</p>
-          <p className="font-bold text-gray-900">{worker.experience || 0} Yrs</p>
-        </div>
-        <div className="text-center border-l border-gray-100">
-          <p className="text-xs text-gray-400 mb-0.5">Rate/Hr</p>
-          <p className="font-bold text-blue-600">{worker.hourlyRate || 0}</p>
-        </div>
-      </div>
-
-      {/* Categories Tags */}
-      {worker.serviceCategories?.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {worker.serviceCategories.slice(0, 3).map((cat, i) => (
-            <span key={cat._id} className="px-2 py-1 bg-gray-50 text-gray-600 text-[10px] font-medium rounded-md border border-gray-100">
-              {cat.name}
-            </span>
-          ))}
-          {worker.serviceCategories.length > 3 && (
-            <span className="px-2 py-1 bg-gray-50 text-gray-400 text-[10px] font-medium rounded-md">
-              +{worker.serviceCategories.length - 3} more
-            </span>
-          )}
-        </div>
-      )}
-      
-      {/* Action Area (Placeholder for future features) */}
-      <div className="mt-4 pt-3 border-t border-gray-50 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-         {/* You can add Block/View Details buttons here later */}
-         {worker.kycStatus === 'approved' && (
-            <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-               <FaCheckCircle/> Verified Account
-            </span>
-         )}
-      </div>
-    </div>
-  );
-};
+// Components
+import WorkerListTable from "../../components/admin/workers/WorkerListTable";
 
 /* ------------------ MAIN COMPONENT ------------------ */
 
@@ -191,69 +43,68 @@ export default function AllWorkers() {
       (user.full_name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
       (user.email?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
       (user.phone || "").includes(searchQuery) ||
-      (worker.serviceCategories || []).some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()));
+      (worker.serviceCategories || []).some(cat => 
+        (typeof cat === 'string' ? cat : cat.name || "").toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
     const matchesStatus = statusFilter === "all" ? true : worker.kycStatus === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
-  // Stats for Header
   const total = workers.length;
   const approved = workers.filter(w => w.kycStatus === 'approved').length;
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-20 max-w-[1600px] mx-auto animate-fadeIn">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">All Providers</h1>
-          <p className="text-gray-500 mt-1">Manage and view all registered service providers</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Service Providers</h1>
+          <p className="text-gray-500 font-medium mt-1">Full database of all registered platform workers.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="p-3 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
-            title="Refresh"
+            className="p-3.5 bg-white border-2 border-gray-100 text-gray-400 rounded-2xl hover:text-blue-600 hover:border-blue-100 transition-all shadow-sm active:scale-95"
+            title="Refresh Database"
           >
             <FaRedo className={isFetching ? "animate-spin" : ""} />
           </button>
-          <div className="px-4 py-2 bg-blue-50 text-blue-700 font-semibold rounded-xl text-sm border border-blue-100">
-             {total} Total / {approved} Active
+          <div className="px-5 py-2.5 bg-blue-600 text-white font-black rounded-2xl text-[11px] uppercase tracking-[0.15em] shadow-lg shadow-blue-500/25">
+             {total} Profiles / {approved} Verified
           </div>
         </div>
       </div>
 
       {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        {/* Search */}
-        <div className="relative flex-1 w-full md:max-w-md">
-          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+      <div className="flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center bg-white p-6 rounded-3xl border border-gray-100 shadow-xl">
+        <div className="relative flex-1 w-full xl:max-w-xl group">
+          <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search name, email, phone or category..."
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+            placeholder="Search by name, email, city or skill..."
+            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-gray-50 rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all font-medium text-gray-700"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={() => setSearchQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <FaTimes />
             </button>
           )}
         </div>
 
-        {/* Status Filter Tabs */}
-        <div className="flex p-1 bg-gray-100 rounded-xl overflow-x-auto w-full md:w-auto">
+        <div className="flex p-1.5 bg-gray-100 rounded-2xl w-full xl:w-auto overflow-x-auto no-scrollbar">
           {['all', 'approved', 'pending', 'rejected'].map(filter => (
             <button
               key={filter}
               onClick={() => setStatusFilter(filter)}
-              className={`px-4 py-2 text-sm font-medium capitalize rounded-lg transition-all whitespace-nowrap flex-1 md:flex-none ${
+              className={`px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 whitespace-nowrap flex-1 xl:flex-none ${
                 statusFilter === filter 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white text-blue-600 shadow-md scale-100' 
+                  : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               {filter}
@@ -262,45 +113,38 @@ export default function AllWorkers() {
         </div>
       </div>
 
-      {/* Error State */}
       {error && (
-        <div className="p-4 bg-red-50 text-red-700 rounded-xl flex items-center gap-2">
-          <FaExclamationCircle /> {error}
+        <div className="p-5 bg-red-50 text-red-700 rounded-2xl flex items-center gap-4 border-2 border-red-100 animate-shake">
+          <FaExclamationCircle className="text-xl" /> 
+          <p className="font-bold">{error}</p>
         </div>
       )}
 
-      {/* Content Grid */}
       {loading ? (
-        <div className="py-20 text-center">
-          <FaSpinner className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Loading providers database...</p>
-        </div>
-      ) : workers.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FaUser className="text-gray-400 text-2xl" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900">No Providers Found</h3>
-          <p className="text-gray-500 mt-1">There are no service providers registered yet.</p>
+        <div className="py-40 flex flex-col items-center justify-center">
+          <FaSpinner className="w-12 h-12 text-blue-600 animate-spin mb-6" />
+          <p className="text-gray-400 font-black uppercase tracking-[0.2em] text-xs">Accessing Records...</p>
         </div>
       ) : filteredWorkers.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FaFilter className="text-gray-400 text-xl" />
+        <div className="text-center py-40 bg-white rounded-[3rem] border-2 border-dashed border-gray-100">
+          <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FaUser className="text-gray-300 text-4xl" />
           </div>
-          <h3 className="text-lg font-bold text-gray-900">No matches found</h3>
-          <p className="text-gray-500 mt-1">Try adjusting your search or filters.</p>
-          <button onClick={() => {setSearchQuery(''); setStatusFilter('all')}} className="mt-4 text-blue-600 font-medium hover:underline">
-            Clear Filters
-          </button>
+          <h3 className="text-2xl font-black text-gray-900 mb-2">No Providers Found</h3>
+          <p className="text-gray-500 font-medium max-w-sm mx-auto">There are no service providers matching your current criteria in the database.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredWorkers.map((worker) => (
-            <ProviderCard key={worker._id} worker={worker} />
-          ))}
+        <div className="animate-fadeIn">
+          <WorkerListTable workers={filteredWorkers} />
         </div>
       )}
+
+      <style jsx>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   );
 }

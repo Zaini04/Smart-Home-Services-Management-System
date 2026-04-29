@@ -47,15 +47,30 @@ export const createBooking = async (req, res) => {
     });
 
     const io = req.app.get("io");
-    if (io) {
+   if (io) {
       io.emit("data_updated"); // Refreshes lists
-      
-      // We broadcast this to everyone (or you can filter it later)
-      io.emit("notification", {
-        title: "📢 New Job Available",
-        message: "A new job was just posted in your area. Check available jobs!",
-      });
     }
+
+
+    
+    const matchingProviders = await ServiceProvider.find({
+      kycStatus: "approved",
+      serviceCategories: category,
+    }).select("userId");
+
+    for (const provider of matchingProviders) {
+      if (provider?.userId) {
+        await sendNotification(
+          req,
+          provider.userId,
+          "📢 New Job Available",
+          "A new job matching your skills has been posted. Check available jobs."
+        );
+      }
+    }
+
+
+
 
     return successResponse(res, "Booking posted successfully", booking, 201);
   } catch (err) {

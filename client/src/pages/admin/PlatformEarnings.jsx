@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import {
-  FaWallet, FaMoneyBillWave, FaChartLine, FaArrowUp,
-  FaArrowDown, FaSpinner, FaArrowRight, FaStar,
-  FaCheckCircle, FaExclamationTriangle, FaUsers,
-  FaClipboardList, FaCalendarAlt,
-} from "react-icons/fa";
+import { FaSpinner, FaCheckCircle, FaExclamationTriangle, FaStar } from "react-icons/fa";
 import {
   getPlatformDashboard, getPlatformWallet, adminWithdraw,
   getTopProviders,
 } from "../../api/adminEndPoints";
 
+// Components
+import WalletHero from "../../components/admin/earnings/WalletHero";
+import EarningsSummary from "../../components/admin/earnings/EarningsSummary";
+import IncomeBreakdown from "../../components/admin/earnings/IncomeBreakdown";
+import BookingStats from "../../components/admin/earnings/BookingStats";
+import WithdrawModal from "../../components/admin/earnings/WithdrawModal";
+
 export default function PlatformEarnings() {
   const queryClient = useQueryClient();
 
-  // Withdraw modal
+  // Withdraw modal state
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawMethod, setWithdrawMethod] = useState("jazzcash");
@@ -43,12 +44,12 @@ export default function PlatformEarnings() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(["platformEarningsDashboard"]);
       setShowWithdraw(false);
-      setAlert({ type: "success", text: `Rs. ${Number(variables.amount).toLocaleString()} withdrawn!` });
-      setTimeout(() => setAlert(null), 4000);
+      setAlert({ type: "success", text: `Rs. ${Number(variables.amount).toLocaleString()} successfully withdrawn!` });
+      setTimeout(() => setAlert(null), 5000);
     },
     onError: (err) => {
-      setAlert({ type: "error", text: err.response?.data?.message || "Withdrawal failed" });
-      setTimeout(() => setAlert(null), 4000);
+      setAlert({ type: "error", text: err.response?.data?.message || "Withdrawal failed. Check your balance." });
+      setTimeout(() => setAlert(null), 5000);
     }
   });
 
@@ -63,8 +64,9 @@ export default function PlatformEarnings() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <FaSpinner className="w-10 h-10 text-blue-600 animate-spin" />
+      <div className="flex flex-col items-center justify-center h-[60vh]">
+        <FaSpinner className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+        <p className="text-gray-500 font-medium">Loading financial data...</p>
       </div>
     );
   }
@@ -79,142 +81,89 @@ export default function PlatformEarnings() {
   const w = dashData?.wallet || walletData || {};
 
   return (
-    <div className="space-y-8">
-
-      {/* Alert */}
+    <div className="space-y-10 pb-20 max-w-7xl mx-auto animate-fadeIn">
+      
+      {/* Dynamic Alerts */}
       {alert && (
-        <div className={`p-4 rounded-xl flex items-center gap-3 ${
-          alert.type === "success" ? "bg-green-50 border border-green-200 text-green-800"
-            : "bg-red-50 border border-red-200 text-red-800"
+        <div className={`p-5 rounded-2xl flex items-center gap-4 shadow-xl border-2 animate-bounceIn ${
+          alert.type === "success" 
+            ? "bg-green-50 border-green-200 text-green-800"
+            : "bg-red-50 border-red-200 text-red-800"
         }`}>
-          {alert.type === "success" ? <FaCheckCircle /> : <FaExclamationTriangle />}
-          <p className="text-sm font-medium">{alert.text}</p>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${alert.type === "success" ? "bg-green-200" : "bg-red-200"}`}>
+            {alert.type === "success" ? <FaCheckCircle /> : <FaExclamationTriangle />}
+          </div>
+          <p className="font-bold">{alert.text}</p>
         </div>
       )}
 
-      {/* Platform Wallet Hero */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-3xl p-8 text-white shadow-lg">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <FaWallet className="w-8 h-8" />
-              <h2 className="text-xl font-bold">Platform Wallet</h2>
-            </div>
-            <p className="text-4xl font-bold mb-1">
-              Rs. {(w.currentBalance || 0).toLocaleString()}
-            </p>
-            <p className="text-emerald-100 text-sm">Available to withdraw</p>
-          </div>
-          <div className="flex gap-4">
-            <div className="bg-white/20 rounded-2xl p-4 min-w-[140px]">
-              <p className="text-emerald-100 text-xs mb-1">Total Earned</p>
-              <p className="text-2xl font-bold">Rs. {(w.totalEarnings || 0).toLocaleString()}</p>
-            </div>
-            <div className="bg-white/20 rounded-2xl p-4 min-w-[140px]">
-              <p className="text-emerald-100 text-xs mb-1">Total Withdrawn</p>
-              <p className="text-2xl font-bold">Rs. {(w.totalWithdrawn || 0).toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-        <div className="mt-5 flex gap-3">
-          <button onClick={() => { setShowWithdraw(true); setWithdrawAmount(""); }}
-            className="px-6 py-3 bg-white text-emerald-600 font-semibold rounded-xl hover:bg-emerald-50 shadow-md"
-          >
-            Withdraw Funds
-          </button>
-          <Link to="/admin/platform-transactions"
-            className="px-6 py-3 bg-white/20 text-white font-medium rounded-xl hover:bg-white/30 border border-white/30"
-          >
-            View Transactions
-          </Link>
-        </div>
+      <WalletHero 
+        balance={w.currentBalance || 0}
+        totalEarned={w.totalEarnings || 0}
+        totalWithdrawn={w.totalWithdrawn || 0}
+        onWithdraw={() => { setShowWithdraw(true); setWithdrawAmount(""); }}
+      />
+
+      <EarningsSummary 
+        today={earnings.today || 0}
+        thisWeek={earnings.thisWeek || 0}
+        thisMonth={earnings.thisMonth || 0}
+      />
+
+      <IncomeBreakdown 
+        commissions={income.commissions}
+        penalties={income.penalties}
+      />
+
+      <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-gray-100">
+        <h3 className="text-2xl font-black text-gray-900 mb-8 flex items-center gap-3">
+          <div className="w-1.5 h-8 bg-blue-600 rounded-full"></div>
+          Platform Activity Overview
+        </h3>
+        <BookingStats 
+          total={bookings.total || 0}
+          completed={bookings.completed || 0}
+          active={bookings.active || 0}
+          cancelled={bookings.cancelled || 0}
+        />
       </div>
 
-      {/* Earnings Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: "Today", value: earnings.today || 0, icon: FaCalendarAlt, bg: "bg-blue-50", color: "text-blue-600", iconBg: "bg-blue-100" },
-          { label: "This Week", value: earnings.thisWeek || 0, icon: FaChartLine, bg: "bg-green-50", color: "text-green-600", iconBg: "bg-green-100" },
-          { label: "This Month", value: earnings.thisMonth || 0, icon: FaMoneyBillWave, bg: "bg-purple-50", color: "text-purple-600", iconBg: "bg-purple-100" },
-        ].map((s) => (
-          <div key={s.label} className={`${s.bg} rounded-2xl p-6 border border-gray-100`}>
-            <div className={`w-10 h-10 ${s.iconBg} rounded-xl flex items-center justify-center mb-3`}>
-              <s.icon className={`w-5 h-5 ${s.color}`} />
-            </div>
-            <p className="text-2xl font-bold text-gray-800">Rs. {s.value.toLocaleString()}</p>
-            <p className="text-sm text-gray-500">{s.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Income Breakdown */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <FaCheckCircle className="text-green-600" /> Commission Income
+      {/* Top Providers Mini List */}
+      <div className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">
+        <div className="p-8 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+          <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+            <FaStar className="text-yellow-500" />
+            Leading Performance
           </h3>
-          <p className="text-3xl font-bold text-green-600">
-            Rs. {(income.commissions?.total || 0).toLocaleString()}
-          </p>
-          <p className="text-gray-500 text-sm mt-1">
-            From {income.commissions?.count || 0} completed jobs
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <FaExclamationTriangle className="text-red-500" /> Penalty Income
-          </h3>
-          <p className="text-3xl font-bold text-red-600">
-            Rs. {(income.penalties?.total || 0).toLocaleString()}
-          </p>
-          <p className="text-gray-500 text-sm mt-1">
-            From {income.penalties?.count || 0} cancellations
-          </p>
-        </div>
-      </div>
-
-      {/* Platform Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "Total Bookings", value: bookings.total || 0, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Completed", value: bookings.completed || 0, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Active", value: bookings.active || 0, color: "text-purple-600", bg: "bg-purple-50" },
-          { label: "Cancelled", value: bookings.cancelled || 0, color: "text-red-600", bg: "bg-red-50" },
-        ].map((s) => (
-          <div key={s.label} className={`${s.bg} rounded-2xl p-5 text-center`}>
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-            <p className="text-sm text-gray-500 mt-1">{s.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Top Providers */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-bold text-gray-800 flex items-center gap-2">
-            <FaStar className="text-yellow-500" /> Top Providers
-          </h3>
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Last 30 Days</span>
         </div>
         <div className="divide-y divide-gray-50">
           {topProvidersList.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No data yet</p>
+            <div className="text-center py-20">
+              <p className="text-gray-400 font-bold italic">No performance rankings available yet.</p>
+            </div>
           ) : (
             topProvidersList.map((tp, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 hover:bg-gray-50">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+              <div key={i} className="flex items-center gap-6 p-6 hover:bg-blue-50/30 transition-all group">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shadow-sm
+                  ${i === 0 ? 'bg-yellow-400 text-yellow-900 shadow-yellow-100' : 'bg-gray-100 text-gray-400'}`}>
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 text-sm">
-                    {tp.provider?.userId?.full_name || "Provider"}
+                  <p className="font-black text-gray-900 text-lg">
+                    {tp.provider?.userId?.full_name || "Service Provider"}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {tp.completedJobs} jobs • Rating: {tp.provider?.rating?.toFixed(1) || "N/A"}
-                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-xs font-bold text-gray-400">{tp.completedJobs} Jobs</span>
+                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                    <span className="text-xs font-bold text-yellow-600 flex items-center gap-1">
+                      <FaStar className="w-3 h-3" /> {tp.provider?.rating?.toFixed(1) || "0.0"}
+                    </span>
+                  </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-green-600 text-sm">Rs. {tp.totalEarning?.toLocaleString()}</p>
-                  <p className="text-xs text-gray-400">Commission: Rs. {tp.totalCommission?.toLocaleString()}</p>
+                  <p className="font-black text-emerald-600 text-xl tracking-tighter">Rs. {tp.totalEarning?.toLocaleString()}</p>
+                  <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mt-0.5">Comm: Rs. {tp.totalCommission?.toLocaleString()}</p>
                 </div>
               </div>
             ))
@@ -222,53 +171,31 @@ export default function PlatformEarnings() {
         </div>
       </div>
 
-      {/* Withdraw Modal */}
       {showWithdraw && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-1">Withdraw Funds</h3>
-            <p className="text-gray-500 text-sm mb-5">
-              Available: <span className="font-bold text-green-600">Rs. {(w.currentBalance || 0).toLocaleString()}</span>
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount (Rs.)</label>
-                <input type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)}
-                  placeholder="e.g. 10000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Method</label>
-                <div className="flex gap-2">
-                  {["jazzcash", "easypaisa", "bank"].map((m) => (
-                    <button key={m} onClick={() => setWithdrawMethod(m)}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 capitalize ${
-                        withdrawMethod === m ? "border-green-500 bg-green-50 text-green-700" : "border-gray-200 text-gray-600"
-                      }`}
-                    >{m}</button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Account Number</label>
-                <input type="text" value={withdrawAccount} onChange={(e) => setWithdrawAccount(e.target.value)}
-                  placeholder="03XX-XXXXXXX" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 outline-none"
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowWithdraw(false)}
-                className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
-              >Cancel</button>
-              <button onClick={handleWithdraw} disabled={withdrawMutation.isPending}
-                className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                {withdrawMutation.isPending ? <FaSpinner className="animate-spin" /> : "Withdraw"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <WithdrawModal 
+          onClose={() => setShowWithdraw(false)}
+          onWithdraw={handleWithdraw}
+          balance={w.currentBalance || 0}
+          amount={withdrawAmount}
+          setAmount={setWithdrawAmount}
+          method={withdrawMethod}
+          setMethod={setWithdrawMethod}
+          account={withdrawAccount}
+          setAccount={setWithdrawAccount}
+          loading={withdrawMutation.isPending}
+        />
       )}
+
+      <style jsx>{`
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+        .animate-bounceIn { animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bounceIn { 
+          from { opacity: 0; transform: scale(0.8); } 
+          50% { transform: scale(1.05); }
+          to { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 }

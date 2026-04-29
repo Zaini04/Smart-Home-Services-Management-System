@@ -2,21 +2,18 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { getSupportTickets, replySupportTicket, deleteSupportTicket } from "../../api/adminEndPoints";
-import { FaTrash, FaSpinner, FaEnvelope, FaCheckCircle, FaReply, FaHeadset, FaGlobe, FaComments } from "react-icons/fa";
+import { FaSpinner, FaEnvelope, FaGlobe, FaComments, FaHeadset } from "react-icons/fa";
 
-// Tab config — each tab maps to specific API params
+// Components
+import SupportTicketCard from "../../components/admin/support/SupportTicketCard";
+
 const TABS = [
-  { key: "all",          label: "All Messages",   icon: FaComments, params: {} },
-  { key: "contact_us",   label: "Contact Us",      icon: FaGlobe,    params: { source: "contact_us" } },
-  { key: "help_support", label: "Help & Support",  icon: FaHeadset,  params: { source: "help_support" } },
-  { key: "open",         label: "Open",            icon: null,       params: { status: "open" } },
-  { key: "replied",      label: "Replied",         icon: null,       params: { status: "replied" } },
+  { key: "all",          label: "Discovery",       icon: FaComments, params: {} },
+  { key: "contact_us",   label: "Contact Web",     icon: FaGlobe,    params: { source: "contact_us" } },
+  { key: "help_support", label: "App Support",     icon: FaHeadset,  params: { source: "help_support" } },
+  { key: "open",         label: "Pending",         icon: null,       params: { status: "open" } },
+  { key: "replied",      label: "Resolved",        icon: null,       params: { status: "replied" } },
 ];
-
-const SOURCE_BADGE = {
-  contact_us:   { label: "Contact Us",    className: "bg-purple-100 text-purple-700" },
-  help_support: { label: "Help & Support", className: "bg-blue-100 text-blue-700" },
-};
 
 export default function HelpSupportAdmin() {
   const queryClient = useQueryClient();
@@ -37,48 +34,53 @@ export default function HelpSupportAdmin() {
   const replyMutation = useMutation({
     mutationFn: ({ id, text }) => replySupportTicket(id, text),
     onSuccess: () => {
-      toast.success("Reply saved!");
+      toast.success("Response dispatched successfully!");
       queryClient.invalidateQueries(["supportTickets"]);
       setReplyingTo(null);
       setReplyText("");
     },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to send reply"),
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to deliver response"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteSupportTicket,
     onSuccess: () => {
-      toast.success("Message deleted!");
+      toast.success("Record cleared from database");
       queryClient.invalidateQueries(["supportTickets"]);
     },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to delete"),
+    onError: (err) => toast.error(err.response?.data?.message || "Operation failed"),
   });
 
   const handleReplySubmit = (id) => {
-    if (!replyText.trim()) return toast.error("Reply cannot be empty");
+    if (!replyText.trim()) return toast.error("Please provide a response body");
     replyMutation.mutate({ id, text: replyText });
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800">Help & Support</h2>
-        <p className="text-gray-500 text-sm">
-          Messages from the Contact Us page and in-app Help & Support forms
-        </p>
+    <div className="space-y-10 pb-20 max-w-6xl mx-auto animate-fadeIn">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+        <div>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-4">
+            <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/25">
+              <FaHeadset className="text-white w-6 h-6" />
+            </div>
+            Support Center
+          </h1>
+          <p className="text-gray-500 font-medium mt-2">Manage customer inquiries and platform feedback.</p>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-1 border-b border-gray-200">
+      {/* Modern Tab System */}
+      <div className="flex flex-wrap items-center gap-2 p-2 bg-gray-100 rounded-[2rem] w-fit">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-1.5 px-4 py-2 font-medium text-sm transition-colors border-b-2 -mb-px ${
+            className={`flex items-center gap-2.5 px-6 py-3 font-black text-[11px] uppercase tracking-widest transition-all duration-300 rounded-[1.5rem] ${
               activeTab === tab.key
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "bg-white text-blue-600 shadow-md scale-100"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
             {tab.icon && <tab.icon className="w-3.5 h-3.5" />}
@@ -87,149 +89,47 @@ export default function HelpSupportAdmin() {
         ))}
       </div>
 
-      {/* Content */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 min-h-[500px]">
+      {/* List Container */}
+      <div className="bg-white rounded-[3rem] shadow-2xl border border-gray-100 overflow-hidden min-h-[600px] relative">
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <FaSpinner className="w-8 h-8 text-blue-500 animate-spin" />
+          <div className="flex flex-col items-center justify-center py-40">
+            <FaSpinner className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+            <p className="text-gray-400 font-black uppercase tracking-[0.2em] text-[10px]">Retrieving Communications...</p>
           </div>
         ) : tickets.length === 0 ? (
-          <div className="text-center py-20">
-            <FaEnvelope className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">No messages found</p>
-            <p className="text-xs text-gray-400 mt-1">
-              Messages from Contact Us and Help & Support forms will appear here.
+          <div className="text-center py-40">
+            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FaEnvelope className="text-gray-200 text-4xl" />
+            </div>
+            <h3 className="text-2xl font-black text-gray-900 mb-2">Inbox Empty</h3>
+            <p className="text-gray-500 font-medium max-w-sm mx-auto">
+              There are no {activeTab === 'all' ? '' : activeTab} inquiries at the moment. All caught up!
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
-            {tickets.map((ticket) => {
-              const sourceBadge = SOURCE_BADGE[ticket.source] || SOURCE_BADGE.contact_us;
-              return (
-                <div key={ticket._id} className="p-6 transition-all hover:bg-gray-50/50">
-                  <div className="flex flex-col lg:flex-row gap-6">
-
-                    {/* Left: Info */}
-                    <div className="flex-1">
-                      {/* Badges row */}
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        {/* Source badge */}
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${sourceBadge.className}`}>
-                          {sourceBadge.label}
-                        </span>
-                        {/* Status badge */}
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-                          ticket.status === "open"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
-                        }`}>
-                          {ticket.status}
-                        </span>
-                        <h4 className="text-base font-bold text-gray-800">{ticket.subject}</h4>
-                      </div>
-
-                      {/* Meta */}
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mb-4">
-                        <span>
-                          <strong className="text-gray-700">From:</strong>{" "}
-                          {ticket.name}{" "}
-                          <a href={`mailto:${ticket.email}`} className="text-blue-500 hover:underline">
-                            ({ticket.email})
-                          </a>
-                        </span>
-                        <span>
-                          <strong className="text-gray-700">Role:</strong>{" "}
-                          <span className="capitalize">{ticket.senderRole}</span>
-                        </span>
-                        <span>
-                          <strong className="text-gray-700">Date:</strong>{" "}
-                          {new Date(ticket.createdAt).toLocaleDateString("en-PK", {
-                            day: "numeric", month: "short", year: "numeric",
-                          })}
-                        </span>
-                      </div>
-
-                      {/* Message */}
-                      <div className="bg-gray-50 p-4 rounded-xl text-gray-700 text-sm leading-relaxed border border-gray-100">
-                        {ticket.message}
-                      </div>
-
-                      {/* Existing Admin Reply */}
-                      {ticket.status === "replied" && ticket.adminReply && (
-                        <div className="mt-4 pl-4 border-l-2 border-blue-500">
-                          <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-                            Your Reply
-                          </p>
-                          <p className="text-sm text-gray-600">{ticket.adminReply}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right: Actions */}
-                    <div className="flex lg:flex-col items-center lg:items-stretch gap-2 lg:w-40 flex-shrink-0">
-                      {ticket.status === "open" && replyingTo !== ticket._id && (
-                        <button
-                          onClick={() => setReplyingTo(ticket._id)}
-                          className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium rounded-xl transition-colors text-sm"
-                        >
-                          <FaReply className="w-3.5 h-3.5" /> Reply
-                        </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          if (window.confirm("Delete this message permanently?")) {
-                            deleteMutation.mutate(ticket._id);
-                          }
-                        }}
-                        className="flex items-center justify-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 font-medium rounded-xl transition-colors text-sm border border-red-100"
-                      >
-                        <FaTrash className="w-3.5 h-3.5" /> Delete
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Inline Reply Form */}
-                  {replyingTo === ticket._id && (
-                    <div className="mt-5 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-                      <h5 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
-                        <FaReply className="text-blue-500" />
-                        Reply to {ticket.name}
-                        <span className="text-gray-400 font-normal">— {ticket.email}</span>
-                      </h5>
-                      <textarea
-                        rows={3}
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                        placeholder="Type your reply here..."
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm resize-none mb-3"
-                      />
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => { setReplyingTo(null); setReplyText(""); }}
-                          className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-xl text-sm font-medium transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => handleReplySubmit(ticket._id)}
-                          disabled={replyMutation.isLoading}
-                          className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-70"
-                        >
-                          {replyMutation.isLoading
-                            ? <FaSpinner className="animate-spin w-4 h-4" />
-                            : <FaCheckCircle className="w-4 h-4" />
-                          }
-                          Save Reply
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          <div className="divide-y-2 divide-gray-50">
+            {tickets.map((ticket) => (
+              <SupportTicketCard 
+                key={ticket._id}
+                ticket={ticket}
+                onReply={handleReplySubmit}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                isReplying={replyingTo === ticket._id}
+                setIsReplying={(val) => setReplyingTo(val ? ticket._id : null)}
+                replyText={replyText}
+                setReplyText={setReplyText}
+                submitting={replyMutation.isPending}
+                deleting={deleteMutation.isPending}
+              />
+            ))}
           </div>
         )}
       </div>
+      
+      <style jsx>{`
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   );
 }

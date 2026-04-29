@@ -6,10 +6,10 @@ import { io } from "socket.io-client";
 import { getApiBaseUrl } from "./utils/url";
 
 // ── Resident / Shared pages ──────────────────────────────────────────────────
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
 import LandingPage from "./pages/LandingPage";
-import HowItWorks from "./components/HowItWorks";
+import HowItWorks from "./components/shared/HowItWorks";
 import PostJob from "./pages/resident/PostJob";
 import MyBookings from "./pages/resident/MyBookings";
 import BookingDetails from "./pages/resident/BookingDetails";
@@ -20,14 +20,14 @@ import Notifications from "./pages/Notifications";
 import UserProfile from "./pages/shared/UserProfile";
 import Settings from "./pages/shared/Settings";
 import HelpSupport from "./pages/shared/HelpSupport";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 import NotFound from "./pages/NotFound";
-import ScrollToTop from "./components/ScrollToTop";
+import ScrollToTop from "./components/shared/ScrollToTop";
 
 // ── Admin pages ──────────────────────────────────────────────────────────────
 import AdminHomePage from "./pages/admin/AdminHomePage";
-import AdminDashboard from "./pages/admin/AdminDashbord";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import CreateCategory from "./pages/admin/CreateCategory";
 import CreateSubCategory from "./pages/admin/CreateSubCategory";
 import GetPendingWorkers from "./pages/admin/GetPendingWorkers";
