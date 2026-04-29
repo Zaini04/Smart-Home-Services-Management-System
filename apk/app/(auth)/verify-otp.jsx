@@ -4,13 +4,17 @@ import {
   StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { verifyEmailOTP } from '../../src/api/authEndPoints';
 import { Colors } from '../../src/theme/colors';
+import { useAuth } from '../../src/context/AuthContext';
+import Toast from 'react-native-toast-message';
 
 export default function VerifyOTPScreen() {
   const router = useRouter();
+  const { email } = useLocalSearchParams();
+  const { loginUser } = useAuth();
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,9 +28,19 @@ export default function VerifyOTPScreen() {
     setError('');
     setLoading(true);
     try {
-      await verifyEmailOTP({ otp });
-      setSuccess(true);
-      setTimeout(() => router.replace('/(auth)/login'), 2000);
+      const res = await verifyEmailOTP({ email, otp: otp.trim() });
+      if (res.status === 200) {
+        const userData = res.data.data;
+        await loginUser(userData, userData.accessToken);
+        setSuccess(true);
+        setTimeout(() => {
+          if (userData.role === 'serviceprovider') {
+            router.replace('/(provider)/complete-profile');
+          } else {
+            router.replace('/(resident)/home');
+          }
+        }, 2000);
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
     } finally {

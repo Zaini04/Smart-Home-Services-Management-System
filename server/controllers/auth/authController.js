@@ -46,15 +46,12 @@ export const signupUser = async (req, res) => {
       <p>This code will expire in 10 minutes.</p>
     `;
     
-try {
-  await sendEmail({
-    email: newUser.email,
-    subject: "Verify your Email",
-    message,
-  });
-} catch (err) {
-  console.log("Email failed but user created:", err.message);
-}
+    // Send the Email (Don't await to prevent timeouts on slow SMTP)
+    sendEmail({
+      email: newUser.email,
+      subject: "Verify your Email",
+      message,
+    }).catch(err => console.log("Email failed but user created:", err.message));
     // Send response WITHOUT tokens (they are not logged in yet)
     return successResponse(res, "OTP sent to email. Please verify.", { email: newUser.email }, 201);
   } catch (err) {
@@ -170,6 +167,7 @@ export const loginUser = async (req, res) => {
       role: user.role,
       city: user.city,
       address: user.address,
+      isEmailVerified: user.isEmailVerified,
       kycStatus: user.role === "serviceprovider" ? user.kycStatus : "n/a",
       accessToken
     }, 201);

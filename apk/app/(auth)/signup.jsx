@@ -118,26 +118,43 @@ export default function SignupScreen() {
   };
 
   const handleSubmit = async () => {
-    if (password !== confirm) { setError('Passwords do not match'); return; }
-    if (!agreed) { setError('Please agree to terms'); return; }
+    if (!validateStep(4)) {
+      setError('Please fill in all fields and agree to terms');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
-      const res = await signUp({ full_name: name, email, phone, password, role, city, address });
-      if (res.status === 201) {
-        // Store user data, advance to OTP step
-        setPendingUserData(res.data.data);
-        setPendingToken(res.data.data.accessToken);
-        setPendingRole(res.data.data.role);
+      const payload = { full_name: name, email, phone, password, role, city, address };
+      const res = await signUp(payload);
+      
+      if (res.data?.success || res.status === 201) {
         Toast.show({
           type: 'success',
-          text1: 'Signup successful',
-          text2: 'OTP sent to your email.',
+          text1: 'OTP sent to your email.',
+          text2: 'Please check your inbox.',
         });
         setStep(5);
+      } else {
+        throw new Error(res.data?.message || 'Signup failed');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Signup failed. Please try again.');
+      console.error('Signup Error:', err);
+      const msg = err.response?.data?.message || err.message || 'Signup failed';
+      
+      if (msg.toLowerCase().includes('unverified')) {
+        Toast.show({
+          type: 'info',
+          text1: 'Account exists',
+          text2: 'Redirecting to verification...',
+        });
+        router.push({
+          pathname: '/(auth)/verify-otp',
+          params: { email }
+        });
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -148,17 +165,24 @@ export default function SignupScreen() {
     setOtpError('');
     setOtpLoading(true);
     try {
-      await verifyEmailOTP({ email, otp: otp.trim() });
-      await loginUser(pendingUserData, pendingToken);
-      Toast.show({
-        type: 'success',
-        text1: 'Account verified',
-        text2: 'You are now signed in.',
-      });
-      if (pendingRole === 'serviceprovider') {
-        router.replace('/(provider)/complete-profile');
-      } else {
-        router.replace('/(resident)/home');
+      const res = await verifyEmailOTP({ email, otp: otp.trim() });
+      if (res.status === 200) {
+        const userData = res.data.data;
+        const accessToken = res.data.data.accessToken;
+        
+        await loginUser(userData, accessToken);
+        
+        Toast.show({
+          type: 'success',
+          text1: 'Account verified',
+          text2: 'You are now signed in.',
+        });
+        
+        if (userData.role === 'serviceprovider') {
+          router.replace('/(provider)/complete-profile');
+        } else {
+          router.replace('/(resident)/home');
+        }
       }
     } catch (err) {
       setOtpError(err.response?.data?.message || 'Invalid OTP. Please try again.');
@@ -480,8 +504,8 @@ export default function SignupScreen() {
                           <ActivityIndicator color="#FFF" size="small" />
                         ) : (
                           <>
-                            <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-                            <Text style={styles.nextText}>Create Account</Text>
+                            <Ionicons name="mail-outline" size={20} color="#FFF" />
+                            <Text style={styles.nextText}>Send Code</Text>
                           </>
                         )}
                       </LinearGradient>

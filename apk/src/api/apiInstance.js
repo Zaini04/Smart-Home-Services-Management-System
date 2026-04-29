@@ -16,7 +16,7 @@ const REFRESH_ENDPOINT = '/api/user/refreshToken';
 const axiosInstance = axios.create({
   baseURL: API_ORIGIN,
   withCredentials: true,
-  timeout: 30000,
+  timeout: 60000,
 });
 
 let isRefreshing = false;

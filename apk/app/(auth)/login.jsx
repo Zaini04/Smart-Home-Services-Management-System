@@ -32,6 +32,20 @@ export default function LoginScreen() {
     try {
       const res = await login({ email, password });
       const data = res.data.data;
+      
+      if (data.isEmailVerified === false) {
+        Toast.show({
+          type: 'info',
+          text1: 'Verification required',
+          text2: 'Please verify your email to continue.',
+        });
+        router.push({
+          pathname: '/(auth)/verify-otp',
+          params: { email: data.email }
+        });
+        return;
+      }
+
       await loginUser(data, data.accessToken);
       Toast.show({
         type: 'success',

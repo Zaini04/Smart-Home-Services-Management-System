@@ -23,16 +23,21 @@ export default function ProviderLayout() {
       try {
         const res = await getProviderStatus(user._id);
         if (mounted) {
-          setStatus(res.data.data.status);
-          const currentScreen = segments[segments.length - 1];
-          
           const providerStatus = res.data.data.status;
-          const isLockedKycState = ['incomplete', 'pending', 'waiting'].includes(providerStatus);
           setStatus(providerStatus);
+          const currentScreen = segments[segments.length - 1];
 
-          if (isLockedKycState) {
+          if (providerStatus === 'incomplete') {
             if (currentScreen !== 'complete-profile') {
               router.replace('/(provider)/complete-profile');
+            }
+          } else if (providerStatus === 'pending' || providerStatus === 'waiting') {
+            if (currentScreen !== 'kyc-status') {
+              router.replace('/(provider)/kyc-status');
+            }
+          } else if (providerStatus === 'rejected') {
+            if (currentScreen !== 'kyc-status' && currentScreen !== 'edit-profile') {
+              router.replace('/(provider)/kyc-status');
             }
           } else if (providerStatus === 'approved') {
             if (currentScreen === 'complete-profile' || currentScreen === 'kyc-status') {
@@ -41,7 +46,17 @@ export default function ProviderLayout() {
           }
         }
       } catch (err) {
-        console.error('Failed to get provider status', err);
+        if (mounted) {
+          if (err.response?.status === 404) {
+            setStatus('incomplete');
+            const currentScreen = segments[segments.length - 1];
+            if (currentScreen !== 'complete-profile') {
+              router.replace('/(provider)/complete-profile');
+            }
+          } else {
+            console.error('Failed to get provider status', err);
+          }
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -60,10 +75,12 @@ export default function ProviderLayout() {
   }
 
   // Hide tab bar for KYC flow screens
-  if (['incomplete', 'pending', 'waiting'].includes(status)) {
+  if (['incomplete', 'pending', 'waiting', 'rejected'].includes(status)) {
     return (
       <Tabs screenOptions={{ headerShown: false, tabBarStyle: { display: 'none' } }}>
         <Tabs.Screen name="complete-profile" />
+        <Tabs.Screen name="kyc-status" />
+        <Tabs.Screen name="edit-profile" />
       </Tabs>
     );
   }
