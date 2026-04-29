@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getPublicSlides } from "../../api/publicEndPoints";
 import { buildMediaUrl } from "../../utils/url";
@@ -139,13 +140,13 @@ export default function Slider() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.6 }}
                 >
-                  <a
-                    href={currentSlide.ctaLink}
+                  <Link
+                    to={currentSlide.ctaLink || "/post-job"}
                     className="inline-flex items-center gap-3 px-8 py-4 bg-yellow-500 text-gray-900 font-bold rounded-xl hover:bg-yellow-400 transition-colors shadow-lg shadow-yellow-500/20 text-lg"
                   >
                     {currentSlide.ctaText}
                     <ArrowRight className="w-5 h-5" />
-                  </a>
+                  </Link>
                 </motion.div>
               </div>
             </div>

@@ -1,26 +1,28 @@
 import dotenv from "dotenv";
-dotenv.config(); 
+dotenv.config();
 
+import nodemailer from "nodemailer";
 
-import { Resend } from "resend";
+console.log("📧 Email User:", process.env.EMAIL_USER ? "Loaded" : "Missing");
 
-
-
-
-console.log("🔑 Resend API Key:", process.env.RESEND_API_KEY ? "Loaded" : "Missing");
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // Gmail App Password (NOT your Gmail login password)
+  },
+});
 
 export const sendEmail = async ({ email, subject, message }) => {
   try {
-    const response = await resend.emails.send({
-      from: "Service Hub <onboarding@resend.dev>", 
+    const info = await transporter.sendMail({
+      from: `"Service Hub" <${process.env.EMAIL_USER}>`,
       to: email,
       subject,
       html: message,
-      reply_to: "zainiii3092@gmail.com", //
     });
 
-    console.log("✅ Email sent:", response);
+    console.log("✅ Email sent:", info.messageId);
   } catch (error) {
     console.error("❌ Email Error:", error.message);
     throw error;
