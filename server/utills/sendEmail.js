@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
 export const sendEmail = async ({ email, subject, message }) => {
   try {
     const info = await transporter.sendMail({
-      from: `"Service Hub" <${process.env.EMAIL_USER}>`,
+      from: `"HomeFix" <${process.env.EMAIL_USER}>`,
       to: email,
       subject,
       html: message,
